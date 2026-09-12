@@ -1,0 +1,23 @@
+# Ghostty Configuration - dwm-oomaya Tokyo Night
+
+# Font
+font-family = "MesloLGS Nerd Font Mono"
+font-size = 16
+
+# Theme
+theme = TokyoNight
+background-opacity = 0.90
+
+# Window Styling
+gtk-titlebar = false
+window-decoration = false
+window-padding-x = 10
+window-padding-y = 10
+
+# Cursor
+cursor-style = block
+cursor-style-blink = false
+
+# Terminal behavior
+mouse-hide-while-typing = true
+confirm-close-surface = false
