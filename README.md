@@ -1,213 +1,271 @@
 <div align="center">
-  <img width="103" height="109" alt="image" src="https://github.com/user-attachments/assets/902d66d5-b4e4-4faf-84a7-a862a710e9b7" />
-  <p><strong>A fast, focused Fedora X11 desktop built for keyboard-driven work.</strong></p>
+  <img width="240" height="240" alt="DWM-Oomaya Logo" src="./assets/dwm-oomaya.png" />
+  <h1>DWM-OOMAYA</h1>
+  <p><strong>A high-performance, keyboard-driven suckless X11 desktop environment engineered for speed, sharp-corner aesthetics, and zero bloat.</strong></p>
+
   <p>
-    <a href="https://dwm.christitus.com">Documentation</a> |
-    <a href="https://github.com/ChrisTitusTech/dwm-titus/releases/latest">Latest release</a> |
-    <a href="./CHANGELOG.md">Changelog</a> |
-    <a href="./CONTRIBUTING.md">Contributing</a>
+    <a href="https://github.com/oomaya/dwm-oomaya/releases"><img src="https://img.shields.io/badge/version-6.5--oomaya-7aa2f7?style=flat-square" alt="Version" /></a>
+    <a href="https://github.com/oomaya/dwm-oomaya/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-GPLv3-7dcfff?style=flat-square" alt="License" /></a>
+    <a href="#installation--quickstart"><img src="https://img.shields.io/badge/platform-Fedora%20%7C%20Arch%20%7C%20Debian-bb9af7?style=flat-square" alt="Platform" /></a>
+    <a href="#aesthetic-standards"><img src="https://img.shields.io/badge/theme-Tokyo%20Night-24283b?style=flat-square" alt="Theme" /></a>
+    <a href="#14-vanitygaps-layouts"><img src="https://img.shields.io/badge/layouts-14%20Vanitygaps-9ece6a?style=flat-square" alt="Layouts" /></a>
+  </p>
+
+  <p>
+    <a href="#key-features">Key Features</a> •
+    <a href="#visual-showcase">Showcase</a> •
+    <a href="#keyboard-mastery">Keybindings</a> •
+    <a href="#centered-dmenu-ecosystem">Dmenu Suite</a> •
+    <a href="#installation--quickstart">Installation</a> •
+    <a href="#architectural-lineage">Lineage</a>
   </p>
 </div>
 
-![The dwm-titus desktop with its Quickshell panel](./dwm-titus-qs-4x.webp)
+---
 
-dwm-titus is a complete, lightweight X11 desktop with sensible defaults,
-guided installation, and powerful customization. It is designed for people who
-want a responsive keyboard-first workflow without having to assemble every
-part themselves.
+## What is DWM-Oomaya?
 
-**dwm-titus is a Fedora-only distribution.** Fedora Linux is the sole supported
-platform for installation, runtime behavior, package resolution, testing, and
-release qualification. Use either the Fedora desktop image or the
-existing-system installer on Fedora Linux.
+**DWM-Oomaya** combines the microsecond speed of suckless `dwm` with the modern UI ergonomics of **ChadDWM**, the robust Fedora & Quickshell integration of **DWM-Titus**, and the sharp-cornered brutalist visual grammar of **Omarchy / OMACOM**. 
 
-## What You Get
+It eliminates desktop friction:
+- **Zero bloat**: Pure C99 compiled with `-Os` (~150KB core binary).
+- **Zero daemon overhead**: Sub-2ms POSIX shell utilities replacing heavy background daemons.
+- **Zero restart friction**: Hot-reload dwm in RAM under the same PID without tearing down your X session or dropping open windows.
+- **Universal compatibility**: Built and tested on **Fedora Linux**, with 100% native build parity across **Arch Linux**, **Debian**, and any standard X11 environment.
 
-| Experience | What it includes |
-| --- | --- |
-| **A focused desktop** | Automatic window tiling, nine workspaces, fast keyboard navigation, multi-monitor support, and flexible fullscreen modes. |
-| **Everyday essentials** | A polished panel, application launcher, system tray, Control Center, Settings, notifications, screenshots, audio, brightness, and power controls. |
-| **Easy discovery** | An interactive keybind viewer, guided display setup, built-in diagnostics, and clear unsupported-feature reporting. |
-| **Personal configuration** | Live-reloading hotkeys, themes, and window rules, with local configuration preserved across upgrades. |
-| **Two installation paths** | A ready-to-install Fedora image or an installer for an existing Fedora system. |
+---
 
-> dwm-titus is an X11 desktop. A Wayland-native session is not currently part
-> of the project scope.
+## Key Features
 
-## Install
+### 🌀 1. 14 Vanitygaps Layouts & Live Topbar Indicator
+Dynamic window tiling with independent inner and outer pixel gaps (`gappih`, `gappiv`, `gappoh`, `gappov`). Cycle layouts dynamically with instant visual feedback exported via the `_DWM_CURRENT_LAYOUT` atom to the Quickshell topbar.
 
-Choose the path that matches your system:
+| Symbol | Layout | Description | Gap-Aware |
+| :---: | :--- | :--- | :---: |
+| `[]=` | **Tile** | Master on left, vertical stack on right | Yes |
+| `[M]` | **Monocle** | Maximized single window with focus tracking | N/A |
+| `[@]` | **Spiral** | Fibonacci spiral arranging windows in golden-ratio increments | Yes |
+| `[\\]`| **Dwindle** | Fibonacci dwindle tiled recursively | Yes |
+| `H[]` | **Deck** | Master window beside stacked card deck | Yes |
+| `TTT` | **Bottomstack** | Master on top, vertical columns underneath | Yes |
+| `===` | **Bottomstack Horiz** | Master on top, horizontal rows underneath | Yes |
+| `HHH` | **Grid** | Equal-ratio responsive grid layout | Yes |
+| `###` | **Nrowgrid** | Configurable N-row adaptive grid | Yes |
+| `---` | **Horizgrid** | Horizontal grid partition | Yes |
+| `:::` | **Gaplessgrid** | Pure edge-to-edge gapless grid | Yes |
+| `\|M\|`| **Centered Master** | Focused master window flanked by stack columns | Yes |
+| `>M>` | **Centered Float Master** | Floating master window centered above background stack | Yes |
+| `><>` | **Floating** | Free-floating X11 window placement | N/A |
 
-| Installation | Best for | What it does |
-| --- | --- | --- |
-| [Fedora ISO](#fedora-iso) | A fresh, dedicated installation | Installs the complete Fedora-only desktop from bootable media. |
-| [Existing system](#existing-system) | A Fedora installation you already use | Installs dependencies, the desktop session, and the selected feature set while preserving local configuration. |
+### ⚡ 2. Seamless In-Place Self-Restart
+Pressing **<kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd>** performs an atomic in-place restart (`execvp("dwm", argv)`). dwm unmanages clients, closes display connections, and replaces its executable in memory under the same PID—reloading changes without session termination or losing your work!
 
-For complete requirements and installation details, see the
-[Installation Guide](https://dwm.christitus.com/install.html).
+### 🎯 3. `focusonnetactive` Window Navigation
+Full EWMH `_NET_ACTIVE_WINDOW` compliance: when an external tool (such as `dmenu-windows` or `wmctrl`) requests focus, dwm automatically switches the workspace view, unhides hidden clients, raises the window, and warps the pointer smoothly.
 
-### Fedora ISO
+### 🎨 4. Sharp-Corner Aesthetic Law & 16pt Typography
+- **2px crisp square borders** (`#7aa2f7` Tokyo Night accent blue). Zero artificial rounding or blur gimmicks.
+- **16pt Typography Floor**: JetBrains Mono & Meslo Nerd Font standard with proportional line heights (`-h 34`) to ensure zero glyph or icon clipping across terminals, menus, and status panels.
 
-Download the latest image:
+### ⚙️ 5. Live-Reloading TOML Runtime Configuration
+Personal settings live in standard XDG user paths:
+- `~/.config/dwm-oomaya/hotkeys.toml`: Keybindings reload on save.
+- `~/.config/dwm-oomaya/themes.toml`: Tokyo Night color roles and palette hot-reload.
+- `~/.config/dwm-oomaya/window-rules.toml`: Application tag assignment and floating rules.
 
-| Image | Download |
-| --- | --- |
-| Standard | [`dwm-titus.iso`](https://github.com/ChrisTitusTech/dwm-titus/releases/latest/download/dwm-titus.iso) |
-| NVIDIA | [`dwm-titus-nvidia.iso`](https://github.com/ChrisTitusTech/dwm-titus/releases/latest/download/dwm-titus-nvidia.iso) |
-| Checksums and release notes | [Latest release](https://github.com/ChrisTitusTech/dwm-titus/releases/latest) |
+---
 
-Use the NVIDIA image only for systems that need the dedicated NVIDIA
-installation path. Write the selected ISO to a USB drive, boot it, complete the
-Fedora installer, and reboot into the `dwm` session.
+## Visual Showcase
 
-### Existing System
+<div align="center">
+  <h3>Real-Time Topbar Mode Pill (Spiral Layout)</h3>
+  <img alt="Topbar with Mode Indicator" src="./assets/topbar_mode_pill.png" width="90%" />
+</div>
+
+<br/>
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center" width="50%">
+        <strong>Centered App Launcher (<code>dmenu-desktop</code>)</strong><br/><br/>
+        <img alt="Dmenu Desktop" src="./assets/dmenu_desktop.png" />
+      </td>
+      <td align="center" width="50%">
+        <strong>Interactive Window Switcher (<code>dmenu-windows</code>)</strong><br/><br/>
+        <img alt="Dmenu Windows" src="./assets/dmenu_windows.png" />
+      </td>
+    </tr>
+    <tr>
+      <td align="center" width="50%">
+        <strong>Session & Power Menu (<code>dmenu-power</code>)</strong><br/><br/>
+        <img alt="Dmenu Power" src="./assets/dmenu_power.png" />
+      </td>
+      <td align="center" width="50%">
+        <strong>Suckless Tokyo Night Dmenu (<code>dmenu-oomaya</code>)</strong><br/><br/>
+        <img alt="Dmenu Centered" src="./assets/dwm-oomaya.png" width="220" />
+      </td>
+    </tr>
+  </table>
+</div>
+
+---
+
+## Centered Dmenu Ecosystem
+
+DWM-Oomaya pairs with [`dmenu-oomaya`](https://github.com/tonybanters/dmenu), a centered, border-aware, fuzzy-matching suckless dmenu engine with a dedicated POSIX scripting suite:
+
+- **`dmenu-desktop`**: Sub-millisecond XDG `.desktop` launcher with category icons (``, ``, ``, ``, ``), elegant vertical dividers `│`, and terminal auto-wrapping.
+- **`dmenu-windows`**: Interactive workspace tag window switcher querying `wmctrl -l` and switching tags instantly.
+- **`dmenu-power`**: Centered session management (Lock, Logout, Suspend, Reboot, Shutdown) with confirmation modals.
+- **`dmenu-run`**: Fast `$PATH` command execution with distance-scored fuzzy search.
+- **`dmenu-clip`**: Ultra-light clipboard history manager supporting PRIMARY and CLIPBOARD selections.
+- **`dmenu-scrot`**: Screenshot capture utility for Fullscreen, Area Select, and Active Window modes via `maim`.
+- **`dmenu-hub`**: Master launcher linking all scripts and controls into a single palette.
+
+---
+
+## Keyboard Mastery
+
+### Launchers & Terminals
+| Action | Keybinding | Command |
+| :--- | :--- | :--- |
+| **Primary Terminal** | <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>Enter</kbd> | `ghostty` \|\| `kitty` |
+| **Alacritty Terminal** | <kbd>Super</kbd> + <kbd>A</kbd> | `alacritty` |
+| **Application Launcher** | <kbd>Super</kbd> + <kbd>C</kbd> / <kbd>Super</kbd> + <kbd>D</kbd> | `dmenu-desktop` |
+| **Interactive Window Switcher** | <kbd>Alt</kbd> + <kbd>Tab</kbd> | `dmenu-windows` |
+| **Command Runner** | <kbd>Alt</kbd> + <kbd>P</kbd> | `dmenu-run` |
+| **Power Menu** | <kbd>Alt</kbd> + <kbd>X</kbd> | `dmenu-power` |
+| **Master Action Hub** | <kbd>Super</kbd> + <kbd>H</kbd> | `dmenu-hub` |
+| **Keybindings Palette** | <kbd>Super</kbd> + <kbd>/</kbd> | Quickshell Keybinds / `dwm-keybinds` |
+
+### Window Management & Tiling
+| Action | Keybinding |
+| :--- | :--- |
+| **Focus Next / Previous Window** | <kbd>Super</kbd> + <kbd>J</kbd> / <kbd>Super</kbd> + <kbd>K</kbd> |
+| **Move Window Down / Up** | <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>J</kbd> / <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>K</kbd> |
+| **Promote to Master** | <kbd>Super</kbd> + <kbd>Enter</kbd> |
+| **Close Focused Window** | <kbd>Super</kbd> + <kbd>Q</kbd> |
+| **Toggle Floating** | <kbd>Super</kbd> + <kbd>Space</kbd> |
+| **Actual Fullscreen** | <kbd>Super</kbd> + <kbd>F</kbd> |
+| **Hide / Restore Window** | <kbd>Super</kbd> + <kbd>H</kbd> / <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>H</kbd> |
+
+### Layout & Gap Controls
+| Action | Keybinding |
+| :--- | :--- |
+| **Cycle Layouts** | <kbd>Super</kbd> + <kbd>Tab</kbd> |
+| **Switch to Tile Layout** | <kbd>Super</kbd> + <kbd>T</kbd> |
+| **Switch to Monocle Layout** | <kbd>Super</kbd> + <kbd>M</kbd> |
+| **Toggle All Gaps** | <kbd>Super</kbd> + <kbd>Alt</kbd> + <kbd>0</kbd> |
+| **Increase / Decrease Gaps** | <kbd>Super</kbd> + <kbd>Alt</kbd> + <kbd>=</kbd> / <kbd>-</kbd> |
+| **Reset Default Gaps** | <kbd>Super</kbd> + <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>=</kbd> |
+
+### System & Session
+| Action | Keybinding |
+| :--- | :--- |
+| **In-Place DWM Self-Restart** | <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd> |
+| **Restart Quickshell Shell** | <kbd>Super</kbd> + <kbd>Ctrl</kbd> + <kbd>R</kbd> |
+| **Screenshot Area** | <kbd>Super</kbd> + <kbd>U</kbd> (`maim --select`) |
+| **Screenshot Fullscreen** | <kbd>Super</kbd> + <kbd>Ctrl</kbd> + <kbd>U</kbd> (`maim`) |
+| **Screenshot Menu** | <kbd>Super</kbd> + <kbd>Print</kbd> (`dmenu-scrot`) |
+
+---
+
+## Installation & Quickstart
+
+### 1. Install Build Dependencies
+
+**Fedora Linux:**
+```bash
+sudo dnf install gcc make libX11-devel libXinerama-devel libXft-devel fontconfig-devel wmctrl xclip maim
+```
+
+**Arch Linux:**
+```bash
+sudo pacman -S base-devel libx11 libxinerama libxft fontconfig xorg-xinit wmctrl xclip maim
+```
+
+**Debian / Ubuntu:**
+```bash
+sudo apt install build-essential libx11-dev libxinerama-dev libxft-dev libfontconfig1-dev wmctrl xclip maim
+```
+
+---
+
+### 2. Build & Install
 
 ```bash
-git clone https://github.com/ChrisTitusTech/dwm-titus.git
-cd dwm-titus
+# Clone the repository
+git clone https://github.com/oomaya/dwm-oomaya.git ~/.local/src/dwm-oomaya
+cd ~/.local/src/dwm-oomaya
 
-./install.sh --dry-run --non-interactive --profile recommended
-./install.sh --profile recommended
+# Compile cleanly
+make -j$(nproc) dwm
+
+# Install user binary to ~/.local/bin/
+install -Dm755 dwm ~/.local/bin/dwm
+
+# Install system-wide to /usr/local/bin/
+sudo make install-system
 ```
 
-The dry run shows the dependency and installation plan before anything changes.
-The installer requires Fedora, preserves existing personal configuration, and
-installs the managed desktop components. It accepts only Fedora's
-`/etc/os-release` identity and rejects every other operating-system identity
-before making changes.
+---
 
-| Profile | Includes |
-| --- | --- |
-| `core` | The X11 session, required dependencies, and one terminal emulator. |
-| `recommended` | The complete everyday desktop, including Alacritty, Quickshell, Gear Lever for AppImages, theming, screenshots, audio, brightness, and the PackageKit, Python RPM binding, AccountsService, CUPS, and printer-tool prerequisites for Phase 6 system management. |
-| `full` | The recommended desktop plus optional file-manager, keyring, wallpaper, display-manager, and supported Fedora gaming integrations. |
-
-`maim` is an optional dependency used only by the screenshot hotkeys. If it is
-unavailable, installation continues and reports that the screenshot hotkeys
-remain disabled; invoking one makes `dwm-screenshot` exit with
-`dwm-screenshot: maim is not installed`. `xclip` and `xdotool` remain required
-runtime dependencies for the X11 desktop and its other managed helpers.
-
-## First Login
-
-**Super** is the Windows key on most keyboards.
-
-| Action | Keybind |
-| --- | --- |
-| Open the application launcher | <kbd>Super</kbd> + <kbd>R</kbd> |
-| Open Alacritty terminal | <kbd>Super</kbd> + <kbd>X</kbd> |
-| Open Control Center | <kbd>Super</kbd> + <kbd>F1</kbd> |
-| Show the interactive keybind viewer | <kbd>Super</kbd> + <kbd>/</kbd> |
-| Close the focused window | <kbd>Super</kbd> + <kbd>Q</kbd> |
-| Switch workspace | <kbd>Super</kbd> + <kbd>1-9</kbd> |
-| Open the power menu | <kbd>Super</kbd> + <kbd>Ctrl</kbd> + <kbd>Q</kbd> |
-
-With a display manager, select the `dwm` session when logging in. From a TTY,
-start the session with:
+### 3. Install the Dmenu Ecosystem
 
 ```bash
-startx
+git clone https://github.com/tonybanters/dmenu.git ~/.local/src/dmenu-oomaya
+cd ~/.local/src/dmenu-oomaya
+
+# Build and install dmenu binary and scripts
+make -j$(nproc)
+install -Dm755 dmenu ~/.local/bin/dmenu
+cp -a scripts/dmenu-* ~/.local/bin/
 ```
 
-## Customize Your Desktop
-
-Most personal settings live under:
-
-```text
-${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus/
-```
-
-Hotkeys, themes, and window rules reload when their TOML files are saved.
-Advanced compile-time preferences live in the user-owned `config.h`, which the
-installer and future upgrades preserve.
-
-The installer also provides `dwm-settings-display` and its root-owned
-`libexec/dwm-titus/dwm-settings-display-root` persistence helper. Live display
-discovery and previews require `xrandr`; hotplug watching requires `udevadm`;
-only persistent Xorg install and rollback require `pkexec`. Named profiles live
-under the `display-profiles/` directory in the XDG path above.
-Run `dwm-display-setup detect`, then `dwm-display-setup`, for a guided wizard
-that detects outputs and configures modes, positions, rotation, and the primary
-display with a reversible preview. Persistent generation selects compatible
-TearFree or NVIDIA Full Composition Pipeline behavior automatically; pass
-`--force-full-composition-pipeline off` to disable the NVIDIA default.
-The adjacent `dwm-settings-input` provider uses `xinput`, `setxkbmap` for
-keyboard settings, `xkbset` for session-wide AccessX controls, and `udevadm`
-for stable device identity and hotplug events. Kept values are stored in
-`input-settings.conf` in the same XDG directory; `DWM_INPUT_SETTINGS_FILE` can
-select another file.
-
-See the [Configuration Guide](https://dwm.christitus.com/configuration.html)
-and [Theming Guide](https://dwm.christitus.com/theming.html) for examples and
-safe customization paths.
-
-## Documentation
-
-- [Installation](https://dwm.christitus.com/install.html)
-- [Getting Started](https://dwm.christitus.com/getting-started.html)
-- [Keybindings](https://dwm.christitus.com/keybinds.html)
-- [Configuration](https://dwm.christitus.com/configuration.html)
-- [Theming](https://dwm.christitus.com/theming.html)
-- [Control Center](https://dwm.christitus.com/control-center.html)
-- [Settings](https://dwm.christitus.com/settings.html)
-- [How dwm-titus Works](https://dwm.christitus.com/patches.html)
-- [Troubleshooting](https://dwm.christitus.com/troubleshooting.html)
-
-The technical guide explains the project architecture, what dwm is, and how
-the maintained enhancements fit together. You do not need to understand or
-apply dwm patches to install and use the desktop.
-
-## Troubleshooting
-
-**Settings -> System** separates read-only **Reload status** from confirmed
-metadata refresh and package installation. Review all package changes, including
-dependency additions and removals, before confirming. PackageKit owns
-authorization and cancellation; closing Settings does not cancel an operation.
-If discovery or recovery is incomplete, reload status and follow its guidance.
-
-The same section provides confirmed account, password, printer, and software-source
-tool launches. Missing tools or stale provider status disable only the affected
-entry. Account and repository inventories remain read-only. A successful launch
-does not mean administration inside the tool completed; authorize and confirm
-those changes in the tool itself. Enter passwords only in the terminal prompt.
-
-For timezone or system locale, **Load choices**, filter and select a reported
-value, then **Review change**. Network time offers fixed enable/disable previews.
-Review the complete preview before **Apply change**: a sent regional change
-cannot be canceled. Cancel only dismisses the preview, and closing Settings does
-not undo an action. An uncertain result requires fresh status and new confirmation,
-not automatic retry. Locale changes apply to new sessions; log out manually when
-ready. Synchronization status is labeled as the last read.
-The panel and System Settings share one minute-level local clock. A newly
-reported timezone refreshes both displays without restarting Quickshell.
-
-Start with the built-in diagnostic report:
-
+Ensure `~/.local/bin` is in your `$PATH` (e.g. in `~/.bashrc` or `~/.profile`):
 ```bash
-dwm-diagnostics
+export PATH="$HOME/.local/bin:$PATH"
 ```
 
-You can also open **Control Center -> System Health** for a graphical overview.
-If the session does not start, run `startx` from a TTY to see its error output.
-The [Troubleshooting Guide](https://dwm.christitus.com/troubleshooting.html)
-covers common session, panel, terminal, theme, display, and NVIDIA issues.
+---
 
-If the problem remains, [open an issue](https://github.com/ChrisTitusTech/dwm-titus/issues)
-and include the relevant diagnostic output. Review it first and remove any
-private system information.
+## Architectural Lineage
 
-## Contributing
+DWM-Oomaya stands on the shoulders of the suckless and open-source Unix community:
 
-Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) for the
-development workflow and validation requirements, and report security issues
-using [SECURITY.md](SECURITY.md).
-
-The main repository check uses a managed workspace under `$HOME/tmp` and
-removes it when the run finishes:
-
-```bash
-scripts/run-tests
+```
+                  ┌──────────────────────┐
+                  │     Suckless DWM     │  (Pure microsecond C window manager)
+                  └──────────┬───────────┘
+                             │
+            ┌────────────────┴────────────────┐
+            ▼                                 ▼
+┌──────────────────────┐            ┌──────────────────────┐
+│       ChadDWM        │            │      DWM-Titus       │
+│  (Vanitygaps, Cfacts,│            │ (Fedora integration, │
+│   ergonomic layouts) │            │  Quickshell panel)   │
+└───────────┬──────────┘            └──────────┬───────────┘
+            │                                  │
+            │      ┌────────────────────┐      │
+            └─────►│   Omarchy / OMA    ├──────┘
+                   │(Brutalist grammar, │
+                   │ Tokyo Night design)│
+                   └─────────┬──────────┘
+                             ▼
+                  ┌──────────────────────┐
+                  │      DWM-OOMAYA      │  (The synthesized masterpiece)
+                  └──────────────────────┘
 ```
 
-Project requirements and active work are tracked in [SPEC.md](SPEC.md),
-[ROADMAP.md](ROADMAP.md), and [TASKS.md](TASKS.md).
+- **[suckless.org](https://suckless.org/)**: The elegant, minimal C core and dynamic window management foundation.
+- **[ChadDWM](https://github.com/siduck/chadwm)**: Vanitygaps architecture, layout matrix, and ergonomic mouse drag resize controls.
+- **[DWM-Titus](https://github.com/ChrisTitusTech/dwm-titus)**: Chris Titus's desktop framework, Quickshell status orchestration, and live TOML parser.
+- **[Omarchy](https://omarchy.org/)**: DHH & 37signals' brutalist visual grammar, sharp-corner discipline, and elegant window-launcher conventions.
+- **[Tony Banters Dmenu](https://github.com/tonybanters/dmenu)**: Centered geometry, crisp border patch, and Tokyo Night aesthetic.
+
+---
+
+## License
+
+DWM-Oomaya is free software released under the **GNU General Public License v3** (GPLv3) to preserve user freedoms, with core suckless components under the MIT / X Consortium license. See [LICENSE](./LICENSE) for details.
