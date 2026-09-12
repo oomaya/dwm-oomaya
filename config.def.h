@@ -133,13 +133,17 @@ static const Key keys[] = {
     { MODKEY,                           XK_u,       spawn,          SHCMD("maim --select | xclip -selection clipboard -t image/png") },
 
     // application launchers & terminals (Ghostty/Kitty support)
-    { MODKEY,                           XK_c,       spawn,          SHCMD("rofi -show drun") },
+    { MODKEY,                           XK_c,       spawn,          SHCMD("dmenu-desktop") },
+    { MODKEY,                           XK_d,       spawn,          SHCMD("dmenu-desktop") },
     { MODKEY|ShiftMask,                 XK_Return,  spawn,          SHCMD("ghostty || kitty") },
     { MODKEY,                           XK_a,       spawn,          SHCMD("alacritty") },
     { MODKEY,                           XK_s,       spawn,          SHCMD("dwm-scratchpad") },
-    { MODKEY,                           XK_slash,   spawn,          SHCMD("quickshell ipc --path \"${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/shell.qml\" call controlcenter openKeybinds") },
-    { Mod1Mask,                         XK_p,       spawn,          SHCMD("dmenu_run -fn 'JetBrainsMonoNerdFont-16' -h 30") },
-    { Mod1Mask,                         XK_x,       spawn,          SHCMD("rofi -show power-menu -modi power-menu:rofi-power-menu") },
+    { MODKEY,                           XK_slash,   spawn,          SHCMD("quickshell ipc --path \"${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/shell.qml\" call controlcenter openKeybinds || dwm-keybinds") },
+    { Mod1Mask,                         XK_p,       spawn,          SHCMD("dmenu-run") },
+    { Mod1Mask,                         XK_x,       spawn,          SHCMD("dmenu-power") },
+    { Mod1Mask,                         XK_Tab,     spawn,          SHCMD("dmenu-windows") },
+    { MODKEY,                           XK_h,       spawn,          SHCMD("dmenu-hub") },
+    { MODKEY,                           XK_Print,   spawn,          SHCMD("dmenu-scrot") },
 
     // toggle stuff
     { MODKEY,                           XK_b,       togglebar,      {0} },
