@@ -32,17 +32,33 @@
 #          incnmaster        → add/remove window from master    (i=1 or i=-1)
 #          setmfact          → resize master area               (f=0.05 or f=-0.05)
 #          setcfact          → resize window in stack slot      (f=0.25 / f=-0.25 / f=0.00)
-#          setlayout         → switch layout                    (layout_idx=0/1/2)
-#                               0=tiling  1=floating  2=monocle
+#          setlayout         → switch layout                    (layout_idx=0..13)
+#                               0=[]= Tile          1=[M] Monocle       2=[@] Spiral
+#                               3=[\\] Dwindle      4=H[] Deck          5=TTT Bstack
+#                               6==== Bstackhoriz   7=HHH Grid          8=### Nrowgrid
+#                               9=--- Horizgrid     10=::: Gaplessgrid  11=|M| CenteredMaster
+#                               12=>M> FloatingMaster 13=><> Floating
+#          cyclelayout       → cycle through layouts            (i=1 or i=-1)
+#          togglegaps        → toggle vanity gaps on/off
+#          defaultgaps       → reset default gaps
+#          incrgaps          → adjust all gaps                  (i=3 or i=-3)
+#          incrigaps         → adjust inner gaps                (i=3 or i=-3)
+#          incrogaps         → adjust outer gaps                (i=3 or i=-3)
+#          hidewin           → hide/stash focused window
+#          restorewin        → restore hidden window
+#          tabmode           → toggle monocle tabbed headers    (i=-1)
+#          togglefullscr     → toggle actual fullscreen
 #          togglefloating    → float or tile focused window
 #          fullscreen        → true fullscreen (hides bar)
 #          togglefakefullscreen → fullscreen look, bar still works
 #          togglebar         → show/hide the status bar
+#          shiftview         → directional tag cycling          (i=1 or i=-1)
 #          focusmon          → focus next/prev monitor           (i=1 or i=-1)
 #          tagmon            → send window to next/prev monitor  (i=1 or i=-1)
 #          view              → switch to a tag  (ui=-1 = show all)
 #          tag               → send window to a tag
 #          toggleview / toggletag → also show/tag alongside current
+#          restart           → restart dwm cleanly
 #          quit              → exit DWM
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -50,7 +66,7 @@
 # Define shortcuts here, then use $name in any exec or cmd value below.
 
 [vars]
-terminal = "kitty"
+terminal = "ghostty"
 webapp   = "webapp-launch"
 
 # ── KEYBINDINGS ───────────────────────────────────────────────────────────────
@@ -101,6 +117,10 @@ keys = [
   { mod="SUPER",            key="Return",  desc="Promote to master",       func="zoom" },
   { mod="SUPER",            key="Tab",     desc="Previous tag",            func="view" },
   { mod="SUPER",            key="q",       desc="Close window",            func="killclient" },
+  { mod="SUPER",            key="s",       desc="Hide window",             func="hidewin" },
+  { mod="SUPER SHIFT",      key="s",       desc="Restore hidden window",   func="restorewin" },
+  { mod="SUPER",            key="n",       desc="Next tag (shiftview)",    func="shiftview",   i=1 },
+  { mod="SUPER",            key="b",       desc="Prev tag (shiftview)",    func="shiftview",   i=-1 },
 
   # ── Master / stack sizing ─────────────────────────────────────────────────────
   { mod="SUPER",            key="i",       desc="Add to master",           func="incnmaster",  i=1 },
@@ -111,14 +131,29 @@ keys = [
   { mod="SUPER SHIFT",      key="l",       desc="Cfact shrink",            func="setcfact",    f=-0.25 },
   { mod="SUPER SHIFT",      key="o",       desc="Cfact reset",             func="setcfact",    f=0.00 },
 
-  # ── Layouts  (0=tiling  1=floating  2=monocle) ───────────────────────────────
+  # ── Layouts ───────────────────────────────────────────────────────────────────
+  { mod="SUPER",            key="bracketright", desc="Next layout",        func="cyclelayout", i=1 },
+  { mod="SUPER",            key="bracketleft",  desc="Prev layout",        func="cyclelayout", i=-1 },
   { mod="SUPER",            key="t",       desc="Tile layout",             func="setlayout",   layout_idx=0 },
-  { mod="SUPER",            key="f",       desc="Float layout",            func="setlayout",   layout_idx=1 },
-  { mod="SUPER",            key="m",       desc="Fullscreen",              func="fullscreen" },
-  { mod="SUPER SHIFT",      key="m",       desc="Toggle floating window",  func="togglefloating" },
+  { mod="SUPER",            key="m",       desc="Monocle layout",          func="setlayout",   layout_idx=1 },
+  { mod="SUPER",            key="g",       desc="Grid layout",             func="setlayout",   layout_idx=7 },
+  { mod="SUPER",            key="c",       desc="CenteredMaster layout",   func="setlayout",   layout_idx=11 },
+  { mod="SUPER",            key="f",       desc="Floating layout",         func="setlayout",   layout_idx=13 },
   { mod="SUPER",            key="space",   desc="Toggle float/tile",       func="togglefloating" },
+  { mod="SUPER SHIFT",      key="m",       desc="Toggle floating window",  func="togglefloating" },
+  { mod="SUPER",            key="F11",     desc="True fullscreen",         func="togglefullscr" },
+  { mod="SUPER SHIFT",      key="f",       desc="True fullscreen",         func="togglefullscr" },
   { mod="SUPER SHIFT",      key="y",       desc="Fake fullscreen",         func="togglefakefullscreen" },
+  { mod="SUPER",            key="w",       desc="Toggle tab mode",         func="tabmode",     i=-1 },
   { mod="SUPER SHIFT",      key="b",       desc="Toggle bar",              func="togglebar" },
+
+  # ── Vanity Gaps ───────────────────────────────────────────────────────────────
+  { mod="SUPER",            key="a",       desc="Toggle vanity gaps",      func="togglegaps" },
+  { mod="SUPER SHIFT",      key="a",       desc="Default vanity gaps",     func="defaultgaps" },
+  { mod="SUPER",            key="z",       desc="Increase all gaps",       func="incrgaps",    i=3 },
+  { mod="SUPER SHIFT",      key="z",       desc="Decrease all gaps",       func="incrgaps",    i=-3 },
+  { mod="SUPER CTRL",       key="z",       desc="Increase inner gaps",     func="incrigaps",   i=3 },
+  { mod="SUPER CTRL SHIFT", key="z",       desc="Decrease inner gaps",     func="incrigaps",   i=-3 },
 
   # ── Multi-monitor ─────────────────────────────────────────────────────────────
   { mod="SUPER",            key="comma",   desc="Focus left monitor",      func="focusmon",    i=-1 },
@@ -128,6 +163,7 @@ keys = [
 
   # ── Session / power ───────────────────────────────────────────────────────────
   { mod="SUPER",            key="0",       desc="Show all tags",           func="view",        ui=-1 },
+  { mod="SUPER CTRL",       key="r",       desc="Restart dwm",             func="restart" },
   { mod="SUPER SHIFT",      key="q",       desc="Quit dwm",                func="quit" },
   { mod="SUPER CTRL",       key="q",       desc="Power menu",              func="spawn",       cmd="quickshell ipc --path \"${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/shell.qml\" call power toggle" },
   { mod="SUPER CTRL SHIFT", key="r",       desc="Reboot",                  func="spawn",       cmd="systemctl reboot" },
@@ -187,10 +223,25 @@ tag_keys = [
 # ─────────────────────────────────────────────────────────────────────────────
 
 buttons = [
-  { click="ClkTagBar",    mod="SUPER",  button=1,  func="tag" },
-  { click="ClkTagBar",    mod="SUPER",  button=3,  func="toggletag" },
-  { click="ClkClientWin", mod="SUPER",  button=1,  func="moveorplace",  i=2 },
-  { click="ClkClientWin", mod="SUPER",  button=3,  func="resizemouse" },
+  # ── Tag Bar ────────────────────────────────────────────────────────────────
   { click="ClkTagBar",    mod="",       button=1,  func="view" },
   { click="ClkTagBar",    mod="",       button=3,  func="toggleview" },
+  { click="ClkTagBar",    mod="",       button=4,  func="shiftview",    i=-1 },
+  { click="ClkTagBar",    mod="",       button=5,  func="shiftview",    i=1 },
+  { click="ClkTagBar",    mod="SUPER",  button=1,  func="tag" },
+  { click="ClkTagBar",    mod="SUPER",  button=3,  func="toggletag" },
+
+  # ── Layout Symbol ──────────────────────────────────────────────────────────
+  { click="ClkLtSymbol",  mod="",       button=1,  func="cyclelayout",  i=1 },
+  { click="ClkLtSymbol",  mod="",       button=3,  func="cyclelayout",  i=-1 },
+
+  # ── Tab Bar (Monocle) ──────────────────────────────────────────────────────
+  { click="ClkTabBar",    mod="",       button=1,  func="focuswin" },
+
+  # ── Client Window Actions ──────────────────────────────────────────────────
+  { click="ClkClientWin", mod="SUPER",  button=1,  func="moveorplace",  i=2 },
+  { click="ClkClientWin", mod="SUPER",  button=2,  func="togglefloating" },
+  { click="ClkClientWin", mod="SUPER",  button=3,  func="resizemouse" },
+  { click="ClkClientWin", mod="SUPER SHIFT", button=1, func="dragmfact" },
+  { click="ClkClientWin", mod="SUPER SHIFT", button=3, func="dragcfact" },
 ]
