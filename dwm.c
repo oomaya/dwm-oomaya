@@ -4633,6 +4633,10 @@ setborderpx(const Arg *arg)
 void
 restart(const Arg *arg)
 {
+	char *const argv[] = { "dwm", NULL };
+	cleanup();
+	XCloseDisplay(dpy);
+	execvp("dwm", argv);
 	running = 0;
 }
 
