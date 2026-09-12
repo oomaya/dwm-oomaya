@@ -1,55 +1,38 @@
-# Prerequisites
-*.d
+# binaries
+/dwm
 
-# Object files
+# User config (created from config.def.h, not tracked)
+config.h
+
+# Patch Fail
+*.rej
+*.orig
+
+# Object Files
 *.o
-*.ko
-*.obj
-*.elf
 
-# Linker output
-*.ilk
-*.map
-*.exp
+nohup.out
+.DS_STORE
+livemedia.log
+program.log
+*.iso
 
-# Precompiled Headers
-*.gch
-*.pch
+# Local editor settings that may contain machine-specific absolute paths
+.zed/settings.json
 
-# Libraries
-*.lib
-*.a
-*.la
-*.lo
+/release/**
+/release
 
-# Shared objects (inc. Windows DLLs)
-*.dll
-*.so
-*.so.*
-*.dylib
+# Local Vicinae AppImage extraction/staging tree
+/vicinae/
 
-# Executables
-*.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
+# Local CI validation virtualenv
+/.ci-pykickstart/
 
-# Debug files
-*.dSYM/
-*.su
-*.idb
-*.pdb
+# Generated Astro documentation output and local dependencies.
+/docs/.astro/
+/docs/dist/
+/docs/node_modules/
 
-# Kernel Module Compile Results
-*.mod*
-*.cmd
-.tmp_versions/
-modules.order
-Module.symvers
-Mkfile.old
-dkms.conf
-
-# debug information files
-*.dwo
+# Local Serena project metadata/cache
+/.serena/
