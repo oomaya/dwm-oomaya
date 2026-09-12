@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ─────────────────────────────────────────────────────────
-# dwm-utils.sh — Shared utility library for dwm-titus
+# dwm-utils.sh — Shared utility library for dwm-oomaya
 # Source this file from other scripts:
 #   source "$(dirname "$0")/dwm-utils.sh"
 # ─────────────────────────────────────────────────────────
@@ -22,8 +22,12 @@ if [[ -r $OS_RELEASE_FILE ]]; then
 	DISTRO_NAME="${PRETTY_NAME:-${NAME:-Unknown Linux}}"
 fi
 
-if [[ $DISTRO_ID == "fedora" ]]; then
+if [[ $DISTRO_ID =~ ^(arch|cachyos|manjaro|endeavouros)$ || ${ID_LIKE:-} =~ arch ]]; then
+	DISTRO_FAMILY="arch"
+elif [[ $DISTRO_ID =~ ^fedora$ || ${ID_LIKE:-} =~ fedora ]]; then
 	DISTRO_FAMILY="fedora"
+elif [[ $DISTRO_ID =~ ^(debian|ubuntu|pop|linuxmint)$ || ${ID_LIKE:-} =~ (debian|ubuntu) ]]; then
+	DISTRO_FAMILY="debian"
 fi
 
 case "$DISTRO_FAMILY" in
@@ -35,6 +39,22 @@ fedora)
 	fi
 	PKG_CMD="${DWM_PACKAGE_COMMAND[*]}"
 	;;
+arch)
+	if ((EUID == 0)); then
+		DWM_PACKAGE_COMMAND=(pacman -S --needed --noconfirm)
+	else
+		DWM_PACKAGE_COMMAND=(sudo pacman -S --needed --noconfirm)
+	fi
+	PKG_CMD="${DWM_PACKAGE_COMMAND[*]}"
+	;;
+debian)
+	if ((EUID == 0)); then
+		DWM_PACKAGE_COMMAND=(apt-get install -y)
+	else
+		DWM_PACKAGE_COMMAND=(sudo apt-get install -y)
+	fi
+	PKG_CMD="${DWM_PACKAGE_COMMAND[*]}"
+	;;
 *)
 	PKG_CMD="unavailable"
 	;;
@@ -43,11 +63,11 @@ export PKG_CMD
 
 install_packages() {
 	case "$DISTRO_FAMILY" in
-	fedora)
+	fedora|arch|debian)
 		"${DWM_PACKAGE_COMMAND[@]}" "$@"
 		;;
 	*)
-		printf 'Unsupported distribution: %s (Fedora is required)\n' "$DISTRO_NAME" >&2
+		printf 'Unsupported distribution: %s\n' "$DISTRO_NAME" >&2
 		return 1
 		;;
 	esac
@@ -69,6 +89,12 @@ package_available() {
 				command grep -Fxq "$1"
 			;;
 		esac
+		;;
+	arch)
+		pacman -Si "$1" &>/dev/null
+		;;
+	debian)
+		apt-cache show "$1" &>/dev/null
 		;;
 	*)
 		return 1
@@ -126,7 +152,7 @@ is_laptop() {
 
 # Detect first available terminal emulator
 detect_terminal() {
-	for t in dwmterm alacritty kitty st warp-terminal xterm; do
+	for t in dwmterm alacritty kitty ghostty foot st warp-terminal xterm; do
 		if command -v "$t" &>/dev/null; then
 			echo "$t"
 			return

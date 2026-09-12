@@ -1,5 +1,5 @@
-# dwm-titus version
-VERSION = 0.7.0
+# dwm-oomaya version
+VERSION = 0.8.0-oomaya
 
 # Customize below to fit your system
 

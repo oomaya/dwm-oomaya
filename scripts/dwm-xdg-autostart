@@ -535,7 +535,7 @@ ensure_user_directory() {
 
 acquire_lock() {
 	local owner_pid owner_start current_start
-	lock_dir=$autostart_dir/.dwm-titus.lock
+	lock_dir=$autostart_dir/.dwm-oomaya.lock
 	if ! (umask 077 && mkdir -- "$lock_dir"); then
 		if [[ -d $lock_dir && ! -L $lock_dir && -f $lock_dir/owner && ! -L $lock_dir/owner ]] &&
 			read -r owner_pid owner_start <"$lock_dir/owner" &&
@@ -579,7 +579,7 @@ validate_vendor_entry() {
 make_backup() {
 	local source=$1 desktop_id=$2 backup_dir candidate
 	backup_mode=$(stat -c %a -- "$source") || die 'could not read existing override permissions'
-	backup_dir=$autostart_dir/.dwm-titus-backups
+	backup_dir=$autostart_dir/.dwm-oomaya-backups
 	if [[ ! -e $backup_dir ]]; then
 		umask 077
 		mkdir -- "$backup_dir" || die 'could not create the autostart backup directory'

@@ -492,10 +492,12 @@ scan_desktop() {
 	fi
 
 	local config_home=${XDG_CONFIG_HOME:-$HOME/.config}
+	local dwm_cfg="dwm-oomaya"
+	[[ -d $config_home/dwm-oomaya || ! -d $config_home/dwm-titus ]] || dwm_cfg="dwm-titus"
 	for detail in \
-		"hotkeys:$config_home/dwm-titus/hotkeys.toml" \
-		"themes:$config_home/dwm-titus/themes.toml" \
-		"rules:$config_home/dwm-titus/window-rules.toml" \
+		"hotkeys:$config_home/$dwm_cfg/hotkeys.toml" \
+		"themes:$config_home/$dwm_cfg/themes.toml" \
+		"rules:$config_home/$dwm_cfg/window-rules.toml" \
 		"quickshell:$config_home/quickshell/shell.qml"; do
 		local name=${detail%%:*}
 		local path=${detail#*:}

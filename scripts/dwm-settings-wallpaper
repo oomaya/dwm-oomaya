@@ -13,15 +13,20 @@ state_home=${XDG_STATE_HOME:-}
 [[ $config_home == /* ]] || config_home=${HOME:?HOME is required for XDG_CONFIG_HOME fallback}/.config
 [[ $state_home == /* ]] || state_home=${HOME:?HOME is required for XDG_STATE_HOME fallback}/.local/state
 
-runtime_base=${XDG_RUNTIME_DIR:-/tmp/dwm-titus-$UID}
+dwm_cfg_name="dwm-oomaya"
+[[ -d $config_home/dwm-oomaya || ! -d $config_home/dwm-titus ]] || dwm_cfg_name="dwm-titus"
+dwm_state_name="dwm-oomaya"
+[[ -d $state_home/dwm-oomaya || ! -d $state_home/dwm-titus ]] || dwm_state_name="dwm-titus"
+
+runtime_base=${XDG_RUNTIME_DIR:-/tmp/dwm-oomaya-$UID}
 [[ $runtime_base == /* ]] || {
 	printf 'dwm-settings-wallpaper: XDG_RUNTIME_DIR must be an absolute path\n' >&2
 	exit 1
 }
 runtime_dir=$runtime_base/dwm-settings-wallpaper
-config_file=${DWM_WALLPAPER_CONFIG_FILE:-$config_home/dwm-titus/wallpaper.conf}
+config_file=${DWM_WALLPAPER_CONFIG_FILE:-$config_home/$dwm_cfg_name/wallpaper.conf}
 wallpaper_dir=${DWM_APPEARANCE_WALLPAPER_DIR:-${HOME:?HOME is required}/Pictures/backgrounds}
-preview_dir=$state_home/dwm-titus/appearance/wallpaper
+preview_dir=$state_home/$dwm_state_name/appearance/wallpaper
 preview_current=$preview_dir/preview.current
 preview_owner=$preview_dir/preview.owner
 mutation_failed=$preview_dir/mutation.failed
@@ -305,7 +310,7 @@ ensure_config_parent() {
 	[[ $config_file == /* && $parent != "$config_file" ]] || die 'wallpaper config path must be absolute'
 	existing_path_chain_is_safe "$config_file" || die "unsafe wallpaper config path: $config_file"
 	ensure_owned_directory "$config_home" config
-	ensure_owned_directory "$parent" 'dwm-titus config'
+	ensure_owned_directory "$parent" 'dwm config'
 	validate_config_file || die "unsafe wallpaper config file: $config_file"
 }
 
@@ -316,9 +321,9 @@ ensure_runtime_dir() {
 }
 
 ensure_preview_dir() {
-	local state_parent=$state_home/dwm-titus appearance_parent=$state_home/dwm-titus/appearance
+	local state_parent=$state_home/$dwm_state_name appearance_parent=$state_home/$dwm_state_name/appearance
 	ensure_owned_directory "$state_home" state
-	ensure_owned_directory "$state_parent" 'dwm-titus state'
+	ensure_owned_directory "$state_parent" 'dwm state'
 	ensure_owned_directory "$appearance_parent" 'appearance state'
 	ensure_owned_directory "$preview_dir" 'wallpaper preview'
 	chmod 700 -- "$state_parent" "$appearance_parent" "$preview_dir"
@@ -522,8 +527,8 @@ mutation_ready() {
 	directory_path_ready "$runtime_base" true || return 1
 	directory_path_ready "$runtime_dir" true || return 1
 	directory_path_ready "$state_home" true || return 1
-	directory_path_ready "$state_home/dwm-titus" true || return 1
-	directory_path_ready "$state_home/dwm-titus/appearance" true || return 1
+	directory_path_ready "$state_home/$dwm_state_name" true || return 1
+	directory_path_ready "$state_home/$dwm_state_name/appearance" true || return 1
 	directory_path_ready "$preview_dir" true || return 1
 	directory_path_ready "$config_home" true || return 1
 	directory_path_ready "$parent" true || return 1

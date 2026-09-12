@@ -85,7 +85,7 @@ print_package_profile() {
 	fi
 }
 
-echo "═══ dwm-titus Dependency Check ═══"
+echo "═══ dwm-oomaya Dependency Check ═══"
 echo ""
 echo "Distribution: $DISTRO_NAME"
 echo "Family: $DISTRO_FAMILY"
@@ -137,7 +137,7 @@ echo ""
 # ── Terminal emulators ──────────────────────────────────
 echo "Terminal Emulators (at least one required):"
 TERM_FOUND=0
-for term in dwmterm alacritty kitty st warp-terminal xterm; do
+for term in dwmterm alacritty kitty ghostty foot st warp-terminal xterm; do
 	if command -v "$term" &>/dev/null; then
 		printf "  ${GREEN}✓${NC} %s\n" "$term"
 		TERM_FOUND=1

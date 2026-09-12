@@ -40,10 +40,20 @@ fedora)
 		exit 1
 	}
 	;;
+arch)
+	command -v pacman &>/dev/null || {
+		err "Arch Linux was detected, but pacman was not found."
+		exit 1
+	}
+	;;
+debian)
+	command -v apt-get &>/dev/null || {
+		err "Debian was detected, but apt-get was not found."
+		exit 1
+	}
+	;;
 *)
-	err "Unsupported distribution: $DISTRO_NAME"
-	err "dwm-titus supports Fedora only."
-	exit 1
+	warn "Distribution $DISTRO_NAME is not officially tested, but continuing anyway."
 	;;
 esac
 
@@ -557,7 +567,7 @@ install_lightdm_config() {
 
 echo ""
 echo "╔═══════════════════════════════════════════╗"
-echo "║             dwm-titus Installer           ║"
+echo "║             dwm-oomaya Installer          ║"
 echo "╚═══════════════════════════════════════════╝"
 echo ""
 info "Distribution: $DISTRO_NAME"

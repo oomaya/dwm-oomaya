@@ -92,7 +92,7 @@ register_identity() {
 		}
 	' "/proc/$$/stat")
 	[[ $starttime =~ ^[0-9]+$ ]] || return 0
-	identity_dir=$XDG_RUNTIME_DIR/dwm-titus
+	identity_dir=$XDG_RUNTIME_DIR/dwm-oomaya
 	(umask 077 && mkdir -p -- "$identity_dir") || return 0
 	[[ -d $identity_dir && ! -L $identity_dir ]] || return 0
 	chmod 700 -- "$identity_dir" 2>/dev/null || return 0

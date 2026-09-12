@@ -9,13 +9,13 @@ OWNER ?= $(or $(SUDO_USER),$(USER))
 USER_HOME ?= $(shell getent passwd "${OWNER}" 2>/dev/null | cut -d: -f6)
 XDG_CONFIG_HOME ?= ${USER_HOME}/.config
 XDG_DATA_HOME ?= ${USER_HOME}/.local/share
-DATA_DIR  := ${XDG_DATA_HOME}/dwm-titus
+DATA_DIR  := ${XDG_DATA_HOME}/dwm-oomaya
 CFG_DIR   := ${XDG_CONFIG_HOME}
 DATADIR   ?= ${PREFIX}/share
 SYSTEMDUSERDIR ?= ${PREFIX}/lib/systemd/user
 CAPITAINE_DARK_THEME = Capitaine-Cursors
 CAPITAINE_LIGHT_THEME = Capitaine-Cursors-White
-CAPITAINE_LICENSE_DIR = ${DATADIR}/licenses/dwm-titus/capitaine-cursors
+CAPITAINE_LICENSE_DIR = ${DATADIR}/licenses/dwm-oomaya/capitaine-cursors
 run_managed_test = if [ -n "$${DWM_TEST_WORKSPACE:-}" ] && [ -n "$${DWM_TEST_RUNNER_TOKEN:-}" ] && [ "$${TMPDIR:-}" = "$${DWM_TEST_WORKSPACE}" ] && [ -f "$${DWM_TEST_WORKSPACE}/.runner" ] && [ ! -L "$${DWM_TEST_WORKSPACE}/.runner" ] && [ "$$(cat "$${DWM_TEST_WORKSPACE}/.runner" 2>/dev/null)" = "$${DWM_TEST_RUNNER_TOKEN}" ]; then $(1); else scripts/run-tests $(1); fi
 
 SRC = drw.c dwm.c util.c tomlparser.c
@@ -79,9 +79,9 @@ INSTALL_COMMANDS = \
 	scripts/xscreensaver-setup.sh
 INSTALL_COMMAND_NAMES = $(notdir ${INSTALL_COMMANDS})
 PRIVILEGED_HELPERS = scripts/dwm-settings-display-root
-PRIVILEGED_HELPER_DIR = ${PREFIX}/libexec/dwm-titus
+PRIVILEGED_HELPER_DIR = ${PREFIX}/libexec/dwm-oomaya
 
-RELEASE_NAME = dwm-titus-${VERSION}
+RELEASE_NAME = dwm-oomaya-${VERSION}
 RELEASE_ARCHIVE = release/${RELEASE_NAME}.tar.gz
 SOURCE_DATE_EPOCH ?= $(shell git log -1 --format=%ct 2>/dev/null || printf '0')
 
@@ -175,6 +175,7 @@ install-system:
 	@echo ""
 	@echo "==> Installing system files..."
 	install -Dm755 dwm ${DESTDIR}${PREFIX}/bin/dwm
+	ln -sf dwm ${DESTDIR}${PREFIX}/bin/dwm-oomaya
 	sed "s/VERSION/${VERSION}/g" dwm.1 | install -Dm644 /dev/stdin ${DESTDIR}${MANPREFIX}/man1/dwm.1
 	sed "s|@PREFIX@|${PREFIX}|g" dwm.desktop | \
 		install -Dm644 /dev/stdin ${DESTDIR}${XSESSIONSDIR}/dwm.desktop
@@ -241,10 +242,10 @@ install-user:
 	mkdir -p "${CFG_DIR}/quickshell"
 	cp -aL --no-preserve=ownership config/quickshell/. "${CFG_DIR}/quickshell"/
 	@echo "==> Seeding user config (skipping existing files)..."
-	mkdir -p ${CFG_DIR}/dwm-titus
-	test -f ${CFG_DIR}/dwm-titus/hotkeys.toml || install -Dm644 config/hotkeys.toml ${CFG_DIR}/dwm-titus/hotkeys.toml
-	test -f ${CFG_DIR}/dwm-titus/themes.toml  || install -Dm644 config/themes.toml  ${CFG_DIR}/dwm-titus/themes.toml
-	test -f ${CFG_DIR}/dwm-titus/window-rules.toml || install -Dm644 config/window-rules.toml ${CFG_DIR}/dwm-titus/window-rules.toml
+	mkdir -p ${CFG_DIR}/dwm-oomaya
+	test -f ${CFG_DIR}/dwm-oomaya/hotkeys.toml || install -Dm644 config/hotkeys.toml ${CFG_DIR}/dwm-oomaya/hotkeys.toml
+	test -f ${CFG_DIR}/dwm-oomaya/themes.toml  || install -Dm644 config/themes.toml  ${CFG_DIR}/dwm-oomaya/themes.toml
+	test -f ${CFG_DIR}/dwm-oomaya/window-rules.toml || install -Dm644 config/window-rules.toml ${CFG_DIR}/dwm-oomaya/window-rules.toml
 	@echo "==> Migrating legacy graphical-session startup..."
 	HOME="${USER_HOME}" XDG_CONFIG_HOME="${XDG_CONFIG_HOME}" scripts/migrate-graphical-session.sh
 	@echo "==> Installing Meslo font aliases..."
@@ -296,6 +297,7 @@ install-user:
 
 uninstall:
 	rm -f ${DESTDIR}${PREFIX}/bin/dwm \
+		${DESTDIR}${PREFIX}/bin/dwm-oomaya \
 		${DESTDIR}${MANPREFIX}/man1/dwm.1 \
 		${DESTDIR}${XSESSIONSDIR}/dwm.desktop
 	rm -rf \

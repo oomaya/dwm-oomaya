@@ -15,17 +15,24 @@ state_home=${XDG_STATE_HOME:-}
 [[ $state_home == /* ]] || state_home=${HOME:?HOME is required for XDG_STATE_HOME fallback}/.local/state
 export XDG_CONFIG_HOME=$config_home XDG_DATA_HOME=$data_home XDG_STATE_HOME=$state_home
 
-themes_file=${DWM_APPEARANCE_THEMES_FILE:-$config_home/dwm-titus/themes.toml}
-managed_themes_file=${DWM_APPEARANCE_MANAGED_THEMES_FILE:-$data_home/dwm-titus/config/themes.toml}
+dwm_cfg_name="dwm-oomaya"
+[[ -d $config_home/dwm-oomaya || ! -d $config_home/dwm-titus ]] || dwm_cfg_name="dwm-titus"
+dwm_data_name="dwm-oomaya"
+[[ -d $data_home/dwm-oomaya || ! -d $data_home/dwm-titus ]] || dwm_data_name="dwm-titus"
+dwm_state_name="dwm-oomaya"
+[[ -d $state_home/dwm-oomaya || ! -d $state_home/dwm-titus ]] || dwm_state_name="dwm-titus"
+
+themes_file=${DWM_APPEARANCE_THEMES_FILE:-$config_home/$dwm_cfg_name/themes.toml}
+managed_themes_file=${DWM_APPEARANCE_MANAGED_THEMES_FILE:-$data_home/$dwm_data_name/config/themes.toml}
 runtime_base=${XDG_RUNTIME_DIR:-}
 if [[ -z $runtime_base ]]; then
-	runtime_base=/tmp/dwm-titus-$UID
+	runtime_base=/tmp/dwm-oomaya-$UID
 elif [[ $runtime_base != /* ]]; then
 	printf 'dwm-settings-theme: XDG_RUNTIME_DIR must be an absolute path\n' >&2
 	exit 1
 fi
 runtime_dir=$runtime_base/dwm-settings-theme
-recovery_dir=$state_home/dwm-titus/appearance
+recovery_dir=$state_home/$dwm_state_name/appearance
 transaction_prefix=$recovery_dir/transaction
 preview_current=$recovery_dir/preview.current
 integration_suppress_file=$recovery_dir/integration-suppress
@@ -116,9 +123,9 @@ ensure_runtime_dir() {
 }
 
 ensure_recovery_dir() {
-	local parent=$state_home/dwm-titus
+	local parent=$state_home/$dwm_state_name
 	ensure_owned_directory "$state_home" state
-	ensure_owned_directory "$parent" 'dwm-titus state'
+	ensure_owned_directory "$parent" 'dwm state'
 	ensure_owned_directory "$recovery_dir" 'appearance recovery'
 	chmod 700 -- "$parent" "$recovery_dir"
 }
@@ -294,7 +301,7 @@ personalization_protocol_repairable() {
 }
 
 personalization_repair_ready() {
-	local file=$config_home/dwm-titus/personalization.conf snapshot target
+	local file=$config_home/$dwm_cfg_name/personalization.conf snapshot target
 	personalization_repair_mutation_ready || return 1
 	[[ -e $file || -L $file ]] || return 1
 	validate_integration_file "$file" || return 1
@@ -311,12 +318,12 @@ personalization_repair_ready() {
 }
 
 personalization_repair_mutation_ready() {
-	local file=$config_home/dwm-titus/personalization.conf snapshot target path
+	local file=$config_home/$dwm_cfg_name/personalization.conf snapshot target path
 	[[ -x $appearance_helper ]] || return 1
 	directory_path_ready "$runtime_base" true || return 1
 	directory_path_ready "$runtime_dir" true || return 1
 	directory_path_ready "$state_home" true || return 1
-	directory_path_ready "$state_home/dwm-titus" true || return 1
+	directory_path_ready "$state_home/$dwm_state_name" true || return 1
 	directory_path_ready "$recovery_dir" true || return 1
 	[[ -f $file && ! -L $file && -r $file ]] || return 1
 	validate_integration_file "$file" || return 1
@@ -341,7 +348,7 @@ personalization_repair_mutation_ready() {
 }
 
 validate_personalization_config() {
-	local file=$config_home/dwm-titus/personalization.conf line capability value first=true
+	local file=$config_home/$dwm_cfg_name/personalization.conf line capability value first=true
 	local -A seen=()
 	[[ ! -e $file && ! -L $file ]] && return 0
 	validate_integration_file "$file" || return 1
@@ -607,12 +614,12 @@ integration_path_list_for() {
 		"$gtk3_path"
 		"$gtk4_path"
 		"$gtk2_path"
-		"$integration_config_home/dwm-titus/cursor.Xresources"
-		"$integration_config_home/dwm-titus/theme-env.sh"
+		"$integration_config_home/$dwm_cfg_name/cursor.Xresources"
+		"$integration_config_home/$dwm_cfg_name/theme-env.sh"
 		"$integration_config_home/qt5ct/qt5ct.conf"
 		"$integration_config_home/qt6ct/qt6ct.conf"
-		"$integration_config_home/dwm-titus/personalization.conf"
-		"$integration_config_home/dwm-titus/xsettingsd.conf"
+		"$integration_config_home/$dwm_cfg_name/personalization.conf"
+		"$integration_config_home/$dwm_cfg_name/xsettingsd.conf"
 	)
 }
 
@@ -1321,7 +1328,7 @@ validate_atomic_mv_support() {
 		die 'required GNU mv options are unavailable'
 	fi
 	if [[ $scope == personalization ]]; then
-		path=$config_home/dwm-titus/personalization.conf
+		path=$config_home/$dwm_cfg_name/personalization.conf
 		parent=${path%/*}
 		[[ -d $parent && ! -L $parent ]] || die "unsafe personalization directory: $parent"
 		[[ $(stat -c %u -- "$parent") == "$UID" ]] ||
@@ -1495,7 +1502,7 @@ prepare_integration_outputs() (
 			mkdir -p -- "$stage_config_home/$index"
 		fi
 	done
-	stage_personalization_config "$stage_config_home/dwm-titus/personalization.conf" || return 1
+	stage_personalization_config "$stage_config_home/$dwm_cfg_name/personalization.conf" || return 1
 	if [[ $personalization_repair == 0 ]]; then
 		run_theme_apply_for transactional "$stage_home" "$stage_config_home" 1 || return 1
 	fi
@@ -2119,7 +2126,7 @@ reset_personalization() {
 }
 
 repair_personalization() {
-	local file=$config_home/dwm-titus/personalization.conf snapshot target
+	local file=$config_home/$dwm_cfg_name/personalization.conf snapshot target
 	local source_hash source_kind
 	acquire_lock
 	ensure_recovery_dir

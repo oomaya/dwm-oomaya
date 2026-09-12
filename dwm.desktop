@@ -1,6 +1,6 @@
 [Desktop Entry]
-Name=dwm-titus
-Comment=Dynamic window manager (dwm-titus)
+Name=dwm-oomaya
+Comment=Dynamic window manager (dwm-oomaya)
 Exec=@PREFIX@/bin/dwm
 Icon=dwm
 Type=Application

@@ -115,6 +115,77 @@ dwm_packages() {
 		dwm_packages "$family" optional
 		dwm_packages "$family" gaming
 		;;
+	arch:build)
+		printf '%s\n' \
+			gcc make pkgconf libx11 libxft libxinerama libxrender \
+			imlib2 libxcb xcb-util freetype2 fontconfig
+		;;
+	arch:x11)
+		printf '%s\n' \
+			xorg-server xorg-xinit xorg-xrandr xorg-xset xorg-xsetroot \
+			xorg-xinput xorg-setxkbmap xkbset
+		;;
+	arch:runtime-required)
+		printf '%s\n' \
+			dbus curl git procps-ng psmisc unzip util-linux xclip xdotool xprop xdg-utils
+		;;
+	arch:desktop)
+		printf '%s\n' \
+			picom feh dex inotify-tools jq \
+			alsa-utils brightnessctl libnotify pipewire pipewire-pulse wireplumber \
+			pavucontrol bluez blueman playerctl upower power-profiles-daemon flatpak \
+			xdg-desktop-portal-gtk
+		;;
+	arch:system-management)
+		printf '%s\n' packagekit python-gobject accountsservice cups system-config-printer
+		;;
+	arch:terminal)
+		printf '%s\n' alacritty kitty ghostty foot
+		;;
+	arch:terminal-primary)
+		printf '%s\n' alacritty
+		;;
+	arch:screenshot-optional)
+		printf '%s\n' maim
+		;;
+	arch:fonts)
+		printf '%s\n' noto-fonts noto-fonts-emoji noto-fonts-cjk
+		;;
+	arch:theme)
+		printf '%s\n' dconf
+		;;
+	arch:theme-gtk)
+		printf '%s\n' arc-gtk-theme
+		;;
+	arch:theme-optional)
+		printf '%s\n' qt6ct qt5ct
+		;;
+	arch:qml-development)
+		printf '%s\n' qt6-declarative
+		;;
+	arch:qml-validation)
+		printf '%s\n' quickshell qt6-declarative
+		;;
+	arch:required)
+		dwm_packages "$family" build
+		dwm_packages "$family" x11
+		dwm_packages "$family" runtime-required
+		;;
+	arch:recommended)
+		dwm_packages "$family" desktop
+		dwm_packages "$family" screenshot-optional
+		dwm_packages "$family" theme
+		dwm_packages "$family" theme-gtk
+		dwm_packages "$family" fonts
+		;;
+	arch:optional)
+		dwm_packages "$family" theme-optional
+		;;
+	arch:full)
+		dwm_packages "$family" required
+		dwm_packages "$family" recommended
+		dwm_packages "$family" optional
+		;;
 	*)
 		return 1
 		;;
