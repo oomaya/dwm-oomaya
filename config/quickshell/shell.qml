@@ -510,6 +510,14 @@ ShellRoot {
                 controlCenterModel.openKeybinds();
             }
         }
+
+        function count(): int {
+            return controlCenterModel.keybindRows ? controlCenterModel.keybindRows.length : 0;
+        }
+
+        function message(): string {
+            return controlCenterModel.message;
+        }
     }
 
     IpcHandler {

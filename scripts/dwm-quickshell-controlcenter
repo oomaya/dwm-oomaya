@@ -1584,7 +1584,9 @@ keybinds_palette() {
 		/^[[:space:]]*#[[:space:]]*──[[:space:]]*/ {
 			sub(/^[[:space:]]*#[[:space:]]*──[[:space:]]*/, "", $0)
 			sub(/[[:space:]]*─+[[:space:]]*$/, "", $0)
-			current_cat = $0
+			sub(/[[:space:]]*\(.*$/, "", $0)
+			gsub(/^[[:space:]]+|[[:space:]]+$/, "", $0)
+			if ($0 != "") current_cat = $0
 			next
 		}
 		/^[[:space:]]*\{/ && /desc=/ {
