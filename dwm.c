@@ -999,8 +999,22 @@ clientmessage(XEvent *e)
 			restack(c->mon);
 		}
 	} else if (cme->message_type == netatom[NetActiveWindow]) {
-		if (c != selmon->sel && !c->isurgent)
-			seturgent(c, 1);
+		if (c != selmon->sel) {
+			unfocus(selmon->sel, 0);
+			selmon = c->mon;
+			if (c->ishidden)
+				show(c);
+			if (!(c->tags & selmon->tagset[selmon->seltags])) {
+				const Arg a = {.ui = c->tags};
+				view(&a);
+			}
+			focus(c);
+			restack(selmon);
+			if (cursorwarp && selmon->sel)
+				XWarpPointer(dpy, None, selmon->sel->win, 0, 0, 0, 0, selmon->sel->w / 2, selmon->sel->h / 2);
+			updatecurrentdesktop();
+			updatelayoutproperty();
+		}
 	} else if (cme->message_type == netatom[NetWMDesktop]) {
 		/* Handle external desktop/workspace change requests */
 		long desktop = cme->data.l[0];
