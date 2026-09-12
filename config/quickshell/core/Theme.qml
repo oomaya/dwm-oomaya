@@ -10,25 +10,25 @@ Singleton {
     property bool reducedMotion: false
 
     readonly property string transparent: "#00000000"
-    property string bg: "#2E3440"
-    property string barBackground: "#434C5E"
-    property string surface: "#434C5E"
-    property string surfaceHover: "#4C566A"
-    property string surfaceActive: "#434C5E"
-    property string border: "#3B4252"
-    property string borderStrong: "#81A1C1"
-    property string text: "#D8DEE9"
-    property string textStrong: "#ECEFF4"
-    property string paletteTextMuted: "#D8DEE9"
+    property string bg: "#1A1B26"
+    property string barBackground: "#24283B"
+    property string surface: "#24283B"
+    property string surfaceHover: "#414868"
+    property string surfaceActive: "#24283B"
+    property string border: "#24283B"
+    property string borderStrong: "#7AA2F7"
+    property string text: "#A9B1D6"
+    property string textStrong: "#C0CAF5"
+    property string paletteTextMuted: "#A9B1D6"
     readonly property string textMuted: highContrast ? text : paletteTextMuted
-    property string placeholder: "#4C566A"
-    property string accent: "#81A1C1"
-    property string accentSecondary: "#81A1C1"
-    property string accentText: "#2E3440"
-    property string success: "#A3BE8C"
-    property string warning: "#EBCB8B"
-    property string danger: "#BF616A"
-    property string dangerSurface: "#3B4252"
+    property string placeholder: "#414868"
+    property string accent: "#7AA2F7"
+    property string accentSecondary: "#BB9AF7"
+    property string accentText: "#1A1B26"
+    property string success: "#9ECE6A"
+    property string warning: "#E0AF68"
+    property string danger: "#F7768E"
+    property string dangerSurface: "#24283B"
     readonly property string shadow: transparent
 
     // Semantic shell roles. Keep these derived from the existing dwm palette
@@ -123,10 +123,10 @@ Singleton {
     readonly property int controlPaddingX: 9
     readonly property int controlBorderWidth: highContrast ? 2 : 1
     readonly property int controlFocusBorderWidth: highContrast ? 3 : 2
-    readonly property int controlRadius: 6
+    readonly property int controlRadius: 0
     readonly property int menuHeaderHeight: 26
     readonly property int popupPadding: spacingHuge
-    readonly property int popupRadius: controlRadius
+    readonly property int popupRadius: 0
     readonly property int panelHeroIconSize: 32
     readonly property real panelMetaLetterSpacing: 1.2
     readonly property int panelSliderHeight: 32
@@ -150,10 +150,10 @@ Singleton {
     readonly property int compactSpacing: spacingXxs
     readonly property int tightSpacing: spacingXs
     readonly property int sectionSpacing: spacingXxxl
-    readonly property int radius: controlRadius
-    readonly property int smallRadius: controlRadius
+    readonly property int radius: 0
+    readonly property int smallRadius: 0
     readonly property int barRadius: 0
-    readonly property int pillRadius: 6
+    readonly property int pillRadius: 0
     readonly property int pillHeight: 26
     readonly property int pillHorizontalPadding: 9
     readonly property int compactWidgetSize: 22
@@ -168,11 +168,11 @@ Singleton {
     readonly property int compactButtonHeight: 40
     readonly property int confirmButtonHeight: 48
     readonly property int notificationAccentWidth: 4
-    readonly property int notificationAccentRadius: 2
+    readonly property int notificationAccentRadius: 0
     readonly property int largeSurfaceMargin: 22
     readonly property int largeSurfaceNavWidth: 248
     readonly property int largeSurfaceSearchHeight: 44
-    readonly property int largeSurfaceCardRadius: 8
+    readonly property int largeSurfaceCardRadius: 0
     readonly property int titleFontSize: fontTitleSize
     readonly property int bodyFontSize: fontSubtitleSize
     readonly property int panelFontSize: fontBodySize

@@ -28,7 +28,7 @@
 # ══════════════════════════════════════════════════════════════════════════════
 
 [active]
-theme = "nord"   # ← change only this line to switch themes
+theme = "tokyonight"   # ← default Omarchy-oomaya sovereign theme
 
 [appearance]
 borderpx = 1   # border size in pixels (0 = none, 1-3 = recommended)
