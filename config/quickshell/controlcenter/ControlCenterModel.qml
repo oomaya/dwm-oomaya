@@ -211,6 +211,20 @@ Scope {
         themeSetProcess.running = true;
     }
 
+    function executeKeybind(row) {
+        root.closeUtility();
+        if (!row) return;
+        keybindExecProcess.command = Commands.keybindExecCommand(row.func || "", row.action || "", row.xdotool_keys || "");
+        keybindExecProcess.running = true;
+    }
+
+    Process {
+        id: keybindExecProcess
+
+        command: ["sh", "-c", "exit 0"]
+        running: false
+    }
+
     Process {
         id: infoProcess
 
@@ -242,12 +256,12 @@ Scope {
     Process {
         id: keybindsProcess
 
-        command: Commands.controlCenterHelperCommand("keybinds")
+        command: Commands.controlCenterHelperCommand("keybinds-palette")
         running: false
 
         stdout: StdioCollector {
             onStreamFinished: {
-                root.keybindRows = root.parseRows(this.text, ["keys", "description"]);
+                root.keybindRows = root.parseRows(this.text, ["keys", "description", "category", "func", "action", "xdotool_keys"]);
                 root.message = root.keybindRows.length + " keybinds";
             }
         }

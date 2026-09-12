@@ -32,6 +32,7 @@ INSTALL_COMMANDS = \
 	scripts/dwm-display-profile \
 	scripts/dwm-display-setup \
 	scripts/dwm-keybinds \
+	scripts/dwm-keybind-exec \
 	scripts/dwm-lock \
 	scripts/dwm-lock-watch \
 	scripts/dwm-panel-settings \

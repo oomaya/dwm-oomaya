@@ -1,0 +1,78 @@
+#!/bin/sh
+set -eu
+
+# Usage:
+#   dwm-keybind-exec "<func>" "<action>" "<xdotool_keys>"
+#   or with full TSV line:
+#   dwm-keybind-exec "<label>\t<desc>\t<cat>\t<func>\t<action>\t<xdotool_keys>"
+
+if [ "$#" -eq 0 ]; then
+	printf 'usage: %s <func> <action> <xdotool_keys>\n' "$0" >&2
+	exit 1
+fi
+
+func=""
+action=""
+xdotool_keys=""
+
+if [ "$#" -eq 1 ]; then
+	# Single TSV line input
+	line=$1
+	# Split by tab
+	func=$(printf '%s\n' "$line" | cut -f4)
+	action=$(printf '%s\n' "$line" | cut -f5)
+	xdotool_keys=$(printf '%s\n' "$line" | cut -f6)
+else
+	func=$1
+	action=${2:-}
+	xdotool_keys=${3:-}
+fi
+
+dispatch_spawn() {
+	act=$1
+	case "$act" in
+		'exec:["$terminal"]'*)
+			if command -v dwm-terminal >/dev/null 2>&1; then
+				dwm-terminal >/dev/null 2>&1 &
+			elif command -v ghostty >/dev/null 2>&1; then
+				ghostty >/dev/null 2>&1 &
+			elif command -v kitty >/dev/null 2>&1; then
+				kitty >/dev/null 2>&1 &
+			else
+				xterm >/dev/null 2>&1 &
+			fi
+			;;
+		exec:\[*\])
+			# Parse JSON array: ["cmd", "arg1", ...]
+			parsed_cmd=$(printf '%s\n' "$act" | sed 's/^exec:\[//; s/\]$//; s/,\s*/ /g; s/"//g')
+			# shellcheck disable=SC2086
+			eval "$parsed_cmd" >/dev/null 2>&1 &
+			;;
+		*)
+			if [ -n "$act" ]; then
+				eval "$act" >/dev/null 2>&1 &
+			fi
+			;;
+	esac
+}
+
+dispatch_xdotool() {
+	keys=$1
+	if [ -z "$keys" ]; then
+		return 0
+	fi
+	if command -v xdotool >/dev/null 2>&1; then
+		# Small delay to let the modal window close and restore focus
+		(sleep 0.05 && xdotool key --clearmodifiers "$keys") >/dev/null 2>&1 &
+	else
+		printf 'dwm-keybind-exec: xdotool is required to simulate keypress for %s\n' "$keys" >&2
+	fi
+}
+
+if [ "$func" = "spawn" ] && [ -n "$action" ]; then
+	dispatch_spawn "$action"
+elif [ -n "$xdotool_keys" ]; then
+	dispatch_xdotool "$xdotool_keys"
+elif [ -n "$action" ]; then
+	dispatch_spawn "$action"
+fi

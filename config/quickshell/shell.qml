@@ -493,6 +493,26 @@ ShellRoot {
     }
 
     IpcHandler {
+        target: "keybinds"
+
+        function close(): void {
+            controlCenterModel.closeUtility();
+        }
+
+        function open(): void {
+            controlCenterModel.openKeybinds();
+        }
+
+        function toggle(): void {
+            if (controlCenterModel.utilityVisible && controlCenterModel.utilityPage === "keybinds") {
+                controlCenterModel.closeUtility();
+            } else {
+                controlCenterModel.openKeybinds();
+            }
+        }
+    }
+
+    IpcHandler {
         target: "systemhealth"
 
         function close(): void {
@@ -1179,6 +1199,10 @@ ShellRoot {
     }
 
     UtilityDetailWindow {
+        controlCenterModel: controlCenterModel
+    }
+
+    KeybindsPaletteWindow {
         controlCenterModel: controlCenterModel
     }
 

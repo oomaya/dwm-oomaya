@@ -10,22 +10,20 @@ FloatingWindow {
 
     required property var controlCenterModel
 
-    visible: controlCenterModel.utilityVisible
+    visible: controlCenterModel.utilityVisible && controlCenterModel.utilityPage === "info"
     screen: controlCenterModel.utilityScreen
     implicitWidth: 680
     implicitHeight: 500
     color: Theme.transparent
     // The prefix keeps this window compatible with preserved user rules that
     // already float the dwm control center by title substring.
-    title: "dwm control center utility"
+    title: "dwm control center utility - system info"
 
     function titleForPage() {
-        if (controlCenterModel.utilityPage === "keybinds") return "Keybinds";
         return "System Info";
     }
 
     function rowsForPage() {
-        if (controlCenterModel.utilityPage === "keybinds") return controlCenterModel.keybindRows;
         return controlCenterModel.infoRows;
     }
 

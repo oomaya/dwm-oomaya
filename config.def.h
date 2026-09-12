@@ -98,7 +98,7 @@ static const Layout layouts[] = {
 
 /* key definitions */
 #define MODKEY Mod4Mask
-#define PREFER_HEADER_KEYS 1
+#define PREFER_HEADER_KEYS 0
 #define STATUSBAR "dwmblocks"
 
 #define TAGKEYS(KEY,TAG) \

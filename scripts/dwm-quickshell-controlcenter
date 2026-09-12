@@ -8,15 +8,21 @@ repo_dir=$(
 
 config_home=${XDG_CONFIG_HOME:-${HOME:-}/.config}
 data_home=${XDG_DATA_HOME:-${HOME:-}/.local/share}
-dwm_config_dir=$config_home/dwm-titus
-managed_config_dir=$data_home/dwm-titus/config
+dwm_config_dir=$config_home/dwm-oomaya
+[ -d "$dwm_config_dir" ] || dwm_config_dir=$config_home/dwm-titus
+managed_config_dir=$data_home/dwm-oomaya/config
+[ -d "$managed_config_dir" ] || managed_config_dir=$data_home/dwm-titus/config
 
 config_file() {
 	name=$1
 	if [ -f "$dwm_config_dir/$name" ]; then
 		printf '%s\n' "$dwm_config_dir/$name"
+	elif [ -f "$config_home/dwm-titus/$name" ]; then
+		printf '%s\n' "$config_home/dwm-titus/$name"
 	elif [ -f "$managed_config_dir/$name" ]; then
 		printf '%s\n' "$managed_config_dir/$name"
+	elif [ -f "$data_home/dwm-titus/config/$name" ]; then
+		printf '%s\n' "$data_home/dwm-titus/config/$name"
 	else
 		printf '%s\n' "$repo_dir/config/$name"
 	fi
@@ -1549,6 +1555,81 @@ keybinds() {
 	' "$(config_file hotkeys.toml)"
 }
 
+keybinds_palette() {
+	awk '
+		function value(line, key, pattern, result) {
+			pattern = key "=\"(\\\\.|[^\"])*\""
+			if (match(line, pattern)) {
+				result = substr(line, RSTART + length(key) + 2, RLENGTH - length(key) - 3)
+				gsub(/\\"/, "\"", result)
+				return result
+			}
+			return ""
+		}
+		function num_or_str(line, key, pattern, result) {
+			pattern = key "=[-0-9.]+"
+			if (match(line, pattern)) {
+				result = substr(line, RSTART + length(key) + 1, RLENGTH - length(key) - 1)
+				return result
+			}
+			return ""
+		}
+		function exec_val(line, pattern, result) {
+			if (match(line, /exec=\[[^\]]*\]/)) {
+				result = substr(line, RSTART + 5, RLENGTH - 5)
+				return result
+			}
+			return ""
+		}
+		/^[[:space:]]*#[[:space:]]*──[[:space:]]*/ {
+			sub(/^[[:space:]]*#[[:space:]]*──[[:space:]]*/, "", $0)
+			sub(/[[:space:]]*─+[[:space:]]*$/, "", $0)
+			current_cat = $0
+			next
+		}
+		/^[[:space:]]*\{/ && /desc=/ {
+			mod = value($0, "mod")
+			key = value($0, "key")
+			desc = value($0, "desc")
+			fn = value($0, "func")
+			cmd = value($0, "cmd")
+			exec_v = exec_val($0)
+			layout_idx = num_or_str($0, "layout_idx")
+			ival = num_or_str($0, "i")
+			fval = num_or_str($0, "f")
+
+			if (key == "") next
+
+			label = mod == "" ? key : mod "+" key
+			gsub(/SUPER/, "Super", label)
+			gsub(/SHIFT/, "Shift", label)
+			gsub(/CTRL/, "Ctrl", label)
+			gsub(/ALT/, "Alt", label)
+			gsub(/\+/, " + ", label)
+
+			xmod = mod
+			gsub(/SUPER/, "Super", xmod)
+			gsub(/SHIFT/, "Shift", xmod)
+			gsub(/CTRL/, "Control", xmod)
+			gsub(/ALT/, "Alt", xmod)
+			gsub(/[[:space:]]+/, "+", xmod)
+
+			xkey = key
+			xdotool_keys = xmod == "" ? xkey : xmod "+" xkey
+
+			action = ""
+			if (cmd != "") action = cmd
+			else if (exec_v != "") action = "exec:" exec_v
+			else if (layout_idx != "") action = "layout:" layout_idx
+			else if (ival != "") action = "i:" ival
+			else if (fval != "") action = "f:" fval
+
+			cat = current_cat != "" ? current_cat : "General"
+			printf "%s\t%s\t%s\t%s\t%s\t%s\n", label, desc, cat, fn, action, xdotool_keys
+		}
+	' "$(config_file hotkeys.toml)"
+}
+
 restart_picom() {
 	pkill -x picom 2>/dev/null || true
 	if command -v picom >/dev/null 2>&1; then
@@ -1712,6 +1793,7 @@ theme-set)
 	theme_set "$2"
 	;;
 keybinds) keybinds ;;
+keybinds-palette) keybinds_palette ;;
 power-status) power_status ;;
 power-snapshot) power_snapshot ;;
 power-lock-snapshot)
