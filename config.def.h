@@ -66,6 +66,7 @@ static const Rule rules[] = {
 	{ "Firefox",  NULL,       NULL,       1 << 8,       0,           0,           0,         -1,         -1 },
 	{ "ghostty",  NULL,       NULL,       0,            0,           0,           1,          0,         -1 },
 	{ "kitty",    NULL,       NULL,       0,            0,           0,           1,          0,         -1 },
+	{ "dwm-scratchpad", NULL, NULL,       0,            1,           1,           1,          0,         -1 },
 };
 
 /* layout(s) */
@@ -134,6 +135,11 @@ static const Key keys[] = {
     // application launchers & terminals (Ghostty/Kitty support)
     { MODKEY,                           XK_c,       spawn,          SHCMD("rofi -show drun") },
     { MODKEY|ShiftMask,                 XK_Return,  spawn,          SHCMD("ghostty || kitty") },
+    { MODKEY,                           XK_a,       spawn,          SHCMD("alacritty") },
+    { MODKEY,                           XK_s,       spawn,          SHCMD("dwm-scratchpad") },
+    { MODKEY,                           XK_slash,   spawn,          SHCMD("quickshell ipc --path \"${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/shell.qml\" call controlcenter openKeybinds") },
+    { Mod1Mask,                         XK_p,       spawn,          SHCMD("dmenu_run -fn 'JetBrainsMonoNerdFont-16' -h 30") },
+    { Mod1Mask,                         XK_x,       spawn,          SHCMD("rofi -show power-menu -modi power-menu:rofi-power-menu") },
 
     // toggle stuff
     { MODKEY,                           XK_b,       togglebar,      {0} },
@@ -197,6 +203,8 @@ static const Key keys[] = {
     { MODKEY,                           XK_space,   setlayout,      {0} },
     { MODKEY|ControlMask,               XK_comma,   cyclelayout,    {.i = -1 } },
     { MODKEY|ControlMask,               XK_period,  cyclelayout,    {.i = +1 } },
+    { MODKEY,                           XK_bracketleft, cyclelayout, {.i = -1 } },
+    { MODKEY,                           XK_bracketright, cyclelayout, {.i = +1 } },
 
     // tag & monitor view
     { MODKEY,                           XK_0,       view,           {.ui = ~0 } },

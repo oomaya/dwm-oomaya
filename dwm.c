@@ -87,7 +87,7 @@ enum { NetSupported, NetWMName, NetWMPid, NetWMState, NetWMCheck,
        NetWMWindowTypeMenu, NetWMWindowTypePopupMenu, NetWMWindowTypeDropdownMenu,
        NetWMWindowTypeCombo, NetWMWindowTypeDnd,
        NetClientList, NetDesktopNames, NetDesktopViewport, NetNumberOfDesktops, NetCurrentDesktop,
-       NetWMDesktop, NetDwmMonitorDesktops, NetDwmSelectedMonitor, NetLast }; /* EWMH atoms */
+       NetWMDesktop, NetDwmMonitorDesktops, NetDwmSelectedMonitor, NetDwmCurrentLayout, NetLast }; /* EWMH atoms */
 enum { WMProtocols, WMDelete, WMState, WMTakeFocus, WMLast }; /* default atoms */
 enum { ClkTagBar, ClkLtSymbol, ClkStatusText, ClkWinTitle,
        ClkClientWin, ClkRootWin, ClkTabBar, ClkTabPrev, ClkTabNext, ClkTabClose, ClkLast }; /* clicks */
@@ -306,6 +306,7 @@ static void updatebars(void);
 static void updateclientlist(void);
 static void updatefullscreenmonitors(void);
 static int updategeom(void);
+static void updatelayoutproperty(void);
 static void updateoverridewindow(Window win);
 static void updatenumlockmask(void);
 static void updatesizehints(Client *c);
@@ -748,6 +749,8 @@ void
 arrangemon(Monitor *m)
 {
 	copystr(m->ltsymbol, sizeof m->ltsymbol, m->lt[m->sellt]->symbol);
+	if (m == selmon)
+		updatelayoutproperty();
 	if (m->lt[m->sellt]->arrange)
 		m->lt[m->sellt]->arrange(m);
 }
@@ -1478,6 +1481,7 @@ focusmon(const Arg *arg)
 	if (cursorwarp && selmon->sel)
 		XWarpPointer(dpy, None, selmon->sel->win, 0, 0, 0, 0, selmon->sel->w / 2, selmon->sel->h / 2);
 	updatecurrentdesktop();
+	updatelayoutproperty();
 }
 
 void
@@ -3661,8 +3665,12 @@ build_arg(const char *func_name, const TomlDoc *doc,
 		return build_spawn_arg(doc, section, tidx);
 	if (strcmp(func_name, "setlayout") == 0) {
 		v = toml_table_get(doc, section, tidx, "layout_idx");
-		int idx = (v && v->type == TOML_INT) ? (int)v->i : 0;
-		if (idx < 0 || idx >= (int)LENGTH(layouts)) idx = 0;
+		if (!v || (v->type == TOML_INT && v->i < 0)) {
+			arg.v = NULL;
+			return arg;
+		}
+		int idx = (int)v->i;
+		if (idx >= (int)LENGTH(layouts)) idx = 0;
 		arg.v = &layouts[idx];
 		return arg;
 	}
@@ -4254,6 +4262,7 @@ setup(void)
 	netatom[NetWMDesktop] = XInternAtom(dpy, "_NET_WM_DESKTOP", False);
 	netatom[NetDwmMonitorDesktops] = XInternAtom(dpy, "_DWM_MONITOR_DESKTOPS", False);
 	netatom[NetDwmSelectedMonitor] = XInternAtom(dpy, "_DWM_SELECTED_MONITOR", False);
+	netatom[NetDwmCurrentLayout] = XInternAtom(dpy, "_DWM_CURRENT_LAYOUT", False);
 	dwmfullscreenmonitorsatom = XInternAtom(dpy, "_DWM_FULLSCREEN_MONITORS", False);
 	dwmtagupdateatom = XInternAtom(dpy, "DWM_TAG_UPDATE", False);
 	/* init cursors */
@@ -4306,6 +4315,7 @@ setup(void)
 	runtime_config_reload();
 	grabkeys();
 	focus(NULL);
+	updatelayoutproperty();
 }
 
 void
@@ -5354,6 +5364,16 @@ updateselectedmonitor(void)
 	ewmh_replace_root_cardinal(netatom[NetDwmSelectedMonitor], data, 1);
 	selectedmonitorcache = logicalindex;
 	selectedmonitorcachevalid = 1;
+}
+
+void
+updatelayoutproperty(void)
+{
+	if (!selmon || !selmon->ltsymbol[0])
+		return;
+	XChangeProperty(dpy, root, netatom[NetDwmCurrentLayout],
+		XInternAtom(dpy, "UTF8_STRING", False), 8, PropModeReplace,
+		(unsigned char *)selmon->ltsymbol, strlen(selmon->ltsymbol));
 }
 
 #if SHOWWINICON

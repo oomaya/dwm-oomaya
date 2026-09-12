@@ -110,13 +110,13 @@ Singleton {
     readonly property int spacingXxxl: 14
     readonly property int spacingHuge: 18
 
-    readonly property int fontCaptionSize: Math.max(8, Math.round(10 * fontScale))
-    readonly property int fontBodySmallSize: Math.max(10, Math.round(12 * fontScale))
-    readonly property int fontBodySize: Math.max(10, Math.round(13 * fontScale))
-    readonly property int fontSubtitleSize: Math.max(11, Math.round(14 * fontScale))
-    readonly property int fontTitleSize: Math.max(14, Math.round(18 * fontScale))
-    readonly property int largeSurfaceTitleSize: Math.max(18, Math.round(24 * fontScale))
-    readonly property int panelIconFontSize: 13
+    readonly property int fontCaptionSize: Math.max(10, Math.round(11 * fontScale))
+    readonly property int fontBodySmallSize: Math.max(14, Math.round(14 * fontScale))
+    readonly property int fontBodySize: Math.max(14, Math.round(14 * fontScale))
+    readonly property int fontSubtitleSize: Math.max(14, Math.round(15 * fontScale))
+    readonly property int fontTitleSize: Math.max(16, Math.round(18 * fontScale))
+    readonly property int largeSurfaceTitleSize: Math.max(20, Math.round(24 * fontScale))
+    readonly property int panelIconFontSize: 15
 
     readonly property int controlHeight: 30
     readonly property int controlRowHeight: 32
@@ -137,7 +137,7 @@ Singleton {
     readonly property int panelToggleKnobSize: 14
     readonly property int panelToggleInset: 3
 
-    readonly property int panelHeight: 30
+    readonly property int panelHeight: 32
     readonly property int panelMargin: 0
     readonly property int panelEdgeMargin: 0
     readonly property int panelGap: spacingSm
@@ -154,9 +154,9 @@ Singleton {
     readonly property int smallRadius: 0
     readonly property int barRadius: 0
     readonly property int pillRadius: 0
-    readonly property int pillHeight: 26
+    readonly property int pillHeight: 28
     readonly property int pillHorizontalPadding: 9
-    readonly property int compactWidgetSize: 22
+    readonly property int compactWidgetSize: 24
     readonly property int compactWidgetHorizontalPadding: 6
     readonly property real networkWidgetHorizontalPadding: 4.5
     readonly property int pillBorderWidth: controlBorderWidth
@@ -164,7 +164,7 @@ Singleton {
     readonly property int animationNormal: reducedMotion ? 0 : 180
     readonly property int buttonHeight: controlHeight
     readonly property int chipHeight: 28
-    readonly property int workspaceButtonSize: 22
+    readonly property int workspaceButtonSize: 24
     readonly property int compactButtonHeight: 40
     readonly property int confirmButtonHeight: 48
     readonly property int notificationAccentWidth: 4

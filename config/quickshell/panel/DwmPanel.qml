@@ -120,6 +120,38 @@ PanelWindow {
                     }
 
                     PanelPill {
+                        id: layoutPill
+                        Layout.preferredWidth: layoutLabel.implicitWidth + Theme.pillHorizontalPadding * 2
+                        Layout.preferredHeight: Theme.pillHeight
+                        outlined: true
+                        hovered: layoutMouse.containsMouse
+
+                        UiText {
+                            id: layoutLabel
+                            anchors.centerIn: parent
+                            text: root.state.layoutSymbol
+                            color: layoutMouse.containsMouse ? Theme.accent : Theme.textStrong
+                            font.bold: true
+                            font.pixelSize: Theme.panelFontSize
+                        }
+
+                        MouseArea {
+                            id: layoutMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            acceptedButtons: Qt.LeftButton | Qt.RightButton
+                            onClicked: (mouse) => {
+                                if (mouse.button === Qt.LeftButton) {
+                                    root.state.cycleLayout(1);
+                                } else {
+                                    root.state.cycleLayout(-1);
+                                }
+                            }
+                        }
+                    }
+
+                    PanelPill {
                         Layout.preferredWidth: Math.min(activeTitle.implicitWidth + Theme.pillHorizontalPadding * 2, 260)
                         Layout.preferredHeight: Theme.pillHeight
                         outlined: true

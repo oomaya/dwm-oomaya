@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+# dwm-scratchpad - Centered floating toggle scratchpad for dwm-oomaya
+
+SCRATCH_CLASS="dwm-scratchpad"
+
+WIN_ID=$(xdotool search --class "$SCRATCH_CLASS" 2>/dev/null | tail -n 1)
+
+if [ -n "$WIN_ID" ]; then
+    VISIBLE_ID=$(xdotool search --onlyvisible --class "$SCRATCH_CLASS" 2>/dev/null | grep "^${WIN_ID}$")
+    if [ -n "$VISIBLE_ID" ]; then
+        xdotool windowunmap "$WIN_ID"
+    else
+        xdotool windowmap "$WIN_ID"
+        xdotool windowactivate "$WIN_ID"
+    fi
+else
+    if command -v alacritty >/dev/null 2>&1; then
+        alacritty --class "$SCRATCH_CLASS,$SCRATCH_CLASS" \
+            -o window.dimensions.columns=120 \
+            -o window.dimensions.lines=32 &
+    elif command -v kitty >/dev/null 2>&1; then
+        kitty --class "$SCRATCH_CLASS" \
+            -o initial_window_width=120c \
+            -o initial_window_height=32c &
+    elif command -v ghostty >/dev/null 2>&1; then
+        ghostty --class="$SCRATCH_CLASS" &
+    else
+        xterm -class "$SCRATCH_CLASS" &
+    fi
+fi

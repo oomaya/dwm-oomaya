@@ -13,6 +13,7 @@ Scope {
     property var runningApps: []
     property string activeWindowTitle: "Desktop"
     property string activeWindowClass: "application-x-executable"
+    property string layoutSymbol: "[]="
     property string statusText: ""
     property var statusSegments: []
     property bool batteryAvailable: false
@@ -71,6 +72,8 @@ Scope {
                 }) : [];
             } else if (key === "title") {
                 root.activeWindowTitle = value.length > 0 ? value : "Desktop";
+            } else if (key === "layout") {
+                root.layoutSymbol = value.length > 0 ? value.replace(/"/g, "") : "[]=";
             } else if (key === "class") {
                 root.activeWindowClass = value.length > 0 ? value : "application-x-executable";
             } else if (key === "status") {
@@ -239,6 +242,13 @@ Scope {
         focusWindowProcess.running = true;
     }
 
+    function cycleLayout(direction) {
+        cycleLayoutProcess.command = direction > 0
+            ? ["xdotool", "key", "Super+bracketright"]
+            : ["xdotool", "key", "Super+bracketleft"];
+        cycleLayoutProcess.running = true;
+    }
+
     Process {
         command: ["dwm-quickshell-state", "watch"]
         running: true
@@ -262,6 +272,13 @@ Scope {
         id: focusWindowProcess
 
         command: ["dwm-quickshell-state", "focus", "0"]
+        running: false
+    }
+
+    Process {
+        id: cycleLayoutProcess
+
+        command: ["xdotool", "key", "Super+bracketright"]
         running: false
     }
 }
