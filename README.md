@@ -102,8 +102,8 @@ Personal settings live in standard XDG user paths:
         <img alt="Dmenu Power" src="./assets/dmenu_power.png" />
       </td>
       <td align="center" width="50%">
-        <strong>Suckless Tokyo Night Dmenu (<code>dmenu-oomaya</code>)</strong><br/><br/>
-        <img alt="Dmenu Centered" src="./assets/dwm-oomaya.png" width="220" />
+        <strong>Master Action Hub (<code>dmenu-hub</code>)</strong><br/><br/>
+        <img alt="Dmenu Hub" src="./assets/dmenu_hub.png" />
       </td>
     </tr>
   </table>
@@ -115,7 +115,7 @@ Personal settings live in standard XDG user paths:
 
 DWM-Oomaya pairs with [`dmenu-oomaya`](https://github.com/tonybanters/dmenu), a centered, border-aware, fuzzy-matching suckless dmenu engine with a dedicated POSIX scripting suite:
 
-- **`dmenu-desktop`**: Sub-millisecond XDG `.desktop` launcher with category icons (``, ``, ``, ``, ``), elegant vertical dividers `│`, and terminal auto-wrapping.
+- **`dmenu-desktop`**: Sub-millisecond XDG `.desktop` launcher with category tagging (🌐 Web, 💻 Terminal, 📝 Code, 📁 Files, ⚙️ Settings, 📊 Monitor), elegant vertical dividers `│`, and terminal auto-wrapping.
 - **`dmenu-windows`**: Interactive workspace tag window switcher querying `wmctrl -l` and switching tags instantly.
 - **`dmenu-power`**: Centered session management (Lock, Logout, Suspend, Reboot, Shutdown) with confirmation modals.
 - **`dmenu-run`**: Fast `$PATH` command execution with distance-scored fuzzy search.
