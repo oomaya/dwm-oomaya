@@ -17,6 +17,7 @@
     <a href="#keyboard-mastery">Keybindings</a> •
     <a href="#centered-dmenu-ecosystem">Dmenu Suite</a> •
     <a href="#installation--quickstart">Installation</a> •
+    <a href="./docs/ARCHITECTURE.md">Architecture</a> •
     <a href="#architectural-lineage">Lineage</a>
   </p>
 </div>
@@ -227,6 +228,14 @@ Ensure `~/.local/bin` is in your `$PATH` (e.g. in `~/.bashrc` or `~/.profile`):
 ```bash
 export PATH="$HOME/.local/bin:$PATH"
 ```
+
+---
+
+## Systems Architecture & Deep Dive
+
+For an exhaustive, step-by-step technical breakdown of the C patches, vanitygaps geometry mathematics, X11 root window atom IPC (`_DWM_CURRENT_LAYOUT`), EWMH `focusonnetactive` surgery, sub-millisecond POSIX `awk` application indexing, and kernel process-replacement mechanics (`execvp` and `ETXTBSY`), consult our complete engineering deliverable:
+
+👉 **[DWM-OOMAYA Systems Engineering & Architecture Reference](./docs/ARCHITECTURE.md)**
 
 ---
 
