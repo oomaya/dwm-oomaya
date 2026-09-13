@@ -78,4 +78,36 @@ All loose ends and operational quirks identified in `dwm-oomaya` have been diagn
 
 *The native tab bar running live across the active monitor, rendering the selected `agy` terminal tab (`#7aa2f7` Tokyo Night accent on `#24283b`) and redacted companion tabs, strictly honoring the Sharp-Corner Aesthetic Law.*
 
+---
 
+## 5. Dual-Tier GitHub Vault & Frictionless Access Activation
+
+In accordance with [artifact_vault_and_github_sync_plan.md](file:///home/rand/.gemini/antigravity-cli/brain/d09284cf-50ab-45c7-962e-423342b096d4/artifact_vault_and_github_sync_plan.md) and [COOKBOOK.md](file:///home/rand/.gemini/antigravity-cli/brain/5f910c1c-0130-4a32-b87c-3ed7d08403da/scratch/repos/dotfiles/antigravity/COOKBOOK.md), the entire artifact access and cross-machine synchronization pipeline is now operational:
+
+### A. Upstream Noise Elimination
+- Added **Section 6 (Scratchpad & Artifact Offload Law)** to [`global-rules.md`](file:///home/rand/.gemini/antigravity-cli/global-rules.md).
+- Mandates that responses >20 lines must be written as `*.md` artifacts. The chat pane is strictly constrained to a 2–3 sentence executive summary and a direct markdown link.
+
+### B. Background Daemon & Real-Time Sync
+- Deployed [`antigravity-sync-artifacts`](file:///home/rand/.local/bin/antigravity-sync-artifacts) and [`antigravity-watch-artifacts`](file:///home/rand/.local/bin/antigravity-watch-artifacts) to `~/.local/bin/`.
+- Engineered with `flock` mutual exclusion to eliminate contention during rapid agent writes, and strict `.gitignore` filters blocking all binaries, media, and credentials.
+- Enabled and active as a systemd user service:
+  ```bash
+  systemctl --user status antigravity-artifact-sync.service  # Active: running (PID 280076, 4.5 MB RAM)
+  ```
+
+### C. Dual-Tier GitHub Vault Repositories
+1. **Global Vault (`oomaya/vault`)**:
+   - Backs `~/Documents/artifacts/` with automatic background commits and pushes.
+   - Pushed 36 artifacts, guides, and historical session logs to `git@github.com:oomaya/vault.git` (commit `9a9b2c3`).
+2. **Project-Local Vault (`.agents/artifacts/`)**:
+   - Created `.agents/artifacts/` in `dwm-oomaya`.
+   - Committed implementation plans and walkthroughs directly into `feat/oomaya-dwm-standalone` (commit `5c2f866`).
+
+### D. Microsecond Keyboard Access
+- **CLI**: `art` (interactive FZF browser), `art plan` (view latest plan), `art -e plan` (edit in Neovim), `art -l` (list current session).
+- **Neovim**:
+  - `<leader>fa`: Search all vault artifacts.
+  - `<leader>ac`: Search current session artifacts.
+  - `<leader>ag`: Search curated cheat sheets and guides.
+  - Inotify buffer auto-reload augroup active on external file changes.
