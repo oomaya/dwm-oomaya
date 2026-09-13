@@ -97,10 +97,11 @@ In accordance with [artifact_vault_and_github_sync_plan.md](file:///home/rand/.g
   ```
 
 ### C. Dual-Tier GitHub Vault Repositories
-1. **Global Vault (`oomaya/vault`)**:
-   - Master repository deployed to `~/Vault/` with remote `git@github.com:oomaya/vault.git`.
-   - **Subfolder Architecture**: Structured with `antigravity-artifacts/` as a dedicated subfolder (`current/`, `guides/`, `history/`), leaving root open for personal notes and documentation.
-   - Symlinked `~/Documents/artifacts -> ~/Vault/antigravity-artifacts` for seamless backwards compatibility.
+1. **Global Vault (`oomaya/vault`) & Pristine Obsidian Vault Law (Rule 4.5)**:
+   - Master AI repository deployed to `~/antigravity-vault/` with remote `git@github.com:oomaya/vault.git`.
+   - **Pristine Obsidian Isolation**: `~/Vault` is reserved strictly for the user's personal Obsidian notes (Google Drive via `rclone bisync`), free of `.git` and AI artifacts.
+   - **Subfolder Architecture**: Structured with `antigravity-artifacts/` as a dedicated subfolder (`current/`, `guides/`, `history/`).
+   - Symlinked `~/Documents/artifacts -> ~/antigravity-vault/antigravity-artifacts` for seamless backwards compatibility.
    - Automatically committed and pushed to `oomaya/vault` on GitHub in real-time.
 2. **Project-Local Vault (`.agents/artifacts/`)**:
    - Created `.agents/artifacts/` in `dwm-oomaya`.
@@ -109,9 +110,9 @@ In accordance with [artifact_vault_and_github_sync_plan.md](file:///home/rand/.g
 ### D. Microsecond Keyboard Access
 - **CLI**: `art` (interactive FZF browser), `art plan` (view latest plan), `art -e plan` (edit in Neovim), `art -l` (list current session).
 - **Neovim**:
-  - `<leader>fv`: Search entire vault (`~/Vault`).
-  - `<leader>fa`: Search all AI artifacts (`~/Vault/antigravity-artifacts`).
-  - `<leader>ac`: Search current session artifacts (`~/Vault/antigravity-artifacts/current`).
-  - `<leader>ag`: Search curated cheat sheets and guides (`~/Vault/antigravity-artifacts/guides`).
+  - `<leader>fv`: Search personal Obsidian notes (`~/Vault`).
+  - `<leader>fa`: Search all AI artifacts (`~/Documents/artifacts` -> `~/antigravity-vault/antigravity-artifacts`).
+  - `<leader>ac`: Search current session artifacts (`~/Documents/artifacts/current`).
+  - `<leader>ag`: Search curated cheat sheets and guides (`~/Documents/artifacts/guides`).
   - Inotify buffer auto-reload augroup active on external file changes.
 

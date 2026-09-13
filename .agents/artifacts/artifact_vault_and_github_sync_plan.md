@@ -50,9 +50,12 @@ flowchart TD
 ## 3. Approved Technical Decisions & Engineering Rails
 
 > [!IMPORTANT]
-> **Approved Global Vault Repository**:
+> **Approved Global Vault Repository & Dedicated Path**:
 > - Repository Name: **`oomaya/vault`** (Private under `@oomaya` organization).
-> - Purpose: Central, cross-machine sync for all plans, walkthroughs, guides, and transcripts across desktop PC, LG Gram, and Studio 1558.
+> - Path on Disk: **`~/antigravity-vault`** (`$HOME/antigravity-vault`).
+> - Pristine Obsidian Isolation (Rule 4.5): `~/Vault` is strictly reserved for user personal notes synced via Google Drive `rclone bisync`. Git tracking and AI artifacts belong exclusively in `~/antigravity-vault`.
+> - Backwards-Compatible Symlink: `~/Documents/artifacts -> ~/antigravity-vault/antigravity-artifacts`.
+> - Purpose: Central, cross-machine sync for all plans, walkthroughs, guides, and transcripts across desktop PC, LG Gram, Studio 1558, and Omarchy VM.
 
 > [!NOTE]
 > **Scope of Managed Deliverables**:
