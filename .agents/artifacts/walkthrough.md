@@ -98,16 +98,20 @@ In accordance with [artifact_vault_and_github_sync_plan.md](file:///home/rand/.g
 
 ### C. Dual-Tier GitHub Vault Repositories
 1. **Global Vault (`oomaya/vault`)**:
-   - Backs `~/Documents/artifacts/` with automatic background commits and pushes.
-   - Pushed 36 artifacts, guides, and historical session logs to `git@github.com:oomaya/vault.git` (commit `9a9b2c3`).
+   - Master repository deployed to `~/Vault/` with remote `git@github.com:oomaya/vault.git`.
+   - **Subfolder Architecture**: Structured with `antigravity-artifacts/` as a dedicated subfolder (`current/`, `guides/`, `history/`), leaving root open for personal notes and documentation.
+   - Symlinked `~/Documents/artifacts -> ~/Vault/antigravity-artifacts` for seamless backwards compatibility.
+   - Automatically committed and pushed to `oomaya/vault` on GitHub in real-time.
 2. **Project-Local Vault (`.agents/artifacts/`)**:
    - Created `.agents/artifacts/` in `dwm-oomaya`.
-   - Committed implementation plans and walkthroughs directly into `feat/oomaya-dwm-standalone` (commit `5c2f866`).
+   - Committed implementation plans and walkthroughs directly into `feat/oomaya-dwm-standalone` (commits `5c2f866`, `5564bb1`).
 
 ### D. Microsecond Keyboard Access
 - **CLI**: `art` (interactive FZF browser), `art plan` (view latest plan), `art -e plan` (edit in Neovim), `art -l` (list current session).
 - **Neovim**:
-  - `<leader>fa`: Search all vault artifacts.
-  - `<leader>ac`: Search current session artifacts.
-  - `<leader>ag`: Search curated cheat sheets and guides.
+  - `<leader>fv`: Search entire vault (`~/Vault`).
+  - `<leader>fa`: Search all AI artifacts (`~/Vault/antigravity-artifacts`).
+  - `<leader>ac`: Search current session artifacts (`~/Vault/antigravity-artifacts/current`).
+  - `<leader>ag`: Search curated cheat sheets and guides (`~/Vault/antigravity-artifacts/guides`).
   - Inotify buffer auto-reload augroup active on external file changes.
+
