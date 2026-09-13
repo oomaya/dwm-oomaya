@@ -1,5 +1,5 @@
 [Desktop Entry]
-Name=dwm-oomaya
+Name=Dynamic window manager (dwm-oomaya)
 Comment=Dynamic window manager (dwm-oomaya)
 Exec=@PREFIX@/bin/dwm
 Icon=dwm

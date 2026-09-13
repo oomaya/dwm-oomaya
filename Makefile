@@ -203,10 +203,18 @@ install-cursors:
 	install -Dm644 assets/cursors/COPYING \
 		"${DESTDIR}${CAPITAINE_LICENSE_DIR}/COPYING"
 
+install-local: dwm
+	$(MAKE) install-user
+
 install-user:
 	@test -n "${USER_HOME}" || { echo "USER_HOME could not be determined." >&2; exit 1; }
 	@test "$$(id -u)" -ne 0 || { echo "Refusing to install user files as root. Run install-user as the target user." >&2; exit 1; }
 	@echo "==> Installing user files for ${OWNER}..."
+	@mkdir -p "${USER_HOME}/.local/bin"
+	@if [ -f dwm ]; then \
+		echo "==> Installing dwm to ${USER_HOME}/.local/bin/dwm..."; \
+		install -Dm755 dwm "${USER_HOME}/.local/bin/dwm"; \
+	fi
 	if [ ! -e "${USER_HOME}/.xinitrc" ]; then \
 		install -Dm644 scripts/.xinitrc "${USER_HOME}/.xinitrc"; \
 	else \
