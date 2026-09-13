@@ -145,7 +145,7 @@ static const Key keys[] = {
     { Mod1Mask,                         XK_p,       spawn,          SHCMD("dmenu-run") },
     { Mod1Mask,                         XK_x,       spawn,          SHCMD("dmenu-power") },
     { Mod1Mask,                         XK_Tab,     spawn,          SHCMD("dmenu-windows") },
-    { MODKEY,                           XK_h,       spawn,          SHCMD("dmenu-hub") },
+    { MODKEY|ShiftMask,                 XK_h,       spawn,          SHCMD("dmenu-hub") },
     { MODKEY,                           XK_Print,   spawn,          SHCMD("dmenu-scrot") },
 
     // toggle stuff
@@ -168,8 +168,8 @@ static const Key keys[] = {
     // change mfact & cfact sizes
     { MODKEY,                           XK_h,       setmfact,       {.f = -0.05} },
     { MODKEY,                           XK_l,       setmfact,       {.f = +0.05} },
-    { MODKEY|ShiftMask,                 XK_h,       setcfact,       {.f = +0.25} },
-    { MODKEY|ShiftMask,                 XK_l,       setcfact,       {.f = -0.25} },
+    { MODKEY|ControlMask,               XK_h,       setcfact,       {.f = +0.25} },
+    { MODKEY|ControlMask,               XK_l,       setcfact,       {.f = -0.25} },
     { MODKEY|ShiftMask,                 XK_o,       setcfact,       {.f =  0.00} },
 
     // stack movement & zoom

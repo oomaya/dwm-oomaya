@@ -18,7 +18,7 @@ This document maps all patches, layout functions, and keybinding mechanisms inte
 | **Bartabgroups / Tabmode** | `dwm.c`, `functions.h` | `tabmode`, `focuswin` | `MODKEY + Ctrl + w` |
 | **Drag Mfact / Cfact** | `dwm.c` | `dragmfact`, `dragcfact` | `Ctrl + Button1`<br>`Ctrl + Button3` |
 | **Move or Place** | `dwm.c` | `moveorplace` | `MODKEY + Button1` |
-| **Cfacts** | `dwm.c` | `setcfact` | `MODKEY + Shift + h/l/o` |
+| **Cfacts** | `dwm.c` | `setcfact` | `MODKEY + Ctrl + h/l`<br>`MODKEY + Shift + o` |
 | **Movestack** | `dwm.c` | `movestack` | `MODKEY + Shift + j/k` |
 | **XF86 Audio & Light** | `<X11/XF86keysym.h>` | `spawn` | `XF86XK_AudioLowerVolume`<br>`XF86XK_AudioRaiseVolume`<br>`XF86XK_AudioMute`<br>`XF86XK_MonBrightnessUp`<br>`XF86XK_MonBrightnessDown` |
 

@@ -84,7 +84,7 @@ keys = [
   { mod="ALT",              key="p",       desc="Dmenu Run",               func="spawn",       cmd="dmenu-run" },
   { mod="ALT",              key="x",       desc="Power Menu",              func="spawn",       cmd="dmenu-power" },
   { mod="ALT",              key="Tab",     desc="Window Switcher",         func="spawn",       cmd="dmenu-windows" },
-  { mod="SUPER",            key="h",       desc="Dmenu Hub",               func="spawn",       cmd="dmenu-hub" },
+  { mod="SUPER SHIFT",      key="h",       desc="Dmenu Hub",               func="spawn",       cmd="dmenu-hub" },
   { mod="SUPER CTRL",       key="q",       desc="Power Menu",              func="spawn",       cmd="dmenu-power" },
   { mod="SUPER",            key="slash",   desc="Keybindings Mastery",     func="spawn",       cmd="quickshell ipc --path \"${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/shell.qml\" call controlcenter openKeybinds || dwm-keybinds" },
   { mod="SUPER",            key="F1",      desc="Control Center",          func="spawn",       cmd="quickshell ipc --path \"${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/shell.qml\" call controlcenter open" },
@@ -130,8 +130,8 @@ keys = [
   { mod="SUPER",            key="d",       desc="Remove from master",      func="incnmaster",  i=-1 },
   { mod="SUPER",            key="h",       desc="Shrink master",           func="setmfact",    f=-0.05 },
   { mod="SUPER",            key="l",       desc="Grow master",             func="setmfact",    f=0.05 },
-  { mod="SUPER SHIFT",      key="h",       desc="Cfact grow",              func="setcfact",    f=0.25 },
-  { mod="SUPER SHIFT",      key="l",       desc="Cfact shrink",            func="setcfact",    f=-0.25 },
+  { mod="SUPER CTRL",       key="h",       desc="Cfact grow",              func="setcfact",    f=0.25 },
+  { mod="SUPER CTRL",       key="l",       desc="Cfact shrink",            func="setcfact",    f=-0.25 },
   { mod="SUPER SHIFT",      key="o",       desc="Cfact reset",             func="setcfact",    f=0.00 },
 
   # ── Layouts ───────────────────────────────────────────────────────────────────

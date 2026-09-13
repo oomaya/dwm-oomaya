@@ -137,7 +137,7 @@ DWM-Oomaya pairs with [`dmenu-oomaya`](https://github.com/tonybanters/dmenu), a 
 | **Interactive Window Switcher** | <kbd>Alt</kbd> + <kbd>Tab</kbd> | `dmenu-windows` |
 | **Command Runner** | <kbd>Alt</kbd> + <kbd>P</kbd> | `dmenu-run` |
 | **Power Menu** | <kbd>Alt</kbd> + <kbd>X</kbd> | `dmenu-power` |
-| **Master Action Hub** | <kbd>Super</kbd> + <kbd>H</kbd> | `dmenu-hub` |
+| **Master Action Hub** | <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>H</kbd> | `dmenu-hub` |
 | **Keybindings Palette** | <kbd>Super</kbd> + <kbd>/</kbd> | Quickshell Keybinds / `dwm-keybinds` |
 
 ### Window Management & Tiling
