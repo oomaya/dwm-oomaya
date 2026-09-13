@@ -114,7 +114,7 @@ Personal settings live in standard XDG user paths:
 
 ## Centered Dmenu Ecosystem
 
-DWM-Oomaya pairs with [`dmenu-oomaya`](https://github.com/tonybanters/dmenu), a centered, border-aware, fuzzy-matching suckless dmenu engine with a dedicated POSIX scripting suite:
+DWM-Oomaya pairs with [`dmenu-oomaya`](https://github.com/oomaya/dmenu-oomaya), a centered, border-aware, fuzzy-matching suckless dmenu engine with a dedicated POSIX scripting suite:
 
 - **`dmenu-desktop`**: Sub-millisecond XDG `.desktop` launcher with category tagging (🌐 Web, 💻 Terminal, 📝 Code, 📁 Files, ⚙️ Settings, 📊 Monitor), elegant vertical dividers `│`, and terminal auto-wrapping.
 - **`dmenu-windows`**: Interactive workspace tag window switcher querying `wmctrl -l` and switching tags instantly.
@@ -215,7 +215,7 @@ sudo make install-system
 ### 3. Install the Dmenu Ecosystem
 
 ```bash
-git clone https://github.com/tonybanters/dmenu.git ~/.local/src/dmenu-oomaya
+git clone https://github.com/oomaya/dmenu-oomaya.git ~/.local/src/dmenu-oomaya
 cd ~/.local/src/dmenu-oomaya
 
 # Build and install dmenu binary and scripts
