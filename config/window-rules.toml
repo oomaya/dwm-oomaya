@@ -46,6 +46,11 @@ rules = [
   # { class="Gimp",           isfloating=1 },
   # { class="pavucontrol",    isfloating=1 },
 
+  # ── unmanaged daemon / background helper windows ─────────────────────────
+  { class="vmware-user", unmanaged=1, isfloating=1 },
+  { class="vmtoolsd",    unmanaged=1, isfloating=1 },
+  { class="VBoxClient",  unmanaged=1, isfloating=1 },
+
   # ── assign to tag ────────────────────────────────────────────────────────
   { class="PlazmicLegends", tags=5, monitor=1, noswallow=1 },
   # { class="firefox",        tags=2 },

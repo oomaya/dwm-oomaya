@@ -61,12 +61,15 @@ static const Rule rules[] = {
 	 *	WM_CLASS(STRING) = instance, class
 	 *	WM_NAME(STRING) = title
 	 */
-	/* class      instance    title       tags mask     isfloating   alwaysontop  isterminal  noswallow  monitor */
-	{ "Gimp",     NULL,       NULL,       0,            1,           0,           0,          0,         -1 },
-	{ "Firefox",  NULL,       NULL,       1 << 8,       0,           0,           0,         -1,         -1 },
-	{ "ghostty",  NULL,       NULL,       0,            0,           0,           1,          0,         -1 },
-	{ "kitty",    NULL,       NULL,       0,            0,           0,           1,          0,         -1 },
-	{ "dwm-scratchpad", NULL, NULL,       0,            1,           1,           1,          0,         -1 },
+	/* class      instance    title       tags mask     isfloating   alwaysontop  isterminal  noswallow  monitor  unmanaged */
+	{ "Gimp",     NULL,       NULL,       0,            1,           0,           0,          0,         -1,      0 },
+	{ "Firefox",  NULL,       NULL,       1 << 8,       0,           0,           0,         -1,         -1,      0 },
+	{ "ghostty",  NULL,       NULL,       0,            0,           0,           1,          0,         -1,      0 },
+	{ "kitty",    NULL,       NULL,       0,            0,           0,           1,          0,         -1,      0 },
+	{ "dwm-scratchpad", NULL, NULL,       0,            1,           1,           1,          0,         -1,      0 },
+	{ "vmware-user", NULL,    NULL,       0,            0,           0,           0,          0,         -1,      1 },
+	{ "vmtoolsd",    NULL,    NULL,       0,            0,           0,           0,          0,         -1,      1 },
+	{ "VBoxClient",  NULL,    NULL,       0,            0,           0,           0,          0,         -1,      1 },
 };
 
 /* layout(s) */

@@ -119,7 +119,7 @@ struct Client {
 	int basew, baseh, incw, inch, maxw, maxh, minw, minh;
 	int bw, oldbw;
 	unsigned int tags;
-	int isfixed, isfloating, isurgent, neverfocus, oldstate, isfullscreen, isterminal, noswallow, alwaysontop, ewmhabove;
+	int isfixed, isfloating, isurgent, neverfocus, oldstate, isfullscreen, isterminal, noswallow, alwaysontop, ewmhabove, unmanaged;
 	int ishidden;
 	int issteam;
 	int beingmoved;
@@ -198,6 +198,7 @@ typedef struct {
 	int isterminal;
 	int noswallow;
 	int monitor;
+	int unmanaged;
 } Rule;
 
 /* core client and layout declarations */
@@ -568,12 +569,19 @@ applyrules(Client *c)
 	c->isfloating = 0;
 	c->alwaysontop = 0;
 	c->tags = 0;
+	c->unmanaged = 0;
 	XGetClassHint(dpy, c->win, &ch);
 	class    = ch.res_class ? ch.res_class : broken;
 	instance = ch.res_name  ? ch.res_name  : broken;
 
 	if (strstr(class, "Steam") || strstr(class, "steam_app_"))
 		c->issteam = 1;
+
+	/* Built-in protection: ignore daemon background helpers that lack override_redirect */
+	if (strstr(class, "vmware-user") || strstr(instance, "vmware-user") ||
+	    strstr(class, "vmtoolsd") || strstr(instance, "vmtoolsd") ||
+	    strstr(class, "VBoxClient") || strstr(instance, "VBoxClient"))
+		c->unmanaged = 1;
 
 	const Rule *active_rules   = rt_rules;
 	unsigned int n_active_rules = (unsigned int)rt_nrules;
@@ -589,6 +597,8 @@ applyrules(Client *c)
 			c->alwaysontop = r->alwaysontop;
 			if (c->alwaysontop)
 				c->isfloating = 1;
+			if (r->unmanaged)
+				c->unmanaged = 1;
 			c->tags |= r->tags;
 			for (m = mons; m && m->num != r->monitor; m = m->next);
 			if (m)
@@ -1991,6 +2001,12 @@ manage(Window w, XWindowAttributes *wa)
 		term = termforwin(c);
 	}
 
+	if (c->unmanaged) {
+		XMapWindow(dpy, w);
+		free(c);
+		return;
+	}
+
 	if (c->x + WIDTH(c) > c->mon->wx + c->mon->ww)
 		c->x = c->mon->wx + c->mon->ww - WIDTH(c);
 	if (c->y + HEIGHT(c) > c->mon->wy + c->mon->wh)
@@ -3390,6 +3406,7 @@ setlayout(const Arg *arg)
 
 	copystr(selmon->ltsymbol, sizeof selmon->ltsymbol,
 	        selmon->lt[selmon->sellt]->symbol);
+	updatelayoutproperty();
 	if (selmon->sel)
 		arrange(selmon);
 	else
@@ -3967,6 +3984,7 @@ load_rules_toml(const char *user_path, const char *default_path)
 		const TomlValue *vterm = toml_table_get(&doc, "rules", i, "isterminal");
 		const TomlValue *vno   = toml_table_get(&doc, "rules", i, "noswallow");
 		const TomlValue *vmon  = toml_table_get(&doc, "rules", i, "monitor");
+		const TomlValue *vunm  = toml_table_get(&doc, "rules", i, "unmanaged");
 		Rule *r = &rt_rules_buf[nk];
 		if (vc && vc->type == TOML_STRING && vc->s[0]) {
 			copystr(rt_rules_strbuf[nk*3+0], TOML_MAX_STR, vc->s);
@@ -3993,6 +4011,7 @@ load_rules_toml(const char *user_path, const char *default_path)
 		r->isterminal = (vterm && vterm->type == TOML_INT) ? (int)vterm->i         : 0;
 		r->noswallow  = (vno   && vno->type   == TOML_INT) ? (int)vno->i           : 0;
 		r->monitor    = (vmon  && vmon->type  == TOML_INT) ? (int)vmon->i          : -1;
+		r->unmanaged  = (vunm  && vunm->type  == TOML_INT) ? (int)vunm->i          : 0;
 		nk++;
 	}
 	rt_rules  = rt_rules_buf;
