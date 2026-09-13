@@ -92,7 +92,7 @@ fi
 # through dwm inotify while the Settings transaction also invokes it directly.
 THEME_RUNTIME_BASE="${XDG_RUNTIME_DIR:-}"
 if [[ -z "$THEME_RUNTIME_BASE" ]]; then
-	THEME_RUNTIME_BASE=/tmp/dwm-titus-$UID
+	THEME_RUNTIME_BASE=/tmp/dwm-oomaya-$UID
 elif [[ "$THEME_RUNTIME_BASE" != /* ]]; then
 	echo "theme-apply: XDG_RUNTIME_DIR must be an absolute path" >&2
 	exit 1
@@ -131,8 +131,36 @@ else
 fi
 
 # ── Locate themes.toml ────────────────────────────────────────────────────────
-THEMES_FILE="${DWM_APPEARANCE_THEMES_FILE:-${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus/themes.toml}"
-MANAGED_THEMES_FILE="${DWM_APPEARANCE_MANAGED_THEMES_FILE:-${XDG_DATA_HOME:-$HOME/.local/share}/dwm-titus/config/themes.toml}"
+config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
+data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
+if [[ -d "$config_home/dwm-oomaya" || ! -d "$config_home/dwm-titus" ]]; then
+	DWM_CONFIG_NAME="dwm-oomaya"
+else
+	DWM_CONFIG_NAME="dwm-titus"
+fi
+
+THEMES_FILE="${DWM_APPEARANCE_THEMES_FILE:-}"
+if [[ -z "$THEMES_FILE" ]]; then
+	if [[ -f "$config_home/dwm-oomaya/themes.toml" ]]; then
+		THEMES_FILE="$config_home/dwm-oomaya/themes.toml"
+	elif [[ -f "$config_home/dwm-titus/themes.toml" ]]; then
+		THEMES_FILE="$config_home/dwm-titus/themes.toml"
+	else
+		THEMES_FILE="$config_home/$DWM_CONFIG_NAME/themes.toml"
+	fi
+fi
+
+MANAGED_THEMES_FILE="${DWM_APPEARANCE_MANAGED_THEMES_FILE:-}"
+if [[ -z "$MANAGED_THEMES_FILE" ]]; then
+	if [[ -f "$data_home/dwm-oomaya/config/themes.toml" ]]; then
+		MANAGED_THEMES_FILE="$data_home/dwm-oomaya/config/themes.toml"
+	elif [[ -f "$data_home/dwm-titus/config/themes.toml" ]]; then
+		MANAGED_THEMES_FILE="$data_home/dwm-titus/config/themes.toml"
+	else
+		MANAGED_THEMES_FILE="$data_home/$DWM_CONFIG_NAME/config/themes.toml"
+	fi
+fi
+
 if [[ -e "$THEMES_FILE" || -L "$THEMES_FILE" ]]; then
 	if [[ ! -f "$THEMES_FILE" || ! -r "$THEMES_FILE" ]]; then
 		echo "theme-apply: user theme source is not a regular file: $THEMES_FILE" >&2
@@ -156,7 +184,7 @@ if [[ $RUNTIME_ONLY_EXPLICIT == false ]]; then
 	THEME_STATE_HOME=${XDG_STATE_HOME:-}
 	[[ $THEME_STATE_HOME == /* ]] || THEME_STATE_HOME=$HOME/.local/state
 	if [[ $AUTOMATIC_APPLY == 1 ]]; then
-		THEME_SUPPRESS_FILE=$THEME_STATE_HOME/dwm-titus/appearance/integration-suppress
+		THEME_SUPPRESS_FILE=$THEME_STATE_HOME/$DWM_CONFIG_NAME/appearance/integration-suppress
 		if [[ -f $THEME_SUPPRESS_FILE && ! -L $THEME_SUPPRESS_FILE &&
 			$(stat -c %u -- "$THEME_SUPPRESS_FILE") == "$UID" ]]; then
 			read -r THEME_SUPPRESS_HASH _ <"$THEME_SUPPRESS_FILE" || {
@@ -170,7 +198,7 @@ if [[ $RUNTIME_ONLY_EXPLICIT == false ]]; then
 			fi
 		fi
 	fi
-	THEME_TRANSACTION_FILE=$THEME_STATE_HOME/dwm-titus/appearance/integration-transaction
+	THEME_TRANSACTION_FILE=$THEME_STATE_HOME/$DWM_CONFIG_NAME/appearance/integration-transaction
 	if [[ -f $THEME_TRANSACTION_FILE && ! -L $THEME_TRANSACTION_FILE &&
 		$(stat -c %u -- "$THEME_TRANSACTION_FILE") == "$UID" ]]; then
 		read -r THEME_TRANSACTION_HASH THEME_TRANSACTION_STATE <"$THEME_TRANSACTION_FILE" || {
@@ -222,7 +250,11 @@ theme_get() {
 	toml_get "$SECTION" "$1" "$THEMES_FILE"
 }
 
-PERSONALIZATION_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus/personalization.conf"
+PERSONALIZATION_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/$DWM_CONFIG_NAME/personalization.conf"
+[[ -f $PERSONALIZATION_FILE ]] || {
+	[[ -f "${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus/personalization.conf" ]] &&
+		PERSONALIZATION_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus/personalization.conf"
+}
 personalization_validate() {
 	[[ ! -e $PERSONALIZATION_FILE && ! -L $PERSONALIZATION_FILE ]] && return 0
 	[[ -f $PERSONALIZATION_FILE && ! -L $PERSONALIZATION_FILE &&
@@ -366,7 +398,8 @@ gtk_theme_available() {
 	local name="$1"
 	local base root
 	local -a data_roots=()
-	[[ $name == Adwaita || $name == Adwaita-dark ]] && return 0
+	[[ $name == Adwaita ]] && return 0
+	[[ $name == Adwaita-dark ]] && [[ -d /usr/share/themes/Adwaita-dark ]] && return 0
 	for base in \
 		"${XDG_DATA_HOME:-$HOME/.local/share}/themes" \
 		"$THEME_DISCOVERY_HOME/.themes"; do
@@ -384,11 +417,39 @@ gtk_theme_available() {
 default_gtk_theme() {
 	if [[ "$DARK_MODE" == "true" ]]; then
 		case "$THEME_NAME" in
-		nord) printf '%s\n' "Nordic" ;;
-		*) printf '%s\n' "Adwaita-dark" ;;
+		nord)
+			if gtk_theme_available "Nordic"; then
+				printf '%s\n' "Nordic"
+			elif gtk_theme_available "adw-gtk3-dark"; then
+				printf '%s\n' "adw-gtk3-dark"
+			else
+				printf '%s\n' "Adwaita"
+			fi ;;
+		tokyonight | tokyo-night)
+			if gtk_theme_available "Tokyonight-Dark"; then
+				printf '%s\n' "Tokyonight-Dark"
+			elif gtk_theme_available "Tokyo-Night-Dark"; then
+				printf '%s\n' "Tokyo-Night-Dark"
+			elif gtk_theme_available "adw-gtk3-dark"; then
+				printf '%s\n' "adw-gtk3-dark"
+			else
+				printf '%s\n' "Adwaita"
+			fi ;;
+		*)
+			if gtk_theme_available "adw-gtk3-dark"; then
+				printf '%s\n' "adw-gtk3-dark"
+			elif gtk_theme_available "Adwaita-dark"; then
+				printf '%s\n' "Adwaita-dark"
+			else
+				printf '%s\n' "Adwaita"
+			fi ;;
 		esac
 	else
-		printf '%s\n' "Adwaita"
+		if gtk_theme_available "adw-gtk3"; then
+			printf '%s\n' "adw-gtk3"
+		else
+			printf '%s\n' "Adwaita"
+		fi
 	fi
 }
 
@@ -550,7 +611,15 @@ if [[ -n $GTK_CHOICE && $GTK_CHOICE != follow-theme ]]; then
 fi
 if ! gtk_theme_available "$GTK_THEME_NAME"; then
 	GTK_THEME_FALLBACK="Adwaita"
-	[[ "$DARK_MODE" == "true" ]] && GTK_THEME_FALLBACK="Adwaita-dark"
+	if [[ "$DARK_MODE" == "true" ]]; then
+		if gtk_theme_available "adw-gtk3-dark"; then
+			GTK_THEME_FALLBACK="adw-gtk3-dark"
+		elif gtk_theme_available "Adwaita-dark"; then
+			GTK_THEME_FALLBACK="Adwaita-dark"
+		fi
+	elif gtk_theme_available "adw-gtk3"; then
+		GTK_THEME_FALLBACK="adw-gtk3"
+	fi
 	echo "theme-apply: GTK theme '$GTK_THEME_NAME' not found; falling back to '$GTK_THEME_FALLBACK'" >&2
 	GTK_THEME_NAME="$GTK_THEME_FALLBACK"
 fi
@@ -912,10 +981,36 @@ if [[ $RUNTIME_ONLY == 0 && $LIVE_ONLY == 0 ]]; then
 fi
 
 # Plain DWM Xorg sessions intentionally do not run a desktop settings daemon.
-# Publish text scaling to a project-owned xsettingsd configuration so native
-# GTK applications consume the same fixed-point DPI as the persisted choice.
-XSETTINGSD_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus/xsettingsd.conf"
+# Publish theme, cursor, font, and text scaling to a project-owned xsettingsd
+# configuration so native GTK and Qt applications receive the active styling.
+XSETTINGSD_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/$DWM_CONFIG_NAME/xsettingsd.conf"
 if [[ $RUNTIME_ONLY == 0 && $LIVE_ONLY == 0 ]]; then
+	xsettingsd_config_write "$XSETTINGSD_CONFIG" "Net/ThemeName" "Net/ThemeName \"$GTK_THEME_NAME\""
+	xsettingsd_config_write "$XSETTINGSD_CONFIG" "Gtk/CursorThemeName" "Gtk/CursorThemeName \"$CURSOR_THEME\""
+	xsettingsd_config_write "$XSETTINGSD_CONFIG" "Gtk/CursorThemeSize" "Gtk/CursorThemeSize $CURSOR_SIZE"
+	if [[ -n "${DESKTOP_FONT_NAME:-}" ]]; then
+		xsettingsd_config_write "$XSETTINGSD_CONFIG" "Gtk/FontName" "Gtk/FontName \"$DESKTOP_FONT_NAME\""
+	elif [[ -n "${FONT_CHOICE:-}" && "$FONT_CHOICE" != "follow-system" ]]; then
+		xsettingsd_config_write "$XSETTINGSD_CONFIG" "Gtk/FontName" "Gtk/FontName \"$FONT_CHOICE $(desktop_font_size)\""
+	else
+		font_desc=$(configured_font_description)
+		[[ -z $font_desc ]] && font_desc=$(gsettings get org.gnome.desktop.interface font-name 2>/dev/null || true)
+		font_desc=${font_desc#\'}
+		font_desc=${font_desc%\'}
+		font_desc=${font_desc#\"}
+		font_desc=${font_desc%\"}
+		[[ -n $font_desc ]] && xsettingsd_config_write "$XSETTINGSD_CONFIG" "Gtk/FontName" "Gtk/FontName \"$font_desc\""
+	fi
+	if [[ -n "${ICON_CHOICE:-}" && "$ICON_CHOICE" != "follow-system" ]]; then
+		xsettingsd_config_write "$XSETTINGSD_CONFIG" "Net/IconThemeName" "Net/IconThemeName \"$ICON_CHOICE\""
+	else
+		icon_desc=$(gsettings get org.gnome.desktop.interface icon-theme 2>/dev/null || true)
+		icon_desc=${icon_desc#\'}
+		icon_desc=${icon_desc%\'}
+		icon_desc=${icon_desc#\"}
+		icon_desc=${icon_desc%\"}
+		[[ -n $icon_desc ]] && xsettingsd_config_write "$XSETTINGSD_CONFIG" "Net/IconThemeName" "Net/IconThemeName \"$icon_desc\""
+	fi
 	if [[ -z $TEXT_SCALE_CHOICE || $TEXT_SCALE_CHOICE == follow-system ]]; then
 		xsettingsd_config_write "$XSETTINGSD_CONFIG" Xft/DPI
 	else
@@ -923,14 +1018,20 @@ if [[ $RUNTIME_ONLY == 0 && $LIVE_ONLY == 0 ]]; then
 		xsettingsd_config_write "$XSETTINGSD_CONFIG" Xft/DPI \
 			"Xft/DPI $TEXT_SCALE_DPI"
 	fi
+	if [[ "$DWM_CONFIG_NAME" != "dwm-titus" && -d "${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus" ]]; then
+		cp -f "$XSETTINGSD_CONFIG" "${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus/xsettingsd.conf" 2>/dev/null || true
+	fi
 fi
 
 # Xcursor settings for Xlib applications and programs launched after reload.
-CURSOR_XRESOURCES="${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus/cursor.Xresources"
+CURSOR_XRESOURCES="${XDG_CONFIG_HOME:-$HOME/.config}/$DWM_CONFIG_NAME/cursor.Xresources"
 if [[ $RUNTIME_ONLY == 0 && $LIVE_ONLY == 0 ]]; then
 	mkdir -p "${CURSOR_XRESOURCES%/*}"
 	printf 'Xcursor.theme: %s\nXcursor.size: %s\n' \
 		"$CURSOR_THEME" "$CURSOR_SIZE" >"$CURSOR_XRESOURCES"
+	if [[ "$DWM_CONFIG_NAME" != "dwm-titus" && -d "${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus" ]]; then
+		cp -f "$CURSOR_XRESOURCES" "${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus/cursor.Xresources" 2>/dev/null || true
+	fi
 fi
 if [[ $RUNTIME_ONLY == 0 && $TRANSACTIONAL_APPLY == 0 ]] &&
 	command -v xrdb &>/dev/null && [[ -n "${DISPLAY:-}" ]]; then
@@ -1143,47 +1244,72 @@ fi
 # ══════════════════════════════════════════════════════════════════════════════
 # QT DARK / LIGHT MODE
 # ══════════════════════════════════════════════════════════════════════════════
-# Prefer qt6ct > qt5ct; fall back to gtk3 (inherits GTK theme set above)
-if command -v qt6ct &>/dev/null; then
+# Prefer gtk3 (uses libqgtk3.so for seamless GTK3 dark theme integration across both Qt5 & Qt6);
+# fall back to qt6ct / qt5ct if explicitly selected.
+if [[ -n $QT_CHOICE && $QT_CHOICE != follow-theme ]]; then
+	QT_PLATFORM_THEME=$QT_CHOICE
+elif [[ -f /usr/lib64/qt6/plugins/platformthemes/libqgtk3.so || -f /usr/lib64/qt5/plugins/platformthemes/libqgtk3.so || -f /usr/lib/qt6/plugins/platformthemes/libqgtk3.so || -f /usr/lib/qt5/plugins/platformthemes/libqgtk3.so ]]; then
+	QT_PLATFORM_THEME="gtk3"
+elif command -v qt6ct &>/dev/null; then
 	QT_PLATFORM_THEME="qt6ct"
 elif command -v qt5ct &>/dev/null; then
 	QT_PLATFORM_THEME="qt5ct"
 else
 	QT_PLATFORM_THEME="gtk3"
 fi
-if [[ -n $QT_CHOICE && $QT_CHOICE != follow-theme ]]; then
-	QT_PLATFORM_THEME=$QT_CHOICE
-fi
 
 # Write persistent env file — sourced by autostart.sh so tray apps inherit it
-THEME_ENV_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus/theme-env.sh"
+THEME_ENV_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/$DWM_CONFIG_NAME/theme-env.sh"
 if [[ $RUNTIME_ONLY == 0 && $LIVE_ONLY == 0 ]]; then
+	mkdir -p "${THEME_ENV_FILE%/*}"
 	cat >"$THEME_ENV_FILE" <<EOF
 # Auto-generated by theme-apply.sh — do not edit manually.
 export QT_QPA_PLATFORMTHEME=$(shell_assignment_escape "$QT_PLATFORM_THEME")
 export XCURSOR_THEME=$(shell_assignment_escape "$CURSOR_THEME")
 export XCURSOR_SIZE=$(shell_assignment_escape "$CURSOR_SIZE")
 EOF
-
-fi
-
-# Update qt5ct / qt6ct color scheme config if that tool is the active theme
-if [[ $RUNTIME_ONLY == 0 && $LIVE_ONLY == 0 &&
-	("$QT_PLATFORM_THEME" == "qt5ct" || "$QT_PLATFORM_THEME" == "qt6ct") ]]; then
-	QT_CT_CONF="${XDG_CONFIG_HOME:-$HOME/.config}/${QT_PLATFORM_THEME}/${QT_PLATFORM_THEME}.conf"
-	if [[ -f "$QT_CT_CONF" ]]; then
-		if [[ "$DARK_MODE" == "true" ]]; then
-			QT_CT_SCHEME="/usr/share/${QT_PLATFORM_THEME}/colors/darker.conf"
-		else
-			QT_CT_SCHEME=""
-		fi
-		if grep -q '^color_scheme_path' "$QT_CT_CONF"; then
-			sed -i "s|^color_scheme_path=.*|color_scheme_path=$QT_CT_SCHEME|" "$QT_CT_CONF"
-		else
-			sed -i "/^\[Appearance\]/a color_scheme_path=${QT_CT_SCHEME}" "$QT_CT_CONF"
-		fi
+	if [[ "$DWM_CONFIG_NAME" != "dwm-titus" && -d "${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus" ]]; then
+		cp -f "$THEME_ENV_FILE" "${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus/theme-env.sh" 2>/dev/null || true
 	fi
 fi
+
+# Update qt5ct / qt6ct configurations
+for ct in qt5ct qt6ct; do
+	CT_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/$ct"
+	CT_CONF="$CT_DIR/$ct.conf"
+	if [[ $RUNTIME_ONLY == 0 && $LIVE_ONLY == 0 ]]; then
+		mkdir -p "$CT_DIR"
+		if [[ ! -f "$CT_CONF" ]]; then
+			cat >"$CT_CONF" <<EOF
+[Appearance]
+color_scheme_path=/usr/share/$ct/colors/darker.conf
+custom_palette=true
+icon_theme=Papirus-Dark
+standard_dialogs=default
+style=Fusion
+
+[Interface]
+cursor_size=$CURSOR_SIZE
+cursor_theme=$CURSOR_THEME
+EOF
+		fi
+		if [[ "$DARK_MODE" == "true" ]]; then
+			CT_SCHEME="/usr/share/$ct/colors/darker.conf"
+			CT_PALETTE="true"
+		else
+			CT_SCHEME=""
+			CT_PALETTE="false"
+		fi
+		if grep -q '^color_scheme_path' "$CT_CONF"; then
+			sed -i "s|^color_scheme_path=.*|color_scheme_path=$CT_SCHEME|" "$CT_CONF"
+		else
+			sed -i "/^\[Appearance\]/a color_scheme_path=${CT_SCHEME}" "$CT_CONF"
+		fi
+		if grep -q '^custom_palette' "$CT_CONF"; then
+			sed -i "s|^custom_palette=.*|custom_palette=$CT_PALETTE|" "$CT_CONF"
+		fi
+	fi
+done
 
 # Propagate to user services and D-Bus-activated services in this session
 if [[ $RUNTIME_ONLY == 0 && $TRANSACTIONAL_APPLY == 0 ]] && command -v systemctl &>/dev/null; then
