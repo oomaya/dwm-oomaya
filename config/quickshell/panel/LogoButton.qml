@@ -15,9 +15,9 @@ PanelPill {
         id: logoImage
 
         anchors.centerIn: parent
-        width: 24
-        height: 25.2
-        source: Qt.resolvedUrl("../assets/ctt_logo.png")
+        width: 22
+        height: 22
+        source: Qt.resolvedUrl("../assets/dwm_oomaya_logo.png")
         fillMode: Image.PreserveAspectFit
         asynchronous: true
         smooth: true
@@ -27,7 +27,7 @@ PanelPill {
     UiText {
         anchors.centerIn: parent
         visible: logoImage.status === Image.Error
-        text: "CTT"
+        text: "OMY"
         color: Theme.accent
         font.pixelSize: Theme.tinyFontSize
         font.bold: true
