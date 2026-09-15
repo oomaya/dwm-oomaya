@@ -162,35 +162,158 @@ sudo update-desktop-database /usr/share/applications
 
 ## 6. The Automated 1-Command Solution: `app-install`
 
-To eliminate the manual 5-step checklist friction, we created **`dwm-app-install`** (symlinked as **`app-install`** in `~/.local/bin/app-install`). It automates the entire lifecycle for `.tar.gz`, `.tar.xz`, `.zip`, and uncompressed app folders.
+To eliminate the manual 5-step checklist friction, we created **`app-install`** (packaged as `dwm-app-install` and stowed across the fleet). It automates the entire installation, binary discovery, icon indexing, PATH linking, and desktop integration lifecycle in under 1 second.
 
-### Usage
-```bash
-# 1. User-local installation (no root / sudo required):
-app-install --user ~/Downloads/ideaIU-2024.1.tar.gz
+### Supported Package Formats
+- Archives: `.tar.gz`, `.tgz`, `.tar.xz`, `.txz`, `.tar.bz2`, `.tbz2`, `.zip`
+- Pre-extracted application directories (e.g. `Downloads/Antigravity IDE/`)
+- Single standalone executable binaries and AppImages
 
-# 2. Installing an extracted folder (e.g. Antigravity IDE):
-app-install --user "$HOME/Downloads/Antigravity IDE" --name antigravity --title "Antigravity IDE"
+### Command Syntax & CLI Flags
+```text
+Usage: app-install [OPTIONS] <ARCHIVE_OR_DIRECTORY>
 
-# 3. System-wide installation (installs to /opt and /usr/local/bin):
-sudo app-install ~/Downloads/postman-linux-x64.tar.gz
+Options:
+  --user               Install for current user only (~/.local/share and ~/.local/bin) [default when unprivileged]
+  --system             Install system-wide (/opt and /usr/local/bin; requires sudo) [default when root]
+  --name <slug>        Custom command/folder name (e.g. "idea", "antigravity", "postman")
+  --title <Title>      Friendly desktop display name (e.g. "IntelliJ IDEA", "Antigravity IDE")
+  --exec <relpath>     Explicit relative path to main executable inside the package
+  --icon <relpath>     Explicit relative path to icon inside package (.svg or .png)
+  --category <cats>    XDG Categories (default: "Development;Utility;")
+  -h, --help           Show help documentation
 ```
 
-### What `app-install` Automates in Under 1 Second:
-1. **Archive Extraction**: Unpacks `.tar.gz`, `.tar.xz`, `.zip`, or pre-extracted folders into `/opt/<name>` (system) or `~/.local/share/<name>` (user).
-2. **Binary Auto-Detection**: Scans `bin/` or root for the main executable or startup script.
+### Real-World Usage Examples
+```bash
+# 1. JetBrains Suite (User-local, no sudo required):
+app-install --user ~/Downloads/ideaIU-2024.1.tar.gz
+
+# 2. Extracted Developer Environment (Custom slug & title):
+app-install --user "$HOME/Downloads/Antigravity IDE" --name antigravity --title "Antigravity IDE"
+
+# 3. System-Wide Multi-User Utility (/opt and /usr/local/bin):
+sudo app-install ~/Downloads/postman-linux-x64.tar.gz
+
+# 4. Explicit Binary Override (when package contains multiple scripts):
+app-install --user ~/Downloads/android-studio-2024.1.tar.gz --exec "bin/studio.sh" --name android-studio
+```
+
+### What `app-install` Automates Under the Hood:
+1. **Archive Extraction**: Unpacks `.tar.gz`, `.tar.xz`, `.zip`, or directory trees cleanly into `/opt/<name>` (system) or `~/.local/share/<name>` (user).
+2. **Binary Auto-Detection**: Scans `bin/` and package roots for main ELF executables or startup scripts matching the slug.
 3. **Icon Auto-Discovery**: Finds the highest-resolution `.svg` or `.png` application logo inside the package.
 4. **PATH Trampoline**: Creates an immediate symlink in `/usr/local/bin/<name>` or `~/.local/bin/<name>`.
-5. **XDG Desktop Entry Generation**: Creates a compliant `.desktop` file with `Name`, `Exec`, `Icon`, and `StartupWMClass`.
-6. **Desktop Index Refresh**: Runs `update-desktop-database` so `dmenu-desktop` and desktop launchers detect the app instantly without restarting the window manager.
+5. **XDG Desktop Entry Generation**: Generates a compliant `.desktop` specification with `Name`, `Exec`, `Icon`, and `StartupWMClass`.
+6. **Desktop Index Refresh**: Triggers `update-desktop-database` so application launchers detect the new tool immediately without restarting the window manager.
 
 ---
 
-## 7. Summary Checklist
+## 7. Cross-Machine Fleet Deployment (Methods 1 to 4)
 
-- [ ] Extracted to `/opt/<app>` (system-wide) or `~/.local/share/<app>` (user-local).
-- [ ] Symlink or trampoline script created in `/usr/local/bin` or `~/.local/bin`.
+To ensure `app-install` is universally available across all physical rigs, VMs, and minimal servers without manual copying, use one of the following automated pipelines:
+
+```mermaid
+flowchart TD
+    Origin["Single Source of Truth (GitHub)"] --> Dotfiles["oomaya/dotfiles<br>(Omarchy & Arch Fleet)"]
+    Origin --> Vault["oomaya/vault<br>(Non-Omarchy / Minimal Fleet)"]
+    Origin --> DWM["oomaya/dwm-oomaya<br>(C Workstation Core)"]
+    Origin --> RawCurl["Universal Raw URL<br>(Any Bare VM / Container)"]
+
+    Dotfiles -->|./install.sh --sync| ArchFleet["Omarchy Main PC & VMs"]
+    Vault -->|~/Vault/setup.sh| MinimalFleet["Dell Studio MX Linux, Fedora, Debian"]
+    DWM -->|make install-user| DWMFleet["DWM Workstations"]
+    RawCurl -->|curl 1-liner| Ephemeral["Any Linux Distro / CI Node"]
+```
+
+### Method 1: The Universal 1-Liner Curl (Fastest for Any VM / Bare Distro)
+Requires zero git clones, build toolchains, or window managers. Works out of the box on Ubuntu, Debian, Fedora, Arch, Alpine, or temporary cloud instances:
+
+```bash
+# User-local install (~/.local/bin/app-install):
+curl -fsSL https://raw.githubusercontent.com/oomaya/dotfiles/master/omarchy/.local/bin/app-install -o ~/.local/bin/app-install && chmod +x ~/.local/bin/app-install
+
+# Or system-wide install (/usr/local/bin/app-install):
+sudo curl -fsSL https://raw.githubusercontent.com/oomaya/dotfiles/master/omarchy/.local/bin/app-install -o /usr/local/bin/app-install && sudo chmod +x /usr/local/bin/app-install
+```
+
+### Method 2: Omarchy Fleet via GNU Stow Pipeline (`oomaya/dotfiles`)
+On any Omarchy or Arch-based workstation (Main Rig, Omarchy VMware VM, LG Gram), `app-install` is tracked inside the `omarchy` package:
+
+```bash
+cd ~/dotfiles  # or ~/.dotfiles
+./install.sh --sync
+```
+- **Automated Stowing**: Links `~/dotfiles/omarchy/.local/bin/app-install` $\rightarrow$ `~/.local/bin/app-install` (and alias `dwm-app-install`).
+- **Health Suite Verification**: Stage 4 automatically runs `./verify.sh`, which confirms `app-install` is present and executable in `$PATH`.
+
+### Method 3: Non-Omarchy Fleet via Vault Bootstrap (`oomaya/vault`)
+For minimal hardware, non-Wayland nodes, and secondary laptops (e.g. Dell Studio 1558 on MX Linux, Fedora, Debian):
+
+```bash
+# 1. Clone your vault repository
+git clone git@github.com:oomaya/vault.git ~/Vault
+
+# 2. Run the self-contained setup script
+~/Vault/setup.sh
+```
+Section 5.5 of `setup.sh` automatically fetches `app-install` and wires it to `~/.local/bin/app-install` alongside the knowledge vault tools (`art`, `antigravity-sync-artifacts`).
+
+### Method 4: Workstations Running `dwm-oomaya`
+If you are developing or running the `dwm-oomaya` suckless desktop:
+
+```bash
+cd ~/dwm-oomaya
+git pull
+make install-user       # Installs ~/.local/bin/app-install and ~/.local/bin/dwm-app-install
+# Or for system-wide:
+sudo make install-system
+```
+
+---
+
+## 8. Application Lifecycle & Maintenance Runbook
+
+### Upgrading Applications
+To update an application to a newer release:
+1. Download the new archive release (e.g. `ideaIU-2024.2.tar.gz`).
+2. Run `app-install` using the same `--name` or letting the slug auto-match:
+   ```bash
+   app-install --user ~/Downloads/ideaIU-2024.2.tar.gz --name idea
+   ```
+3. `app-install` replaces the existing extracted folder in `~/.local/share/idea` atomically, updates the executable pointer, and refreshes the desktop database without breaking existing configuration or project files.
+
+### Clean Uninstallation
+To completely remove an application installed via `app-install`:
+
+```bash
+# 1. Define the application slug
+APP="idea"
+
+# For User-Local installs:
+rm -rf "$HOME/.local/share/$APP" "$HOME/.local/bin/$APP" "$HOME/.local/share/applications/$APP.desktop"
+update-desktop-database "$HOME/.local/share/applications" 2>/dev/null || true
+
+# For System-Wide installs:
+sudo rm -rf "/opt/$APP" "/usr/local/bin/$APP" "/usr/share/applications/$APP.desktop"
+sudo update-desktop-database /usr/share/applications 2>/dev/null || true
+```
+
+### Desktop Launcher Compatibility
+Because `app-install` strictly adheres to the XDG Desktop Entry Specification and updates the system desktop cache, newly installed applications appear instantaneously in:
+- **`dmenu-desktop`** (`Super + D` in `dwm-oomaya`)
+- **`omarchy-menu-apps`** / **`fuzzel`** (`Super + Space` in Omarchy / Hyprland)
+- **`walker`**, **`rofi`**, **`wofi`**
+- **GNOME Shell**, **KDE Plasma**, and **XFCE Application Finder**
+
+---
+
+## 9. Summary Checklist
+
+- [ ] Extracted cleanly to `/opt/<app>` (system) or `~/.local/share/<app>` (user).
+- [ ] Single symlink / trampoline created in `/usr/local/bin` or `~/.local/bin`.
 - [ ] `.desktop` file created with valid `Exec`, `Icon`, `Categories`, and `StartupWMClass`.
-- [ ] Tested execution via terminal and dynamic desktop launcher (`dmenu-desktop`).
 - [ ] `update-desktop-database` executed to refresh application index.
-*(All 5 steps above are automated via `app-install`)*
+- [ ] Verified launching via terminal command and desktop launcher (`dmenu-desktop`, `fuzzel`).
+
+*(All 5 steps above are automated in under 1 second via `app-install`)*
