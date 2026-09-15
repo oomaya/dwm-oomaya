@@ -15,8 +15,7 @@
 # ==============================================================================
 set -euo pipefail
 
-VAULT_DIR="${ANTIGRAVITY_VAULT_DIR:-$HOME/Vault}"
-[ -d "$VAULT_DIR" ] || VAULT_DIR="$HOME/antigravity-vault"
+VAULT_DIR="${ANTIGRAVITY_VAULT_DIR:-$HOME/antigravity-vault}"
 [ -d "$VAULT_DIR" ] || VAULT_DIR="$HOME/vault"
 
 ARTIFACTS_DIR="$VAULT_DIR/antigravity-artifacts"
