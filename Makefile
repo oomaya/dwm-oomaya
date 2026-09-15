@@ -23,6 +23,7 @@ OBJ = ${SRC:.c=.o}
 
 INSTALL_COMMANDS = \
 	scripts/active-audio \
+	scripts/agy-update \
 	scripts/dwm-accessibility-settings \
 	scripts/dwm-app-install \
 	scripts/check-deps.sh \

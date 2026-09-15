@@ -1,0 +1,196 @@
+#!/usr/bin/env bash
+# agy-update: Zero-token update orchestrator for Antigravity suite (CLI & IDE)
+# Combines native CLI updater with automated archive ingestion via app-install.
+set -euo pipefail
+
+SCRIPT_NAME="$(basename "${0:-agy-update}")"
+QUIET=0
+CHECK_ONLY=0
+FORCE=0
+CUSTOM_IDE_ARCHIVE=""
+
+print_help() {
+	cat <<EOF
+Usage: $SCRIPT_NAME [OPTIONS]
+
+Zero-token automated update orchestrator for the Google Antigravity suite.
+Updates the Antigravity CLI (agy) and seamlessly ingests Antigravity IDE
+archives from ~/Downloads via app-install with atomic link protection.
+
+Options:
+  -c, --check          Inspect versions without performing updates
+  --ide <archive>      Explicit path to Antigravity IDE .tar.gz archive
+  -f, --force          Force re-installation of IDE even if version appears current
+  -q, --quiet          Quiet mode; only outputs if an update occurred or on error
+  -h, --help           Show this help message
+
+Examples:
+  $SCRIPT_NAME
+  $SCRIPT_NAME --check
+  $SCRIPT_NAME --ide ~/Downloads/Antigravity\ IDE.tar.gz
+EOF
+}
+
+while [[ $# -gt 0 ]]; do
+	case "$1" in
+	-c | --check)
+		CHECK_ONLY=1
+		shift
+		;;
+	--ide)
+		CUSTOM_IDE_ARCHIVE="$2"
+		shift 2
+		;;
+	-f | --force)
+		FORCE=1
+		shift
+		;;
+	-q | --quiet)
+		QUIET=1
+		shift
+		;;
+	-h | --help)
+		print_help
+		exit 0
+		;;
+	*)
+		printf 'Error: Unknown option %s\n' "$1" >&2
+		print_help >&2
+		exit 1
+		;;
+	esac
+done
+
+log() {
+	if [[ $QUIET -eq 0 ]]; then
+		printf "$@"
+	fi
+}
+
+# 1. Inspect & Update Antigravity CLI (agy)
+log '==> [1/2] Checking Antigravity CLI (agy)...\n'
+CLI_BIN=$(command -v agy || true)
+if [[ -z $CLI_BIN && -x "${HOME}/.local/bin/agy" ]]; then
+	CLI_BIN="${HOME}/.local/bin/agy"
+fi
+
+if [[ -n $CLI_BIN ]]; then
+	CLI_VERSION=$("$CLI_BIN" --version 2>/dev/null || echo "installed")
+	log '    Active CLI Version: %s (%s)\n' "$CLI_VERSION" "$CLI_BIN"
+
+	if [[ $CHECK_ONLY -eq 0 ]]; then
+		log '    Running native agy update...\n'
+		CLI_UPDATE_OUTPUT=$("$CLI_BIN" update 2>&1 || true)
+		if [[ $QUIET -eq 0 ]]; then
+			printf '    %s\n' "$CLI_UPDATE_OUTPUT"
+		fi
+	fi
+else
+	printf 'Warning: Antigravity CLI (agy) not found in PATH or ~/.local/bin/agy\n' >&2
+fi
+
+# 2. Inspect & Ingest Antigravity IDE
+log '\n==> [2/2] Checking Antigravity IDE...\n'
+IDE_INSTALL_DIR="${HOME}/.local/share/antigravity"
+IDE_BIN="${HOME}/.local/bin/antigravity"
+INSTALLED_IDE_VER="none"
+
+if [[ -f "$IDE_INSTALL_DIR/resources/app/package.json" ]]; then
+	INSTALLED_IDE_VER=$(grep -m1 '"version":' "$IDE_INSTALL_DIR/resources/app/package.json" | cut -d'"' -f4 || echo "unknown")
+elif [[ -f "$IDE_INSTALL_DIR/resources/app/product.json" ]]; then
+	INSTALLED_IDE_VER=$(grep -m1 '"version":' "$IDE_INSTALL_DIR/resources/app/product.json" | cut -d'"' -f4 || echo "unknown")
+fi
+log '    Installed IDE Version: %s\n' "$INSTALLED_IDE_VER"
+
+# Discover latest candidate IDE archive
+TARGET_ARCHIVE=""
+if [[ -n $CUSTOM_IDE_ARCHIVE ]]; then
+	if [[ -f $CUSTOM_IDE_ARCHIVE ]]; then
+		TARGET_ARCHIVE="$CUSTOM_IDE_ARCHIVE"
+	else
+		printf 'Error: Specified IDE archive does not exist: %s\n' "$CUSTOM_IDE_ARCHIVE" >&2
+		exit 1
+	fi
+else
+	# Search ~/Downloads for newest Antigravity IDE archive
+	DOWNLOADS_DIR="${HOME}/Downloads"
+	if [[ -d $DOWNLOADS_DIR ]]; then
+		LATEST_FOUND=$(find "$DOWNLOADS_DIR" -maxdepth 1 -type f \( -iname "*antigravity*ide*.tar.gz" -o -iname "*antigravity*.tar.gz" \) -printf '%T@ %p\n' 2>/dev/null | sort -nr | head -n1 | cut -d' ' -f2- || true)
+		if [[ -n $LATEST_FOUND && -f $LATEST_FOUND ]]; then
+			TARGET_ARCHIVE="$LATEST_FOUND"
+		fi
+	fi
+fi
+
+if [[ -n $TARGET_ARCHIVE ]]; then
+	ARCHIVE_NAME=$(basename "$TARGET_ARCHIVE")
+	ARCHIVE_TIME=$(stat -c %Y "$TARGET_ARCHIVE" 2>/dev/null || stat -f %m "$TARGET_ARCHIVE" 2>/dev/null || echo 0)
+	INSTALLED_TIME=0
+	if [[ -e $IDE_INSTALL_DIR ]]; then
+		INSTALLED_TIME=$(stat -c %Y "$IDE_INSTALL_DIR" 2>/dev/null || stat -f %m "$IDE_INSTALL_DIR" 2>/dev/null || echo 0)
+	fi
+
+	log '    Discovered Archive:    %s\n' "$TARGET_ARCHIVE"
+
+	NEEDS_UPDATE=0
+	if [[ $FORCE -eq 1 || $INSTALLED_TIME -eq 0 || $ARCHIVE_TIME -gt $INSTALLED_TIME ]]; then
+		NEEDS_UPDATE=1
+	fi
+
+	if [[ $CHECK_ONLY -eq 1 ]]; then
+		if [[ $NEEDS_UPDATE -eq 1 ]]; then
+			log '    Status: Update available from archive (%s)\n' "$ARCHIVE_NAME"
+		else
+			log '    Status: Installed IDE is up to date with latest archive.\n'
+		fi
+	else
+		if [[ $NEEDS_UPDATE -eq 1 ]]; then
+			log '    Ingesting update via app-install...\n'
+
+			# Verify app-install exists
+			APP_INSTALL_BIN=$(command -v app-install || true)
+			if [[ -z $APP_INSTALL_BIN && -x "${HOME}/.local/bin/app-install" ]]; then
+				APP_INSTALL_BIN="${HOME}/.local/bin/app-install"
+			elif [[ -z $APP_INSTALL_BIN && -x "$(dirname "$0")/dwm-app-install" ]]; then
+				APP_INSTALL_BIN="$(dirname "$0")/dwm-app-install"
+			fi
+
+			if [[ -n $APP_INSTALL_BIN ]]; then
+				# Staging & atomic rollback buffer
+				if [[ -d $IDE_INSTALL_DIR ]]; then
+					rm -rf "${IDE_INSTALL_DIR}.bak" 2>/dev/null || true
+					cp -a "$IDE_INSTALL_DIR" "${IDE_INSTALL_DIR}.bak" 2>/dev/null || true
+				fi
+
+				# Run app-install
+				"$APP_INSTALL_BIN" --user "$TARGET_ARCHIVE" --name antigravity --title "Antigravity IDE"
+
+				# Ensure symlink in ~/.local/bin/antigravity points cleanly
+				mkdir -p "${HOME}/.local/bin"
+				ln -sfn "$IDE_INSTALL_DIR/antigravity-ide" "$IDE_BIN"
+
+				# Defensive XDG database refresh
+				APP_DESKTOP_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
+				if command -v update-desktop-database >/dev/null 2>&1; then
+					update-desktop-database "$APP_DESKTOP_DIR" >/dev/null 2>&1 || true
+				fi
+
+				log '    ✅ IDE updated successfully to: %s\n' "$IDE_BIN"
+
+				# Send desktop notification if notify-send is available
+				if command -v notify-send >/dev/null 2>&1; then
+					notify-send "Antigravity Suite" "Antigravity IDE updated successfully." -i "${IDE_INSTALL_DIR}/resources/app/resources/linux/code.png" 2>/dev/null || true
+				fi
+			else
+				printf 'Error: app-install utility not found in PATH or ~/.local/bin/app-install\n' >&2
+				exit 1
+			fi
+		else
+			log '    Installed IDE is current with %s.\n' "$ARCHIVE_NAME"
+		fi
+	fi
+else
+	log '    No pending IDE archive found in ~/Downloads. (Download updates from antigravity.google)\n'
+fi
+
+log '\n✅ Antigravity suite check complete.\n'
