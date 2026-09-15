@@ -1,118 +1,66 @@
-# Walkthrough: DWM-Oomaya System Tightening & Tab Mode Activation
+# Walkthrough: DWM-Oomaya Keybindings, Layouts, Flow Cockpit & Documentation
 
-All loose ends and operational quirks identified in `dwm-oomaya` have been diagnosed, refactored, compiled, and verified in the live desktop session.
-
----
-
-## 1. Accomplishments Overview
-
-| Issue Area | Initial State | Resolved State | Verification |
-| :--- | :--- | :--- | :--- |
-| **Keybindings** | `Super + H` launched `dmenu-hub`, blocking `setmfact -0.05` | `Super + H` exclusively shrinks master factor; `Super + Shift + H` launches `dmenu-hub`; `setcfact` moved to `Super + Ctrl + H/L` | Verified via `dwm-quickshell-controlcenter keybinds` and live testing |
-| **Topbar Branding** | Old Titus Tech emblem (`ctt_logo.png` / "CTT") | Official `dwm-oomaya` crisp 128×128 emblem (`dwm_oomaya_logo.png`) with fallback badge `"OMY"` | Verified rendered in running Quickshell panel |
-| **Tab Mode Engine** | Empty stub in `dwm.c` (no tabs drawn or mapped) | Full suckless tab bar engine implemented: dynamic window management (`m->tabwin`), title rendering with `TabSel`/`TabNorm`, and click-to-focus | Verified live running in PID 1270 (`drawtab.part.0`) |
-| **GTK & Qt Theming** | Apps remained bright white due to nonexistent `Adwaita-dark` and stopped `xsettingsd` | Switched to installed `adw-gtk3-dark`, active `xsettingsd` broadcasting theme/font attributes, `QT_QPA_PLATFORMTHEME="gtk3"`, and dark `Fusion` palettes | Verified GTK3 dark background (`#222226`) and active `dump_xsettings` |
-| **Desktop Entry** | Showed legacy name `dwm-titus` in greeter | Updated to `Dynamic window manager (dwm-oomaya)` in `/usr/share/xsessions/dwm.desktop` | Verified via `/usr/share/xsessions/dwm.desktop` |
+We addressed all reported keybinding conflicts, layout anomalies, vanity gap controls, and README instructions across `dwm-oomaya`.
 
 ---
 
-## 2. Key Code Changes
+## Changes Implemented
 
-### A. Suckless C Core: Native Tab Bar Engine
-- **File**: [`dwm.c`](file:///home/rand/.local/src/dwm-oomaya/dwm.c)
-- **Changes**:
-  - Managed `tabwin` per monitor with `CWOverrideRedirect | CWBackPixmap | CWEventMask`.
-  - Implemented `drawtab(Monitor *m)` and `drawtabs(void)` rendering client names with `TabSel` (`#7aa2f7` on `#24283b`) and `TabNorm` (`#a9b1d6` on `#1a1b26`).
-  - Added click-to-focus in `buttonpress()`: clicking any tab directly switches focus to that client and raises it.
-  - Linked tab geometry in `updatebarpos()` and connected drawing to `expose()`, `propertynotify()`, and `drawbars()`.
+### 1. Keybindings & Launchers
+- **<kbd>Super</kbd> + <kbd>A</kbd> $\rightarrow$ Antigravity IDE (GUI)**:
+  - Unbound from `alacritty` (zero conflict).
+  - Deployed dynamic launcher [antigravity](file:///home/rand/.local/bin/antigravity) resolving local IDE installs without hardcoded usernames.
+- **<kbd>Super</kbd> + <kbd>C</kbd> / <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>C</kbd> $\rightarrow$ Sovereign Flow Cockpit**:
+  - Implemented [scripts/dwm-flow](file:///home/rand/dwm-oomaya/scripts/dwm-flow) and installed to `~/.local/bin/dwm-flow`.
+  - Spawns `agy -c` on the left pane (master) and `nvim` (LazyVim) on the right pane (stack) in Tile layout, reproducing your Omarchy flow cockpit.
+- **<kbd>Super</kbd> + <kbd>D</kbd> $\rightarrow$ Desktop App Launcher (`dmenu-desktop`)**:
+  - Decoupled `incnmaster -1` collision (which previously dropped `nmaster` to 0 and caused the horizontal strip collapse).
+  - Moved `incnmaster -1` to <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>I</kbd> (symmetrically paired with <kbd>Super</kbd> + <kbd>I</kbd> for `incnmaster +1`).
 
-### B. Clean Keybinding Mastery
-- **Files**: [`config.def.h`](file:///home/rand/.local/src/dwm-oomaya/config.def.h), [`config.h`](file:///home/rand/.local/src/dwm-oomaya/config.h), [`config/hotkeys.toml`](file:///home/rand/.local/src/dwm-oomaya/config/hotkeys.toml), [`~/.config/dwm-oomaya/hotkeys.toml`](file:///home/rand/.config/dwm-oomaya/hotkeys.toml)
-- **Changes**:
-  - `MODKEY, XK_h`: `setmfact {.f = -0.05}` (shrink master column).
-  - `MODKEY|ShiftMask, XK_h`: `dmenu-hub`.
-  - `MODKEY|ControlMask, XK_h / XK_l`: `setcfact (+0.25 / -0.25)`.
-  - `MODKEY|ControlMask, XK_w`: `tabmode {-1}`.
+### 2. Layouts & Gap Controls
+- **Cycle Layouts (<kbd>Super</kbd> + <kbd>Tab</kbd> / <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>Tab</kbd>)**:
+  - Replaced tag toggle `view {0}` with `cyclelayout (+1)` and `cyclelayout (-1)` for bidirectional layout navigation.
+- **Switch to Monocle (<kbd>Super</kbd> + <kbd>M</kbd>)**:
+  - Corrected layout index from `2` (which pointed to `spiral`) to `1` (`monocle`).
+  - Updated layout symbol button 3 click to `&layouts[1]`.
+- **Switch to Tile (<kbd>Super</kbd> + <kbd>T</kbd>)**:
+  - Verified `layout_idx = 0` (`[]=`). The previous "horizontal grid" appearance was diagnosed as `nmaster` having been decremented to 0 via the old `Super + D` dual-binding.
+- **Vanity Gaps**:
+  - Wired upstream suckless bindings: <kbd>Super</kbd> + <kbd>Alt</kbd> + <kbd>0</kbd> (toggle), <kbd>Super</kbd> + <kbd>Alt</kbd> + <kbd>=</kbd> (+5px), <kbd>Super</kbd> + <kbd>Alt</kbd> + <kbd>-</kbd> (-5px), and <kbd>Super</kbd> + <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>=</kbd> (reset default 10px).
+  - Updated `Super + Ctrl` aliases to visually noticeable 5px increments.
+- **Hide / Restore Window**:
+  - Documented <kbd>Super</kbd> + <kbd>E</kbd> (`hidewin`) and <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>E</kbd> (`restorewin`) in `README.md`.
+  - Documented <kbd>Super</kbd> + <kbd>H</kbd> / <kbd>Super</kbd> + <kbd>L</kbd> for master resizing.
 
-### C. Theming & Toolkit Synchronization
-- **Files**: [`scripts/theme-apply.sh`](file:///home/rand/.local/src/dwm-oomaya/scripts/theme-apply.sh), [`scripts/dwm-xsettings`](file:///home/rand/.local/src/dwm-oomaya/scripts/dwm-xsettings), [`scripts/autostart.sh`](file:///home/rand/.local/src/dwm-oomaya/scripts/autostart.sh)
-- **Changes**:
-  - Dynamically resolved directories to prioritize `dwm-oomaya` over legacy `dwm-titus`.
-  - Updated `default_gtk_theme()` and fallback to use `adw-gtk3-dark` (preventing white fallback).
-  - Configured `xsettingsd` to broadcast `Net/ThemeName`, `Net/IconThemeName`, `Gtk/CursorThemeName`, `Gtk/CursorThemeSize`, and `Gtk/FontName`.
-  - Configured `QT_QPA_PLATFORMTHEME="gtk3"` so Qt5 and Qt6 automatically share the GTK dark theme via `libqgtk3.so`.
-  - Scaffolding dark `Fusion` configs for `qt5ct` and `qt6ct`.
+### 3. Systems Craftsmanship Runbook
+- Authored [docs/runbooks/compressed_apps_linux_guide.md](file:///home/rand/dwm-oomaya/docs/runbooks/compressed_apps_linux_guide.md) (mirrored to `~/Documents/artifacts/guides/`):
+  - Standard Unix FHS hierarchy (`/opt/` vs `~/.local/share/`).
+  - JetBrains suites, VMware Workstation (`.bundle`, services, kernel modules), and AppImages.
+  - XDG desktop entry integration and `/usr/local/bin` trampoline symlinks.
 
-### D. Session Branding
-- **File**: [`dwm.desktop`](file:///home/rand/.local/src/dwm-oomaya/dwm.desktop)
-- **Installed**: `/usr/share/xsessions/dwm.desktop`
-- **Result**: Display manager greeter displays `Dynamic window manager (dwm-oomaya)`.
-
----
-
-## 3. Verification & Live Status
-
-- **Running Binary**: PID `1270` executing `/usr/local/bin/dwm` with symbol `drawtab.part.0` active.
-- **XSETTINGS Daemon**: PID `1453` running `/home/rand/.config/dwm-oomaya/xsettingsd.conf`.
-- **Properties Output** (`dump_xsettings`):
-  ```
-  Gtk/CursorThemeName "Capitaine-Cursors-White"
-  Gtk/CursorThemeSize 32
-  Gtk/FontName "Adwaita Sans 16"
-  Net/IconThemeName "Adwaita"
-  Net/ThemeName "adw-gtk3-dark"
-  ```
-- **Tab Mode Functionality**:
-  - `Super + Ctrl + W` cycles through `showtab_auto` -> `showtab_always` -> `showtab_never`.
-  - Tabs appear crisply above client windows with Tokyo Night styling.
-  - Clicking tabs focuses and raises clients.
+### 4. Documentation & Installation
+- Overhauled [README.md](file:///home/rand/dwm-oomaya/README.md):
+  - Updated Keyboard Mastery reference table.
+  - Section 2 (Build & Install): Dual-path deployment (`make install-local` and `sudo make install-system`) to guarantee display manager parity.
+  - Section 3 (Install Dmenu Ecosystem): Updated `dmenu-oomaya` build & install with atomic `install -Dm755`.
 
 ---
 
-## 4. Live Session Capture (Privacy-Preserved)
+## Verification Results
 
-> [!NOTE]
-> **Zero Privacy Invasion Guarantee**: In strict accordance with the Zero Privacy Invasion Rule, no workspace contents, browser windows, media, or personal applications are captured. The capture is strictly cropped to the 32px native tab bar widget itself, with non-active/private window titles fully redacted and blacked out.
+### 1. Automated Build Gates
+- `make clean && make -j$(nproc) dwm`: **PASS** (Zero warnings, clean compilation).
+- `tests/test-configure-build.sh`: **PASS** (Configuration generator and header preservation validated).
 
-![DWM-Oomaya Native Tab Mode (Strictly Cropped to 32px Tab Bar)](/home/rand/.gemini/antigravity-cli/brain/d09284cf-50ab-45c7-962e-423342b096d4/dwm_oomaya_tabmode_screenshot.png)
+### 2. Live Runtime Validation (via `xdotool` & `xprop`)
+- `xdotool key Super_L+m`: `_DWM_CURRENT_LAYOUT` switched to `"[M]"` (Monocle) **PASS**.
+- `xdotool key Super_L+t`: `_DWM_CURRENT_LAYOUT` switched to `"[]="` (Tile) **PASS**.
+- `xdotool key Super_L+Tab`: Cycled forward across layouts (`"[]="` $\rightarrow$ `"[M]"` $\rightarrow$ `"[@]"`) **PASS**.
+- `xdotool key Super_L+Shift_L+Tab`: Cycled reverse across layouts **PASS**.
+- `kill -USR1 $(pidof dwm)`: Reloaded runtime TOML configuration cleanly **PASS**.
 
-*The native tab bar running live across the active monitor, rendering the selected `agy` terminal tab (`#7aa2f7` Tokyo Night accent on `#24283b`) and redacted companion tabs, strictly honoring the Sharp-Corner Aesthetic Law.*
-
----
-
-## 5. Dual-Tier GitHub Vault & Frictionless Access Activation
-
-In accordance with [artifact_vault_and_github_sync_plan.md](file:///home/rand/.gemini/antigravity-cli/brain/d09284cf-50ab-45c7-962e-423342b096d4/artifact_vault_and_github_sync_plan.md) and [COOKBOOK.md](file:///home/rand/.gemini/antigravity-cli/brain/5f910c1c-0130-4a32-b87c-3ed7d08403da/scratch/repos/dotfiles/antigravity/COOKBOOK.md), the entire artifact access and cross-machine synchronization pipeline is now operational:
-
-### A. Upstream Noise Elimination
-- Added **Section 6 (Scratchpad & Artifact Offload Law)** to [`global-rules.md`](file:///home/rand/.gemini/antigravity-cli/global-rules.md).
-- Mandates that responses >20 lines must be written as `*.md` artifacts. The chat pane is strictly constrained to a 2–3 sentence executive summary and a direct markdown link.
-
-### B. Background Daemon & Real-Time Sync
-- Deployed [`antigravity-sync-artifacts`](file:///home/rand/.local/bin/antigravity-sync-artifacts) and [`antigravity-watch-artifacts`](file:///home/rand/.local/bin/antigravity-watch-artifacts) to `~/.local/bin/`.
-- Engineered with `flock` mutual exclusion to eliminate contention during rapid agent writes, and strict `.gitignore` filters blocking all binaries, media, and credentials.
-- Enabled and active as a systemd user service:
-  ```bash
-  systemctl --user status antigravity-artifact-sync.service  # Active: running (PID 280076, 4.5 MB RAM)
-  ```
-
-### C. Dual-Tier GitHub Vault Repositories
-1. **Global Vault (`oomaya/vault`) & Pristine Obsidian Vault Law (Rule 4.5)**:
-   - Master AI repository deployed to `~/antigravity-vault/` with remote `git@github.com:oomaya/vault.git`.
-   - **Pristine Obsidian Isolation**: `~/Vault` is reserved strictly for the user's personal Obsidian notes (Google Drive via `rclone bisync`), free of `.git` and AI artifacts.
-   - **Subfolder Architecture**: Structured with `antigravity-artifacts/` as a dedicated subfolder (`current/`, `guides/`, `history/`).
-   - Symlinked `~/Documents/artifacts -> ~/antigravity-vault/antigravity-artifacts` for seamless backwards compatibility.
-   - Automatically committed and pushed to `oomaya/vault` on GitHub in real-time.
-2. **Project-Local Vault (`.agents/artifacts/`)**:
-   - Created `.agents/artifacts/` in `dwm-oomaya`.
-   - Committed implementation plans and walkthroughs directly into `feat/oomaya-dwm-standalone` (commits `5c2f866`, `5564bb1`).
-
-### D. Microsecond Keyboard Access
-- **CLI**: `art` (interactive FZF browser), `art plan` (view latest plan), `art -e plan` (edit in Neovim), `art -l` (list current session).
-- **Neovim**:
-  - `<leader>fv`: Search personal Obsidian notes (`~/Vault`).
-  - `<leader>fa`: Search all AI artifacts (`~/Documents/artifacts` -> `~/antigravity-vault/antigravity-artifacts`).
-  - `<leader>ac`: Search current session artifacts (`~/Documents/artifacts/current`).
-  - `<leader>ag`: Search curated cheat sheets and guides (`~/Documents/artifacts/guides`).
-  - Inotify buffer auto-reload augroup active on external file changes.
-
+### 3. Sandboxed Build & Install Testing
+- Tested in isolated `mktemp -d` sandbox:
+  - `DESTDIR=$SANDBOX make install-system` (verified `dwm`, `dwm-flow`, desktop session, man pages) **PASS**.
+  - `DESTDIR=$SANDBOX ... make install-user` (verified user tree, TOML configs, autostart overrides) **PASS**.
+  - `DESTDIR=$SANDBOX make install` in `dmenu-oomaya` (verified binaries and all 7 scripts) **PASS**.

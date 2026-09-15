@@ -136,10 +136,11 @@ static const Key keys[] = {
     { MODKEY,                           XK_u,       spawn,          SHCMD("maim --select | xclip -selection clipboard -t image/png") },
 
     // application launchers & terminals (Ghostty/Kitty support)
-    { MODKEY,                           XK_c,       spawn,          SHCMD("dmenu-desktop") },
+    { MODKEY,                           XK_c,       spawn,          SHCMD("dwm-flow") },
+    { MODKEY|ShiftMask,                 XK_c,       spawn,          SHCMD("dwm-flow") },
     { MODKEY,                           XK_d,       spawn,          SHCMD("dmenu-desktop") },
     { MODKEY|ShiftMask,                 XK_Return,  spawn,          SHCMD("ghostty || kitty") },
-    { MODKEY,                           XK_a,       spawn,          SHCMD("alacritty") },
+    { MODKEY,                           XK_a,       spawn,          SHCMD("antigravity") },
     { MODKEY,                           XK_s,       spawn,          SHCMD("dwm-scratchpad") },
     { MODKEY,                           XK_slash,   spawn,          SHCMD("quickshell ipc --path \"${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/shell.qml\" call controlcenter openKeybinds || dwm-keybinds") },
     { Mod1Mask,                         XK_p,       spawn,          SHCMD("dmenu-run") },
@@ -159,7 +160,7 @@ static const Key keys[] = {
     { MODKEY,                           XK_j,       focusstack,     {.i = +1 } },
     { MODKEY,                           XK_k,       focusstack,     {.i = -1 } },
     { MODKEY,                           XK_i,       incnmaster,     {.i = +1 } },
-    { MODKEY,                           XK_d,       incnmaster,     {.i = -1 } },
+    { MODKEY|ShiftMask,                 XK_i,       incnmaster,     {.i = -1 } },
 
     // shift view
     { MODKEY,                           XK_Left,    shiftview,      {.i = -1 } },
@@ -176,35 +177,40 @@ static const Key keys[] = {
     { MODKEY|ShiftMask,                 XK_j,       movestack,      {.i = +1 } },
     { MODKEY|ShiftMask,                 XK_k,       movestack,      {.i = -1 } },
     { MODKEY,                           XK_Return,  zoom,           {0} },
-    { MODKEY,                           XK_Tab,     view,           {0} },
+    { MODKEY,                           XK_Tab,     cyclelayout,    {.i = +1 } },
+    { MODKEY|ShiftMask,                 XK_Tab,     cyclelayout,    {.i = -1 } },
 
-    // overall gaps
-    { MODKEY|ControlMask,               XK_i,       incrgaps,       {.i = +1 } },
-    { MODKEY|ControlMask,               XK_d,       incrgaps,       {.i = -1 } },
+    // overall gaps (suckless vanitygaps keybinds + aliases)
+    { MODKEY|Mod1Mask,                  XK_0,       togglegaps,     {0} },
+    { MODKEY|Mod1Mask,                  XK_equal,   incrgaps,       {.i = +5 } },
+    { MODKEY|Mod1Mask,                  XK_minus,   incrgaps,       {.i = -5 } },
+    { MODKEY|Mod1Mask|ShiftMask,        XK_equal,   defaultgaps,    {0} },
+    { MODKEY|ControlMask,               XK_i,       incrgaps,       {.i = +5 } },
+    { MODKEY|ControlMask,               XK_d,       incrgaps,       {.i = -5 } },
 
     // inner gaps
-    { MODKEY|ShiftMask,                 XK_i,       incrigaps,      {.i = +1 } },
-    { MODKEY|ControlMask|ShiftMask,     XK_i,       incrigaps,      {.i = -1 } },
+    { MODKEY|ShiftMask,                 XK_i,       incrigaps,      {.i = +5 } },
+    { MODKEY|ControlMask|ShiftMask,     XK_i,       incrigaps,      {.i = -5 } },
 
     // outer gaps
-    { MODKEY|ControlMask,               XK_o,       incrogaps,      {.i = +1 } },
-    { MODKEY|ControlMask|ShiftMask,     XK_o,       incrogaps,      {.i = -1 } },
+    { MODKEY|ControlMask,               XK_o,       incrogaps,      {.i = +5 } },
+    { MODKEY|ControlMask|ShiftMask,     XK_o,       incrogaps,      {.i = -5 } },
 
     // inner+outer hori, vert gaps
-    { MODKEY|ControlMask,               XK_6,       incrihgaps,     {.i = +1 } },
-    { MODKEY|ControlMask|ShiftMask,     XK_6,       incrihgaps,     {.i = -1 } },
-    { MODKEY|ControlMask,               XK_7,       incrivgaps,     {.i = +1 } },
-    { MODKEY|ControlMask|ShiftMask,     XK_7,       incrivgaps,     {.i = -1 } },
-    { MODKEY|ControlMask,               XK_8,       incrohgaps,     {.i = +1 } },
-    { MODKEY|ControlMask|ShiftMask,     XK_8,       incrohgaps,     {.i = -1 } },
-    { MODKEY|ControlMask,               XK_9,       incrovgaps,     {.i = +1 } },
-    { MODKEY|ControlMask|ShiftMask,     XK_9,       incrovgaps,     {.i = -1 } },
+    { MODKEY|ControlMask,               XK_6,       incrihgaps,     {.i = +5 } },
+    { MODKEY|ControlMask|ShiftMask,     XK_6,       incrihgaps,     {.i = -5 } },
+    { MODKEY|ControlMask,               XK_7,       incrivgaps,     {.i = +5 } },
+    { MODKEY|ControlMask|ShiftMask,     XK_7,       incrivgaps,     {.i = -5 } },
+    { MODKEY|ControlMask,               XK_8,       incrohgaps,     {.i = +5 } },
+    { MODKEY|ControlMask|ShiftMask,     XK_8,       incrohgaps,     {.i = -5 } },
+    { MODKEY|ControlMask,               XK_9,       incrovgaps,     {.i = +5 } },
+    { MODKEY|ControlMask|ShiftMask,     XK_9,       incrovgaps,     {.i = -5 } },
     { MODKEY|ControlMask|ShiftMask,     XK_d,       defaultgaps,    {0} },
 
     // layout selection & cycling
     { MODKEY,                           XK_t,       setlayout,      {.v = &layouts[0]} },
     { MODKEY|ShiftMask,                 XK_f,       setlayout,      {.v = &layouts[1]} },
-    { MODKEY,                           XK_m,       setlayout,      {.v = &layouts[2]} },
+    { MODKEY,                           XK_m,       setlayout,      {.v = &layouts[1]} },
     { MODKEY|ControlMask,               XK_g,       setlayout,      {.v = &layouts[10]} },
     { MODKEY|ControlMask|ShiftMask,     XK_t,       setlayout,      {.v = &layouts[13]} },
     { MODKEY,                           XK_space,   setlayout,      {0} },
@@ -250,7 +256,7 @@ static const Key keys[] = {
 static const Button buttons[] = {
     /* click                event mask      button          function        argument */
     { ClkLtSymbol,          0,              Button1,        setlayout,      {0} },
-    { ClkLtSymbol,          0,              Button3,        setlayout,      {.v = &layouts[2]} },
+    { ClkLtSymbol,          0,              Button3,        setlayout,      {.v = &layouts[1]} },
     { ClkWinTitle,          0,              Button2,        zoom,           {0} },
     { ClkStatusText,        0,              Button2,        spawn,          SHCMD("ghostty || kitty") },
     { ClkClientWin,         MODKEY,         Button1,        moveorplace,    {.i = 0} },

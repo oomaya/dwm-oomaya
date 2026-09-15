@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# Sovereign Agent Flow Cockpit for DWM-Oomaya (agy + nvim dual pane)
+set -euo pipefail
+
+# 1. Resolve terminal emulator (prefer Ghostty, fallback to Kitty/Alacritty)
+TERM_CMD=""
+if command -v ghostty >/dev/null 2>&1; then
+	TERM_CMD="ghostty"
+elif command -v kitty >/dev/null 2>&1; then
+	TERM_CMD="kitty"
+elif command -v alacritty >/dev/null 2>&1; then
+	TERM_CMD="alacritty"
+else
+	TERM_CMD="xterm"
+fi
+
+# 2. Resolve workspace target for Neovim studio
+ARTIFACTS_DIR="${HOME}/Documents/artifacts/current"
+if [ ! -d "$ARTIFACTS_DIR" ]; then
+	ARTIFACTS_DIR="${HOME}/Documents/artifacts"
+fi
+TARGET_DIR="${1:-$ARTIFACTS_DIR}"
+if [ ! -d "$TARGET_DIR" ]; then
+	TARGET_DIR="$HOME"
+fi
+
+# 3. Spawn Dispatcher (agy CLI - Left Pane / Master)
+if command -v agy >/dev/null 2>&1; then
+	"$TERM_CMD" --class=org.omarchy.flow.dispatcher --title="agy-flow" -e agy -c &
+else
+	"$TERM_CMD" --class=org.omarchy.flow.dispatcher --title="agy-flow" &
+fi
+
+# Brief yield so dwm assigns dispatcher to master
+sleep 0.15
+
+# 4. Spawn Studio (LazyVim / Neovim - Right Pane / Stack)
+if command -v nvim >/dev/null 2>&1; then
+	"$TERM_CMD" --class=org.omarchy.flow.studio --title="nvim-studio" -e nvim "$TARGET_DIR" &
+else
+	"$TERM_CMD" --class=org.omarchy.flow.studio --title="nvim-studio" &
+fi

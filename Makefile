@@ -24,6 +24,7 @@ OBJ = ${SRC:.c=.o}
 INSTALL_COMMANDS = \
 	scripts/active-audio \
 	scripts/dwm-accessibility-settings \
+	scripts/dwm-app-install \
 	scripts/check-deps.sh \
 	scripts/disable-powersaving \
 	scripts/dwm-controlcenter \
@@ -31,6 +32,7 @@ INSTALL_COMMANDS = \
 	scripts/dwm-diagnostics \
 	scripts/dwm-display-profile \
 	scripts/dwm-display-setup \
+	scripts/dwm-flow \
 	scripts/dwm-keybinds \
 	scripts/dwm-keybind-exec \
 	scripts/dwm-lock \

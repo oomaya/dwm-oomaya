@@ -1,0 +1,307 @@
+#!/usr/bin/env bash
+# dwm-app-install: Automated installer for compressed app archives and directories
+# Handles: .tar.gz, .tar.xz, .tar.bz2, .zip, and pre-extracted directories.
+# Automatically detects executables, icons, generates .desktop entries, and creates PATH trampolines.
+set -euo pipefail
+
+print_help() {
+	cat <<'EOF'
+Usage: dwm-app-install [OPTIONS] <ARCHIVE_OR_DIRECTORY>
+
+Automatically install and integrate unpackaged Linux applications into the desktop.
+Extracts to /opt/ (or ~/.local/share/), links to PATH, creates an XDG .desktop entry,
+and registers icons for dmenu-desktop and system launchers.
+
+Options:
+  --user               Install for current user only (~/.local/share and ~/.local/bin)
+  --system             Install system-wide (/opt and /usr/local/bin; requires sudo)
+  --name <slug>        Custom command/folder name (e.g. "idea", "antigravity")
+  --title <Title>      Friendly desktop display name (e.g. "Antigravity IDE")
+  --exec <relpath>     Explicit relative path to main executable inside the package
+  --icon <relpath>     Explicit relative path to icon inside the package (.png or .svg)
+  --category <cats>    XDG Categories (default: "Development;Utility;")
+  -h, --help           Show this help message
+
+Examples:
+  dwm-app-install --user ~/Downloads/ideaIU-2024.1.tar.gz
+  dwm-app-install --user "/home/rand/Downloads/Antigravity IDE" --name antigravity --title "Antigravity IDE"
+  sudo dwm-app-install ~/Downloads/postman-linux-x64.tar.gz
+EOF
+}
+
+INSTALL_SCOPE="auto"
+CUSTOM_NAME=""
+CUSTOM_TITLE=""
+CUSTOM_EXEC=""
+CUSTOM_ICON=""
+CUSTOM_CATEGORY="Development;Utility;"
+SOURCE=""
+
+while [[ $# -gt 0 ]]; do
+	case "$1" in
+	--user)
+		INSTALL_SCOPE="user"
+		shift
+		;;
+	--system)
+		INSTALL_SCOPE="system"
+		shift
+		;;
+	--name)
+		CUSTOM_NAME="$2"
+		shift 2
+		;;
+	--title)
+		CUSTOM_TITLE="$2"
+		shift 2
+		;;
+	--exec)
+		CUSTOM_EXEC="$2"
+		shift 2
+		;;
+	--icon)
+		CUSTOM_ICON="$2"
+		shift 2
+		;;
+	--category)
+		CUSTOM_CATEGORY="$2"
+		shift 2
+		;;
+	-h | --help)
+		print_help
+		exit 0
+		;;
+	-*)
+		printf 'Error: Unknown option %s\n' "$1" >&2
+		print_help >&2
+		exit 1
+		;;
+	*)
+		if [[ -z $SOURCE ]]; then
+			SOURCE="$1"
+		else
+			printf 'Error: Multiple sources specified: %s and %s\n' "$SOURCE" "$1" >&2
+			exit 1
+		fi
+		shift
+		;;
+	esac
+done
+
+if [[ -z $SOURCE ]]; then
+	printf 'Error: Missing archive or directory argument.\n\n' >&2
+	print_help >&2
+	exit 1
+fi
+
+if [[ ! -e $SOURCE ]]; then
+	printf 'Error: Source does not exist: %s\n' "$SOURCE" >&2
+	exit 1
+fi
+
+# Determine default scope
+if [[ $INSTALL_SCOPE == "auto" ]]; then
+	if [[ $EUID -eq 0 ]]; then
+		INSTALL_SCOPE="system"
+	else
+		INSTALL_SCOPE="user"
+	fi
+fi
+
+if [[ $INSTALL_SCOPE == "system" && $EUID -ne 0 ]]; then
+	SUDO="sudo"
+else
+	SUDO=""
+fi
+
+# Set installation targets based on scope
+if [[ $INSTALL_SCOPE == "system" ]]; then
+	BASE_INSTALL_DIR="/opt"
+	BIN_DIR="/usr/local/bin"
+	APP_DIR="/usr/share/applications"
+else
+	BASE_INSTALL_DIR="${HOME}/.local/share"
+	BIN_DIR="${HOME}/.local/bin"
+	APP_DIR="${HOME}/.local/share/applications"
+fi
+
+WORKDIR=$(mktemp -d /tmp/app-install-XXXXXX)
+trap 'rm -rf "$WORKDIR"' EXIT
+
+printf '==> Processing source: %s\n' "$SOURCE"
+
+# Unpack archive or copy directory into work staging
+STAGED_APP=""
+if [[ -d $SOURCE ]]; then
+	# Pre-extracted directory
+	SOURCE_BASENAME=$(basename "$SOURCE")
+	STAGED_APP="$WORKDIR/$SOURCE_BASENAME"
+	cp -a "$SOURCE" "$STAGED_APP"
+elif [[ -f $SOURCE ]]; then
+	# Archive detection and extraction
+	case "$SOURCE" in
+	*.tar.gz | *.tgz)
+		tar -xzf "$SOURCE" -C "$WORKDIR"
+		;;
+	*.tar.xz | *.txz)
+		tar -xJf "$SOURCE" -C "$WORKDIR"
+		;;
+	*.tar.bz2 | *.tbz2)
+		tar -xjf "$SOURCE" -C "$WORKDIR"
+		;;
+	*.tar)
+		tar -xf "$SOURCE" -C "$WORKDIR"
+		;;
+	*.zip)
+		unzip -q "$SOURCE" -d "$WORKDIR"
+		;;
+	*)
+		printf 'Error: Unsupported archive format: %s\n' "$SOURCE" >&2
+		exit 1
+		;;
+	esac
+
+	# Find top-level extracted directory
+	SUBDIRS=("$WORKDIR"/*)
+	if [[ ${#SUBDIRS[@]} -eq 1 && -d ${SUBDIRS[0]} ]]; then
+		STAGED_APP="${SUBDIRS[0]}"
+	else
+		# Files were extracted directly into root of archive
+		ARCHIVE_NAME=$(basename "$SOURCE" | sed -E 's/\.(tar\.(gz|xz|bz2)|tgz|txz|tbz2|zip)$//')
+		STAGED_APP="$WORKDIR/$ARCHIVE_NAME"
+		mkdir -p "$STAGED_APP"
+		find "$WORKDIR" -mindepth 1 -maxdepth 1 ! -name "$(basename "$STAGED_APP")" -exec mv {} "$STAGED_APP"/ \;
+	fi
+fi
+
+# Derive application slug and title
+DETECTED_BASENAME=$(basename "$STAGED_APP")
+SLUG=${CUSTOM_NAME:-$(echo "$DETECTED_BASENAME" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9_-]+/-/g' | sed -E 's/^-+|-+$//g')}
+DISPLAY_TITLE=${CUSTOM_TITLE:-$(echo "$SLUG" | sed -E 's/[-_]/ /g' | awk '{for(i=1;i<=NF;i++)sub(/./,toupper(substr($i,1,1)),$i)}1')}
+
+printf '==> Target Application Slug: %s\n' "$SLUG"
+printf '==> Application Display Name: %s\n' "$DISPLAY_TITLE"
+
+# Auto-detect primary executable if not provided
+TARGET_EXEC_REL=""
+if [[ -n $CUSTOM_EXEC ]]; then
+	if [[ -f "$STAGED_APP/$CUSTOM_EXEC" ]]; then
+		TARGET_EXEC_REL="$CUSTOM_EXEC"
+	else
+		printf 'Error: Specified --exec does not exist in package: %s\n' "$CUSTOM_EXEC" >&2
+		exit 1
+	fi
+else
+	# Search heuristics:
+	# 1. Look for executable in bin/ matching slug or product
+	# 2. Look for executable in root matching slug
+	# 3. Look for script *.sh in bin/
+	# 4. Fallback to any executable ELF or script in bin/ or root
+	CANDIDATES=(
+		"bin/$SLUG"
+		"bin/$SLUG.sh"
+		"$SLUG"
+		"bin/$(echo "$SLUG" | cut -d- -f1)"
+		"bin/$(echo "$SLUG" | cut -d- -f1).sh"
+		"$SLUG-ide"
+		"bin/$SLUG-ide"
+	)
+	for c in "${CANDIDATES[@]}"; do
+		if [[ -x "$STAGED_APP/$c" ]]; then
+			TARGET_EXEC_REL="$c"
+			break
+		fi
+	done
+
+	if [[ -z $TARGET_EXEC_REL ]]; then
+		# Search all executables
+		FOUND=$(find "$STAGED_APP" -maxdepth 3 -type f \( -perm -111 -o -name "*.sh" \) ! -name "*test*" ! -name "*uninstall*" | head -n 1)
+		if [[ -n $FOUND ]]; then
+			TARGET_EXEC_REL=${FOUND#"$STAGED_APP/"}
+		fi
+	fi
+fi
+
+if [[ -z $TARGET_EXEC_REL ]]; then
+	printf 'Error: Could not auto-detect main executable. Please specify --exec <relative_path>\n' >&2
+	exit 1
+fi
+printf '==> Detected Executable: %s\n' "$TARGET_EXEC_REL"
+
+# Auto-detect icon if not provided
+TARGET_ICON_REL=""
+if [[ -n $CUSTOM_ICON ]]; then
+	if [[ -f "$STAGED_APP/$CUSTOM_ICON" ]]; then
+		TARGET_ICON_REL="$CUSTOM_ICON"
+	else
+		printf 'Warning: Specified --icon does not exist: %s. Proceeding with auto-detection.\n' "$CUSTOM_ICON" >&2
+	fi
+fi
+
+if [[ -z $TARGET_ICON_REL ]]; then
+	# Look for svg or png
+	ICON_FOUND=$(find "$STAGED_APP" -type f \( -name "*.svg" -o -name "*.png" \) ! -name "*splash*" ! -name "*screenshot*" | grep -E "icon|logo|code|app" | head -n 1 || true)
+	if [[ -z $ICON_FOUND ]]; then
+		ICON_FOUND=$(find "$STAGED_APP" -type f \( -name "*.svg" -o -name "*.png" \) ! -name "*splash*" | head -n 1 || true)
+	fi
+	if [[ -n $ICON_FOUND ]]; then
+		TARGET_ICON_REL=${ICON_FOUND#"$STAGED_APP/"}
+	fi
+fi
+
+if [[ -n $TARGET_ICON_REL ]]; then
+	printf '==> Detected Icon: %s\n' "$TARGET_ICON_REL"
+else
+	printf '==> No icon detected; using generic system application icon.\n'
+fi
+
+FINAL_DEST_DIR="$BASE_INSTALL_DIR/$SLUG"
+FINAL_EXEC_PATH="$FINAL_DEST_DIR/$TARGET_EXEC_REL"
+FINAL_BIN_PATH="$BIN_DIR/$SLUG"
+FINAL_DESKTOP_PATH="$APP_DIR/$SLUG.desktop"
+
+printf '==> Installing to: %s\n' "$FINAL_DEST_DIR"
+$SUDO mkdir -p "$BASE_INSTALL_DIR"
+$SUDO rm -rf "$FINAL_DEST_DIR"
+$SUDO cp -a "$STAGED_APP" "$FINAL_DEST_DIR"
+$SUDO chmod -R a+rX "$FINAL_DEST_DIR"
+$SUDO chmod +x "$FINAL_EXEC_PATH"
+
+printf '==> Creating PATH trampoline: %s\n' "$FINAL_BIN_PATH"
+$SUDO mkdir -p "$BIN_DIR"
+$SUDO ln -sfn "$FINAL_EXEC_PATH" "$FINAL_BIN_PATH"
+
+printf '==> Generating XDG desktop entry: %s\n' "$FINAL_DESKTOP_PATH"
+$SUDO mkdir -p "$APP_DIR"
+
+ICON_ENTRY="Icon=application-x-executable"
+if [[ -n $TARGET_ICON_REL ]]; then
+	ICON_ENTRY="Icon=$FINAL_DEST_DIR/$TARGET_ICON_REL"
+fi
+
+$SUDO bash -c "cat > '$FINAL_DESKTOP_PATH' <<EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=$DISPLAY_TITLE
+GenericName=$DISPLAY_TITLE
+Comment=Installed via dwm-app-install
+Exec=$FINAL_BIN_PATH %F
+$ICON_ENTRY
+Terminal=false
+Categories=$CUSTOM_CATEGORY
+StartupNotify=true
+StartupWMClass=$SLUG
+EOF"
+
+# Update desktop database
+if command -v update-desktop-database >/dev/null 2>&1; then
+	printf '==> Updating XDG desktop database...\n'
+	$SUDO update-desktop-database "$APP_DIR" >/dev/null 2>&1 || update-desktop-database "$APP_DIR" >/dev/null 2>&1 || true
+fi
+
+printf '\n✅ SUCCESS! %s installed successfully.\n' "$DISPLAY_TITLE"
+printf '   - Binary: %s\n' "$FINAL_BIN_PATH"
+printf '   - Files:  %s\n' "$FINAL_DEST_DIR"
+printf '   - Menu:   %s\n' "$FINAL_DESKTOP_PATH"
+printf '   - Available immediately via PATH and dmenu-desktop.\n'

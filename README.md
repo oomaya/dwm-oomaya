@@ -132,10 +132,12 @@ DWM-Oomaya pairs with [`dmenu-oomaya`](https://github.com/oomaya/dmenu-oomaya), 
 | Action | Keybinding | Command |
 | :--- | :--- | :--- |
 | **Primary Terminal** | <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>Enter</kbd> | `ghostty` \|\| `kitty` |
-| **Alacritty Terminal** | <kbd>Super</kbd> + <kbd>A</kbd> | `alacritty` |
-| **Application Launcher** | <kbd>Super</kbd> + <kbd>C</kbd> / <kbd>Super</kbd> + <kbd>D</kbd> | `dmenu-desktop` |
-| **Interactive Window Switcher** | <kbd>Alt</kbd> + <kbd>Tab</kbd> | `dmenu-windows` |
+| **Antigravity IDE** | <kbd>Super</kbd> + <kbd>A</kbd> | `antigravity` (GUI IDE) |
+| **Sovereign Flow Cockpit** | <kbd>Super</kbd> + <kbd>C</kbd> / <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>C</kbd> | `dwm-flow` (`agy` master + `nvim` stack) |
+| **Application Launcher** | <kbd>Super</kbd> + <kbd>D</kbd> | `dmenu-desktop` |
+| **Scratchpad Terminal** | <kbd>Super</kbd> + <kbd>S</kbd> | `dwm-scratchpad` |
 | **Command Runner** | <kbd>Alt</kbd> + <kbd>P</kbd> | `dmenu-run` |
+| **Interactive Window Switcher** | <kbd>Alt</kbd> + <kbd>Tab</kbd> | `dmenu-windows` |
 | **Power Menu** | <kbd>Alt</kbd> + <kbd>X</kbd> | `dmenu-power` |
 | **Master Action Hub** | <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>H</kbd> | `dmenu-hub` |
 | **Keybindings Palette** | <kbd>Super</kbd> + <kbd>/</kbd> | Quickshell Keybinds / `dwm-keybinds` |
@@ -146,20 +148,22 @@ DWM-Oomaya pairs with [`dmenu-oomaya`](https://github.com/oomaya/dmenu-oomaya), 
 | **Focus Next / Previous Window** | <kbd>Super</kbd> + <kbd>J</kbd> / <kbd>Super</kbd> + <kbd>K</kbd> |
 | **Move Window Down / Up** | <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>J</kbd> / <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>K</kbd> |
 | **Promote to Master** | <kbd>Super</kbd> + <kbd>Enter</kbd> |
+| **Master Client Count (+ / -)** | <kbd>Super</kbd> + <kbd>I</kbd> / <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>I</kbd> |
+| **Master Area Shrink / Grow** | <kbd>Super</kbd> + <kbd>H</kbd> / <kbd>Super</kbd> + <kbd>L</kbd> |
 | **Close Focused Window** | <kbd>Super</kbd> + <kbd>Q</kbd> |
 | **Toggle Floating** | <kbd>Super</kbd> + <kbd>Space</kbd> |
 | **Actual Fullscreen** | <kbd>Super</kbd> + <kbd>F</kbd> |
-| **Hide / Restore Window** | <kbd>Super</kbd> + <kbd>H</kbd> / <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>H</kbd> |
+| **Hide / Restore Window** | <kbd>Super</kbd> + <kbd>E</kbd> / <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>E</kbd> |
 
 ### Layout & Gap Controls
 | Action | Keybinding |
 | :--- | :--- |
-| **Cycle Layouts** | <kbd>Super</kbd> + <kbd>Tab</kbd> |
-| **Switch to Tile Layout** | <kbd>Super</kbd> + <kbd>T</kbd> |
-| **Switch to Monocle Layout** | <kbd>Super</kbd> + <kbd>M</kbd> |
-| **Toggle All Gaps** | <kbd>Super</kbd> + <kbd>Alt</kbd> + <kbd>0</kbd> |
-| **Increase / Decrease Gaps** | <kbd>Super</kbd> + <kbd>Alt</kbd> + <kbd>=</kbd> / <kbd>-</kbd> |
-| **Reset Default Gaps** | <kbd>Super</kbd> + <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>=</kbd> |
+| **Cycle Layouts (Forward / Reverse)** | <kbd>Super</kbd> + <kbd>Tab</kbd> / <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>Tab</kbd> |
+| **Switch to Tile Layout** | <kbd>Super</kbd> + <kbd>T</kbd> (`[]=`) |
+| **Switch to Monocle Layout** | <kbd>Super</kbd> + <kbd>M</kbd> (`[M]`) |
+| **Toggle All Gaps** | <kbd>Super</kbd> + <kbd>Alt</kbd> + <kbd>0</kbd> *(or <kbd>Super</kbd> + <kbd>Ctrl</kbd> + <kbd>T</kbd>)* |
+| **Increase / Decrease Gaps (+5px / -5px)** | <kbd>Super</kbd> + <kbd>Alt</kbd> + <kbd>=</kbd> / <kbd>-</kbd> *(or <kbd>Super</kbd> + <kbd>Ctrl</kbd> + <kbd>I</kbd> / <kbd>D</kbd>)* |
+| **Reset Default Gaps** | <kbd>Super</kbd> + <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>=</kbd> *(or <kbd>Super</kbd> + <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd>)* |
 
 ### System & Session
 | Action | Keybinding |
@@ -193,35 +197,50 @@ sudo apt install build-essential libx11-dev libxinerama-dev libxft-dev libfontco
 
 ---
 
-### 2. Build & Install
+### 2. Build & Install (Dual-Path Deployment)
+
+Display managers (LightDM/SDDM) execute `/usr/local/bin/dwm` before user profiles are loaded. To prevent session termination and ensure live desktop upgrades do not collide with running binaries, install both system-wide and user-locally:
 
 ```bash
 # Clone the repository
 git clone https://github.com/oomaya/dwm-oomaya.git ~/.local/src/dwm-oomaya
 cd ~/.local/src/dwm-oomaya
 
-# Compile cleanly
+# 1. Clean build
+make clean
 make -j$(nproc) dwm
 
-# Install user binary to ~/.local/bin/
-install -Dm755 dwm ~/.local/bin/dwm
+# 2. Install user binary, configs, and autostarts to ~/.local/bin/
+make install-local
 
-# Install system-wide to /usr/local/bin/
+# 3. Install system binary, scripts suite, and desktop session to /usr/local/bin/
 sudo make install-system
+```
+
+Verify binary checksum parity:
+```bash
+sha256sum ~/.local/bin/dwm /usr/local/bin/dwm
 ```
 
 ---
 
 ### 3. Install the Dmenu Ecosystem
 
+[`dmenu-oomaya`](https://github.com/oomaya/dmenu-oomaya) provides the centered, fuzzy-matching menu suite and POSIX application discoverers (`dmenu-desktop`, `dmenu-windows`, `dmenu-power`, `dmenu-run`, `dmenu-hub`, `dmenu-scrot`, `dmenu-clip`).
+
 ```bash
 git clone https://github.com/oomaya/dmenu-oomaya.git ~/.local/src/dmenu-oomaya
 cd ~/.local/src/dmenu-oomaya
 
-# Build and install dmenu binary and scripts
+# Clean build
+make clean
 make -j$(nproc)
-install -Dm755 dmenu ~/.local/bin/dmenu
-cp -a scripts/dmenu-* ~/.local/bin/
+
+# Install system-wide (binaries and all scripts to /usr/local/bin)
+sudo make install PREFIX=/usr/local
+
+# Install user-local copy for shell parity
+make install PREFIX="$HOME/.local"
 ```
 
 Ensure `~/.local/bin` is in your `$PATH` (e.g. in `~/.bashrc` or `~/.profile`):
@@ -231,11 +250,10 @@ export PATH="$HOME/.local/bin:$PATH"
 
 ---
 
-## Systems Architecture & Deep Dive
+## Systems Guides & Architecture References
 
-For an exhaustive, step-by-step technical breakdown of the C patches, vanitygaps geometry mathematics, X11 root window atom IPC (`_DWM_CURRENT_LAYOUT`), EWMH `focusonnetactive` surgery, sub-millisecond POSIX `awk` application indexing, and kernel process-replacement mechanics (`execvp` and `ETXTBSY`), consult our complete engineering deliverable:
-
-👉 **[DWM-OOMAYA Systems Engineering & Architecture Reference](./docs/ARCHITECTURE.md)**
+- 👉 **[Systems Engineering & Architecture Reference](./docs/ARCHITECTURE.md)**: Deep dive into C patches, vanitygaps geometry mathematics, X11 atom IPC (`_DWM_CURRENT_LAYOUT`), and process-aware file replacement.
+- 👉 **[Compressed Application Downloads & Suite Runbook](./docs/runbooks/compressed_apps_linux_guide.md)**: Standardized guide on cleanly deploying unpackaged archives (JetBrains IDEs, VMware Workstation, AppImages) into Linux.
 
 ---
 
