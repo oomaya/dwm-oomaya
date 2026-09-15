@@ -45,7 +45,7 @@ Instead of carrying bloated chat transcripts between models, models communicate 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor User as Rand (User)
+    actor User as User / Developer
     participant Architect as 🧠 Gemini 3.8 Flash (Tech Lead)
     participant File as 📄 ~/Documents/artifacts/current_plan.md
     participant Implementer as ⚡ Claude Sonnet 4.6 (Implementer)
@@ -61,6 +61,100 @@ sequenceDiagram
     
     User->>Architect: Step 5: Final review and handoff logging
 ```
+
+---
+
+### 2.1 How the Protocol Works in Antigravity IDE (GUI)
+
+The Antigravity IDE sidebar panel provides a clean, visual interface to execute the Artifact-Handoff Protocol without leaving your code editor:
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Antigravity IDE Workspace                                                   │
+├────────────────────────────────────────┬────────────────────────────────────┤
+│ Editor Canvas (dwm.c, hyprland.lua)    │ Sidebar Chat Panel                 │
+│                                        ├────────────────────────────────────┤
+│                                        │ [Thread A: Gemini 3.8 Flash]       │
+│                                        │  User: "Help me scope and plan X"  │
+│                                        │  Gemini: Generates current_plan.md │
+│                                        │  --------------------------------  │
+│                                        │  (Click '+' to Open Clean Thread)  │
+│                                        ├────────────────────────────────────┤
+│                                        │ [Thread B: Claude Sonnet 4.6]      │
+│                                        │  Model Dropdown: [Claude 4.6 ▼]    │
+│                                        │  User: "Implement @current_plan.md"│
+│                                        │  Claude: Applies surgical edits -> │
+│                                        │          Visual Diff Overlay       │
+└────────────────────────────────────────┴────────────────────────────────────┘
+```
+
+#### Step-by-Step IDE Workflow:
+1. **Thread 1 (Scoping with Gemini 3.8 Flash)**:
+   - In your active sidebar chat thread, set model to **Gemini 3.8 Flash (High)**.
+   - Describe your requirement or bug (e.g. *"Investigate why layout cycling fails in dwm-oomaya and propose a fix"*).
+   - Gemini rapidly scans workspace files using its 1M+ token context and writes the plan to:
+     `~/Documents/artifacts/current_plan.md` *(or `.agents/artifacts/plan.md`)*.
+2. **The Clean Context Transition**:
+   - Instead of continuing in the same bloated thread, click the **`+` (New Thread)** button at the top of the chat panel (or press `Ctrl + Shift + L`).
+   - *Why?* This leaves behind the 20+ turns of exploration and gives you a **pristine 0-token canvas**.
+3. **Thread 2 (Surgical Implementation with Claude Sonnet 4.6)**:
+   - In the new thread, change the model dropdown at the bottom to **Claude Sonnet 4.6 (Thinking)**.
+   - Send:
+     ```text
+     Implement the plan in @current_plan.md
+     ```
+     *(You can also use a file URI: `Implement file://${HOME}/Documents/artifacts/current_plan.md`)*.
+   - Claude reads only the plan and the targeted source files. It executes with 100% focused attention, avoiding hallucinations and zero token waste.
+4. **Visual In-Editor Review**:
+   - Claude’s edits appear directly in your editor canvas as inline visual red/green diff overlays.
+   - Review and accept/reject diffs per-hunk or run your terminal build test.
+
+---
+
+### 2.2 How the Protocol Works in Antigravity CLI (`agy`)
+
+For terminal-first workflows (e.g. running inside Alacritty, Ghostty, or `dwm-flow`):
+
+1. **Step 1: Scoping with Gemini**:
+   ```bash
+   cd ~/dwm-oomaya
+   agy-plan "Scope and draft an implementation plan for vanity gaps in config.def.h"
+   ```
+   Gemini writes the approved plan to `~/Documents/artifacts/current_plan.md`.
+2. **Step 2: Clean Implementation with Claude**:
+   ```bash
+   agy-code "Implement the changes specified in file://${HOME}/Documents/artifacts/current_plan.md"
+   ```
+   Claude boots in a fresh session with a 100% clean context window, mounts the workspace, applies surgical code edits, and verifies the build (`make dwm`).
+3. **Step 3: Verification & Walkthrough**:
+   Claude outputs a concise `walkthrough.md` with git diffs and test results.
+
+---
+
+### 2.3 Concrete Sample Scenarios
+
+#### Scenario 1: Refactoring C Window Manager Pointer Logic (`dwm.c`)
+- **Challenge**: Modifying client window focus handling or layout cycling in `dwm.c` risks subtle pointer corruption, off-by-one index arithmetic, and window manager segfaults.
+- **Workflow**:
+  1. *Gemini Flash*: You run `agy-plan "Analyze layouts[] indices in dwm.c and config.def.h; find why Super+M switches to spiral instead of monocle"`. Gemini flags that index `2` is spiral while monocle is at index `1`, and drafts `current_plan.md`.
+  2. *Claude Sonnet 4.6*: You invoke `agy-code "Implement file://${HOME}/Documents/artifacts/current_plan.md"`. Claude makes the precise C edit, ensures `setlayout(&layouts[1])` is used, runs `make -j$(nproc)`, and tests compiler warnings.
+  3. *Result*: Fixed in 1 shot, 0 compiler warnings, zero bloated transcript.
+
+#### Scenario 2: Debugging a Wayland Lua IPC Dispatch Bug (`hyprland.lua`)
+- **Challenge**: `omarchy-menu-windows` fails to focus windows on off-screen scrolling ribbons due to legacy `hyprctl dispatch` shell collisions.
+- **Workflow**:
+  1. *Gemini Flash*: Explores the dotfiles ecosystem, discovers all references to `omarchy-menu-windows`, and writes the architectural blueprint into `current_plan.md`.
+  2. *Claude Sonnet 4.6*: Opens `hyprland.lua`, replaces the string interpolation with the atomic Lua IPC dispatch (`hl.dispatch(hl.dsp.focus({ window = 'address:0x...' }))`), and verifies Lua syntax using `luac -p`.
+  3. *Result*: Flawless Wayland camera panning with crisp window centering.
+
+#### Scenario 3: Investigating an Application Crash via Systemd Coredump
+- **Challenge**: An application segfaults, generating a coredump in `systemd-coredump`.
+- **Workflow**:
+  1. *Gemini Flash*: Ingests the 2,000-line `coredumpctl info` stack trace and maps the faulting instruction pointer to the binary's symbol table.
+  2. *Claude Sonnet 4.6*: Reviews the exact lines of C source code where the SIGSEGV occurred, spots an unchecked `NULL` pointer returned by a malloc/lookup call, and applies defensive bounds checking.
+  3. *Result*: Crash permanently resolved with zero regression risk.
+
+---
 
 ### Why the Artifact-Handoff Protocol is 10x More Efficient:
 1. **Clean Attention Window**: The implementer model (Claude) starts fresh, focusing 100% of its reasoning budget on the code rather than parsing 40 turns of conversational chat.
@@ -104,12 +198,12 @@ agy -m claude-sonnet-4-6 -c
 
 ## 4. Agent-Triad Guardrails: The 1-Revision Law (`MAX_ROUND_COUNT=2`)
 
-When orchestrating a 3-agent triad (Designer, Reviewer, Mediator), unconstrained debate can result in a "token-fire." The updated [`agent-triad` skill](file:///home/rand/.local/src/antigravity-skills/skills/agent-triad/SKILL.md) enforces two strict architectural controls:
+When orchestrating a 3-agent triad (Designer, Reviewer, Mediator), unconstrained debate can result in a "token-fire." The updated `agent-triad` skill (`~/.gemini/config/skills/agent-triad/SKILL.md`) enforces two strict architectural controls:
 
 1. **`MAX_ROUND_COUNT=2` (The 1-Revision Law)**:
    - **Round 1**: Designer drafts architecture/code $\rightarrow$ Reviewer executes empirical tests and grades 5 vectors.
    - **Round 2**: Designer applies surgical fixes addressing feedback $\rightarrow$ Reviewer audits the fixes.
-   - **Immediate Escalation**: If consensus is not reached after Round 2, debate **immediately halts**. The Mediator summarizes remaining trade-offs and escalates to the Human Partner (Rand) for a binding tie-breaker decision.
+   - **Immediate Escalation**: If consensus is not reached after Round 2, debate **immediately halts**. The Mediator summarizes remaining trade-offs and escalates to the Human Partner (User) for a binding tie-breaker decision.
 2. **Mandatory Consensus File Offload**:
    - Final deliverables are **never dumped into chat**.
    - Output is automatically written to `~/Documents/artifacts/current_plan.md` *(convenience mirror: `current/triad_consensus.md`)*.
