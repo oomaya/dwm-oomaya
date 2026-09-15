@@ -34,9 +34,18 @@ alias agy-pro="agy --model gemini-3.1-pro-high"         # Heavy synthesis (Gemin
 ```
 
 ### The Artifact-Handoff Protocol
-- **Gemini (Tech Lead / Architect)**: Scopes the problem and generates `current_plan.md`.
-- **Claude (Implementer / Systems Coder)**: Launched via `agy-code "Implement file://.../current_plan.md"`, receiving a **100% clean context window** with zero transcript bloat.
-- **Review**: Tech Lead and user review the verified results.
+
+#### In Antigravity IDE (GUI):
+1. **Thread 1 (Scoping)**: In active chat with Gemini 3.8 Flash, scope the task and generate `current_plan.md`.
+2. **Clean Context Transition**: Click `+` (New Thread, `Ctrl+Shift+L`) to clear accumulated exploration baggage.
+3. **Thread 2 (Implementation)**: Select **Claude Sonnet 4.6 (Thinking)** from the model dropdown and send:
+   `Implement the plan in @current_plan.md`.
+4. **Verification**: Claude executes with a 100% clean context window; edits appear as inline visual red/green diffs on your editor canvas.
+
+#### In Antigravity CLI (`agy`):
+1. **Scoping**: `agy-plan "Scope and draft implementation plan for X"` $\rightarrow$ writes `current_plan.md`.
+2. **Implementation**: `agy-code "Implement the changes in file://${HOME}/Documents/artifacts/current_plan.md"`.
+3. **Audit**: Claude applies surgical edits and outputs `walkthrough.md` with git diffs and test results.
 
 ---
 
