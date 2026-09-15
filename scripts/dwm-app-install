@@ -4,13 +4,15 @@
 # Automatically detects executables, icons, generates .desktop entries, and creates PATH trampolines.
 set -euo pipefail
 
+SCRIPT_NAME="$(basename "${0:-app-install}")"
+
 print_help() {
-	cat <<'EOF'
-Usage: dwm-app-install [OPTIONS] <ARCHIVE_OR_DIRECTORY>
+	cat <<EOF
+Usage: $SCRIPT_NAME [OPTIONS] <ARCHIVE_OR_DIRECTORY>
 
 Automatically install and integrate unpackaged Linux applications into the desktop.
 Extracts to /opt/ (or ~/.local/share/), links to PATH, creates an XDG .desktop entry,
-and registers icons for dmenu-desktop and system launchers.
+and registers icons for desktop launchers (dmenu-desktop, fuzzel, walker, rofi, omarchy-menu-apps).
 
 Options:
   --user               Install for current user only (~/.local/share and ~/.local/bin)
@@ -23,9 +25,9 @@ Options:
   -h, --help           Show this help message
 
 Examples:
-  dwm-app-install --user ~/Downloads/ideaIU-2024.1.tar.gz
-  dwm-app-install --user "/home/rand/Downloads/Antigravity IDE" --name antigravity --title "Antigravity IDE"
-  sudo dwm-app-install ~/Downloads/postman-linux-x64.tar.gz
+  $SCRIPT_NAME --user ~/Downloads/ideaIU-2024.1.tar.gz
+  $SCRIPT_NAME --user "\$HOME/Downloads/Antigravity IDE" --name antigravity --title "Antigravity IDE"
+  sudo $SCRIPT_NAME ~/Downloads/postman-linux-x64.tar.gz
 EOF
 }
 
@@ -285,7 +287,7 @@ Version=1.0
 Type=Application
 Name=$DISPLAY_TITLE
 GenericName=$DISPLAY_TITLE
-Comment=Installed via dwm-app-install
+Comment=Installed via $SCRIPT_NAME
 Exec=$FINAL_BIN_PATH %F
 $ICON_ENTRY
 Terminal=false
@@ -304,4 +306,4 @@ printf '\n✅ SUCCESS! %s installed successfully.\n' "$DISPLAY_TITLE"
 printf '   - Binary: %s\n' "$FINAL_BIN_PATH"
 printf '   - Files:  %s\n' "$FINAL_DEST_DIR"
 printf '   - Menu:   %s\n' "$FINAL_DESKTOP_PATH"
-printf '   - Available immediately via PATH and dmenu-desktop.\n'
+printf '   - Available immediately via PATH and desktop launchers.\n'
