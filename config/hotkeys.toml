@@ -77,7 +77,8 @@ keys = [
 
   # ── Launchers & Terminals ────────────────────────────────────────────────────
   { mod="SUPER SHIFT",      key="Return",  desc="Primary Terminal (Ghostty/Kitty)", func="spawn", cmd="ghostty || kitty" },
-  { mod="SUPER",            key="a",       desc="Antigravity IDE",         func="spawn",       cmd="antigravity" },
+  { mod="SUPER",            key="a",       desc="Antigravity IDE",         func="spawn",       cmd="antigravity-ide" },
+  { mod="SUPER SHIFT",      key="a",       desc="Antigravity CLI",         func="spawn",       cmd="ghostty -e antigravity || kitty -e antigravity" },
   { mod="SUPER",            key="s",       desc="Scratchpad Terminal",     func="spawn",       cmd="dwm-scratchpad" },
   { mod="SUPER",            key="c",       desc="Sovereign Flow Cockpit",  func="spawn",       cmd="dwm-flow" },
   { mod="SUPER SHIFT",      key="c",       desc="Sovereign Flow Cockpit (alias)", func="spawn", cmd="dwm-flow" },
