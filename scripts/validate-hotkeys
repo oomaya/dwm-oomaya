@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+TARGET="${1:-$REPO_DIR/config/hotkeys.toml}"
+
+if command -v validate-desktop-command >/dev/null 2>&1; then
+	exec validate-desktop-command "$TARGET"
+elif [[ -x "$HOME/dotfiles/antigravity/.local/bin/validate-desktop-command" ]]; then
+	exec "$HOME/dotfiles/antigravity/.local/bin/validate-desktop-command" "$TARGET"
+else
+	printf "validate-hotkeys: validate-desktop-command not found in PATH or dotfiles\n" >&2
+	exit 1
+fi
