@@ -200,8 +200,8 @@ curl -fsSL https://raw.githubusercontent.com/oomaya/dwm-oomaya/main/bootstrap.sh
 ```
 
 > [!TIP]
-> **Piped TTY Preservation**:
-> When piped through `gh api ... | bash` or `curl | bash`, the bootstrapper automatically reattaches stdin to `/dev/tty` so `sudo` password prompts and configuration dialogs remain interactive without consuming script commands.
+> **Piped Stream Safety**:
+> When piped through `gh api ... | bash -s -- [args]` or process substitution `bash <(...) [args]`, the bootstrapper isolates all child process inputs (`< /dev/null`) and handles non-interactive dry-runs cleanly without draining the incoming script stream.
 
 ---
 
