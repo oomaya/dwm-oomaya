@@ -180,15 +180,28 @@ DWM-Oomaya pairs with [`dmenu-oomaya`](https://github.com/oomaya/dmenu-oomaya), 
 
 ### 1. The Frictionless Remote One-Liner (Recommended)
 
-For fresh systems or instant onboarding, the remote bootstrapper automatically resolves prerequisites, synchronizes both `dwm-oomaya` and `dmenu-oomaya` into canonical paths, and runs the consolidated installer:
+For fresh systems or instant onboarding across the fleet, the remote bootstrapper automatically resolves prerequisites, synchronizes both `dwm-oomaya` and `dmenu-oomaya` into canonical paths (`~/.local/src/`), and runs the consolidated installer:
 
+**Fleet Remote One-Liner (Authenticated via SSH / GitHub CLI):**
+```bash
+# Stream directly via GitHub CLI on authenticated fleet nodes
+gh api repos/oomaya/dwm-oomaya/contents/bootstrap.sh -H "Accept: application/vnd.github.raw" | bash
+```
+
+**Alternative SSH Git One-Liner:**
+```bash
+# Clone with SSH and run consolidated installer
+git clone git@github.com:oomaya/dwm-oomaya.git ~/.local/src/dwm-oomaya && ~/.local/src/dwm-oomaya/install.sh
+```
+
+**Public / Open Access (when repo is public or token is supplied):**
 ```bash
 curl -fsSL https://raw.githubusercontent.com/oomaya/dwm-oomaya/main/bootstrap.sh | bash
 ```
 
 > [!TIP]
 > **Piped TTY Preservation**:
-> When piped through `curl | bash`, the bootstrapper automatically reattaches stdin to `/dev/tty` so `sudo` password prompts and configuration dialogs remain interactive without consuming script commands.
+> When piped through `gh api ... | bash` or `curl | bash`, the bootstrapper automatically reattaches stdin to `/dev/tty` so `sudo` password prompts and configuration dialogs remain interactive without consuming script commands.
 
 ---
 
