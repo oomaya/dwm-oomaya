@@ -123,7 +123,7 @@ dwm_packages() {
 	arch:x11)
 		printf '%s\n' \
 			xorg-server xorg-xinit xorg-xrandr xorg-xset xorg-xsetroot \
-			xorg-xinput xorg-setxkbmap xkbset
+			xorg-xinput xorg-setxkbmap
 		;;
 	arch:runtime-required)
 		printf '%s\n' \
