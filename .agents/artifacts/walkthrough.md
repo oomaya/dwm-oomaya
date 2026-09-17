@@ -1,84 +1,80 @@
-# Walkthrough: DWM-Oomaya & Antigravity Suite Mastery
+# Consolidated DWM-oomaya & Dmenu Installation Pipeline Walkthrough
 
-We have completed the full implementation across `dwm-oomaya`, `oomaya/dotfiles`, `oomaya/antigravity-skills`, and `oomaya/vault`.
-
----
-
-## 1. Zero-Token Antigravity Suite Updates (`agy-update`)
-
-To eliminate manual archive extraction and version drift across machines without spending a single AI token, we built and deployed [`scripts/agy-update`](file:///home/rand/dwm-oomaya/scripts/agy-update):
-
-- **CLI Engine**: Executes native `agy update` silently, verifying the active CLI binary.
-- **IDE Engine**: Automatically detects candidate archives (`~/Downloads/Antigravity IDE*.tar.gz`), checks timestamps against the installed instance in `~/.local/share/antigravity`, and ingests updates via `app-install` in under 1 second.
-- **Defensive Error Boundaries**:
-  - **`ETXTBSY` Protection**: Uses atomic symlink pointer swapping (`ln -sfn`) to prevent crashes while an active IDE session is running.
-  - **Rollback Staging**: Preserves `~/.local/share/antigravity.bak` until verification succeeds.
-  - **Cache Protection**: Guards `update-desktop-database` with `command -v` to prevent crashes on headless/minimal nodes.
-- **Fleet Deployment**:
-  - Installed in [`~/.local/bin/agy-update`](file:///home/rand/.local/bin/agy-update).
-  - Stowed across the Omarchy fleet via [`omarchy/.local/bin/agy-update`](file:///home/rand/dotfiles/omarchy/.local/bin/agy-update) (`3301749`).
-  - Added to [`~/dotfiles/verify.sh`](file:///home/rand/dotfiles/verify.sh) health suite.
-  - Added to non-Omarchy standalone installer [`~/vault/setup.sh`](file:///home/rand/vault/setup.sh) (`70b60b0`).
+We have unified the previously separate `dwm-oomaya` and `dmenu-oomaya` installation streams into a consolidated pipeline, eliminated the GitHub `insteadOf` rewrite loop and SSH/HTTPS authentication trap, and introduced a remote one-liner bootstrapper with TTY reattachment.
 
 ---
 
-## 2. Strategic Claude Model Synergy & Shell Ergonomics
+## Changes Made
 
-Configured shell aliases in [`~/.bashrc`](file:///home/rand/.bashrc) and [`~/dotfiles/bash/.bashrc`](file:///home/rand/dotfiles/bash/.bashrc) (`5ca6096`):
+### 1. Smart Git Transport Engine & Isolation Shield
+- **File**: [`scripts/dwm-git-helper.sh`](file:///home/rand/dwm-oomaya/scripts/dwm-git-helper.sh)
+- **`dwm_git_probe_ssh()`**: Probes GitHub SSH authentication non-interactively in sub-second time using `ssh -o BatchMode=yes -o ConnectTimeout=3 -o StrictHostKeyChecking=accept-new -T git@github.com`.
+- **`dwm_git_resolve_url()`**: Automatically routes `oomaya/*` repositories to SSH (`git@github.com:...`) when authenticated (preserving instant `git push` access for you) or falls back cleanly to HTTPS when unauthenticated.
+- **`dwm_git_safe_clone()`**: Implements an **Isolation Shield** using `GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_NOSYSTEM=1`. This completely bypasses any global `url.<base>.insteadOf` rules in `~/.gitconfig`, permanently neutralizing circular infinite loops (`fatal: infinite loop in insteadOf substitution detected!`) and public-key auth failures.
+- **`dwm_git_clone()`**: Unified clone dispatcher supporting `--git-protocol={auto,ssh,https}`.
+
+---
+
+### 2. Consolidated Installation Script
+- **File**: [`install.sh`](file:///home/rand/dwm-oomaya/install.sh)
+- **Unified Ecosystem Build (`install_dmenu_ecosystem`)**:
+  - Automatically discovers `dmenu-oomaya` across custom `--dmenu-dir`, adjacent developer checkouts (`../dmenu-oomaya`), or canonical checkout (`~/.local/src/dmenu-oomaya`).
+  - Automatically clones `oomaya/dmenu-oomaya` if not present using the Smart Git Transport.
+  - Compiles and deploys `dmenu` and its companion POSIX suite (`dmenu-desktop`, `dmenu-run`, `dmenu-power`, `dmenu-windows`, `dmenu-hub`, `dmenu-scrot`, `dmenu-clip`) both system-wide (`/usr/local/bin`) and user-locally (`~/.local/bin`) using `install -Dm755` (`ETXTBSY` immune).
+- **New CLI Flags**:
+  - `--skip-dmenu`: Skip dmenu installation if managed independently.
+  - `--dmenu-dir=PATH`: Explicit path to dmenu source checkout.
+  - `--git-protocol={auto,ssh,https}`: Transport protocol selection.
+- **Third-Party Asset Immunity**:
+  - Nordic GTK theme and Nord wallpaper downloads now use `dwm_git_safe_clone`, preventing SSH rewriting on public repositories.
+
+---
+
+### 3. Remote Zero-Friction Bootstrapper
+- **File**: [`bootstrap.sh`](file:///home/rand/dwm-oomaya/bootstrap.sh)
+- **Single-Line Remote Execution**:
+  ```bash
+  curl -fsSL https://raw.githubusercontent.com/oomaya/dwm-oomaya/main/bootstrap.sh | bash
+  ```
+- **Piped TTY Preservation**: Detects if stdin is connected to a pipe (`! -t 0`) and reattaches stdin to `/dev/tty`. This guarantees that `sudo` password prompts and configuration dialogs remain interactive without consuming subsequent bash instructions.
+- **Prerequisite Bootstrapping**: Validates and installs missing build tools (`git`, `curl`, `make`, `gcc`).
+- **Canonical Setup**: Clones and synchronizes both `dwm-oomaya` and `dmenu-oomaya` into canonical `~/.local/src/` before executing the consolidated installer.
+
+---
+
+### 4. Build System & Test Suite Parity
+- **File**: [`Makefile`](file:///home/rand/dwm-oomaya/Makefile)
+  - Added target `install-dmenu` for manual developer builds.
+  - Fixed manifest verification parity in `check-install-manifest` (`usr/libexec/dwm-oomaya/dwm-settings-display-root`, `capitaine-cursors` licenses, and `dwm-oomaya` symlink).
+- **File**: [`tests/test-install-preservation.sh`](file:///home/rand/dwm-oomaya/tests/test-install-preservation.sh)
+  - Updated expected data path to `dwm-oomaya`.
+- **File**: [`README.md`](file:///home/rand/dwm-oomaya/README.md)
+  - Updated Quickstart to document the remote one-liner, canonical source paths, Smart Git Transport options, and consolidated build instructions.
+
+---
+
+## Validation & Test Results
+
+All test suites executed with 100% success:
 
 ```bash
-alias agy-code="agy --model claude-sonnet-4-6"          # Deep systems coder (Claude Sonnet 4.6 Thinking)
-alias agy-opus="agy --model claude-opus-4-6-thinking"  # High-depth reasoning (Claude Opus 4.6 Thinking)
-alias agy-plan="agy --model gemini-3.8-flash-high --mode plan" # Rapid architect (Gemini 3.8 Flash)
-alias agy-pro="agy --model gemini-3.1-pro-high"         # Heavy synthesis (Gemini 3.1 Pro)
+# 1. Smart Git Transport & insteadOf immunity under hostile circular configs
+/home/rand/dwm-oomaya/tests/test-smart-git.sh
+# ==> All Smart Git Transport tests passed successfully! ✓
+
+# 2. Consolidated installer options & dry-run validation
+/home/rand/dwm-oomaya/tests/test-consolidated-install.sh
+# ==> Consolidated installation test suite passed! ✓
+
+# 3. System install manifest and uninstall symmetry
+make check-install
+# ==> Install manifest and uninstall symmetry validated.
+
+# 4. Repeated install and user file preservation
+/home/rand/dwm-oomaya/tests/test-install-preservation.sh
+# ==> Repeated install preservation: PASS
+
+# 5. Shellcheck across all 90 scripts
+make check-shell && make check-build-config
+# ==> Build configuration generation and preservation: PASS (0 errors, 0 warnings)
 ```
-
-### The Artifact-Handoff Protocol
-
-#### In Antigravity IDE (GUI):
-1. **Thread 1 (Scoping)**: In active chat with Gemini 3.8 Flash, scope the task and generate `current_plan.md`.
-2. **Clean Context Transition**: Click `+` (New Thread, `Ctrl+Shift+L`) to clear accumulated exploration baggage.
-3. **Thread 2 (Implementation)**: Select **Claude Sonnet 4.6 (Thinking)** from the model dropdown and send:
-   `Implement the plan in @current_plan.md`.
-4. **Verification**: Claude executes with a 100% clean context window; edits appear as inline visual red/green diffs on your editor canvas.
-
-#### In Antigravity CLI (`agy`):
-1. **Scoping**: `agy-plan "Scope and draft implementation plan for X"` $\rightarrow$ writes `current_plan.md`.
-2. **Implementation**: `agy-code "Implement the changes in file://${HOME}/Documents/artifacts/current_plan.md"`.
-3. **Audit**: Claude applies surgical edits and outputs `walkthrough.md` with git diffs and test results.
-
----
-
-## 3. Agent-Triad Upgrade: The 1-Revision Law (`MAX_ROUND_COUNT=2`)
-
-Pushed to [`oomaya/antigravity-skills`](https://github.com/oomaya/antigravity-skills) (`d4447dc`) in [`skills/agent-triad/SKILL.md`](file:///home/rand/.local/src/antigravity-skills/skills/agent-triad/SKILL.md):
-
-1. **`MAX_ROUND_COUNT=2` (The 1-Revision Law)**:
-   - Round 1: Designer drafts $\rightarrow$ Reviewer critiques.
-   - Round 2: Designer applies revisions $\rightarrow$ Reviewer audits.
-   - If consensus is not reached after Round 2, debate **immediately halts** and escalates to the Human Partner (Rand). Eliminates circular bikeshedding and cuts token burn by 33%.
-2. **Mandatory File Offload**:
-   - Consensus outputs are strictly written to [`~/Documents/artifacts/current_plan.md`](file:///home/rand/Documents/artifacts/current_plan.md). Zero chat pane wall-of-text.
-
----
-
-## 4. Systems Runbooks Authored & Mirrored
-
-1. **[antigravity_suite_and_model_synergy_guide.md](file:///home/rand/vault/antigravity-artifacts/guides/antigravity_suite_and_model_synergy_guide.md)**:
-   - Comprehensive model routing matrix, the Artifact-Handoff Protocol, and `agy-update` operations.
-   - Mirrored in [`dwm-oomaya/docs/runbooks/`](file:///home/rand/dwm-oomaya/docs/runbooks/antigravity_suite_and_model_synergy_guide.md) (`94c78b2`) and [`oomaya/vault`](https://github.com/oomaya/vault) (`c7326d6`).
-2. **[compressed_apps_linux_guide.md](file:///home/rand/vault/antigravity-artifacts/guides/compressed_apps_linux_guide.md)**:
-   - Detailed manual and automated installation guide covering FHS hierarchies (`/opt` vs `~/.local/share`), JetBrains, VMware, and Methods 1-4 for fleet deployment.
-   - Mirrored in `dwm-oomaya` (`2e8f6d2`) and `oomaya/vault` (`eb829fa`).
-
----
-
-## 5. Verification Results
-
-| Test / Check | Command | Result |
-| :--- | :--- | :--- |
-| **`agy-update --help`** | `agy-update --help` | **PASS**: Clean flag parsing (`--check`, `--ide`, `--quiet`, `--force`). |
-| **`agy-update --check`** | `agy-update --check` | **PASS**: Detected CLI `1.2.3` and IDE `1.107.0` with candidate archive in `~/Downloads`. |
-| **Bash Syntax Integrity** | `bash -n scripts/agy-update scripts/dwm-app-install` | **PASS**: Zero syntax errors. |
-| **Dotfiles Health Check** | `verify.sh` syntax validation | **PASS**: Verified `app-install` and `agy-update` checks pass. |
-| **Live DWM Layouts** | `xdotool` Monocle, Tile, Layout Cycle | **PASS**: `[M]`, `[]=`, bidirectional cycle working cleanly. |

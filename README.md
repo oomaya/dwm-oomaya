@@ -178,69 +178,90 @@ DWM-Oomaya pairs with [`dmenu-oomaya`](https://github.com/oomaya/dmenu-oomaya), 
 
 ## Installation & Quickstart
 
-### 1. Install Build Dependencies
+### 1. The Frictionless Remote One-Liner (Recommended)
 
-**Fedora Linux:**
+For fresh systems or instant onboarding, the remote bootstrapper automatically resolves prerequisites, synchronizes both `dwm-oomaya` and `dmenu-oomaya` into canonical paths, and runs the consolidated installer:
+
 ```bash
-sudo dnf install gcc make libX11-devel libXinerama-devel libXft-devel fontconfig-devel wmctrl xclip maim
+curl -fsSL https://raw.githubusercontent.com/oomaya/dwm-oomaya/main/bootstrap.sh | bash
 ```
 
-**Arch Linux:**
-```bash
-sudo pacman -S base-devel libx11 libxinerama libxft fontconfig xorg-xinit wmctrl xclip maim
+> [!TIP]
+> **Piped TTY Preservation**:
+> When piped through `curl | bash`, the bootstrapper automatically reattaches stdin to `/dev/tty` so `sudo` password prompts and configuration dialogs remain interactive without consuming script commands.
+
+---
+
+### 2. Canonical Source Architecture & Sibling Discovery
+
+`dwm-oomaya` and `dmenu-oomaya` standardize on canonical user-space source directories:
+- **`~/.local/src/dwm-oomaya/`**: Window manager C core, layouts, and desktop scripts suite.
+- **`~/.local/src/dmenu-oomaya/`**: Centered Tokyo Night dmenu C core and POSIX launchers.
+
+When running `./install.sh` from any location, the installer automatically checks:
+1. Custom `--dmenu-dir=PATH` if specified.
+2. Adjacent developer checkouts (`../dmenu-oomaya`).
+3. Canonical checkout (`~/.local/src/dmenu-oomaya`).
+4. Clones missing components on-demand using the **Smart Git Transport**.
+
+---
+
+### 3. Smart Git Transport & `insteadOf` Immunity Shield
+
+Many developers configure Git to automatically rewrite HTTPS URLs to SSH:
+```gitconfig
+[url "git@github.com:"]
+    insteadOf = https://github.com/
 ```
 
-**Debian / Ubuntu:**
+In naive scripts, this causes severe friction:
+1. **The Infinite Rewrite Loop**: If an installer attempts an inverse `-c url."https://github.com/".insteadOf=...` rewrite, Git aborts with `fatal: infinite loop in insteadOf substitution detected!`.
+2. **Missing SSH Keys**: On fresh machines lacking an SSH key, rewriting public clones to SSH fails with `Permission denied (publickey)`.
+3. **Third-Party Assets**: Public assets like Nordic GTK theme and Nord wallpapers fail if redirected to SSH.
+
+**The Solution (`--git-protocol={auto,ssh,https}`)**:
+- **Auto-Probe Protocol (`auto`, default)**: Probes GitHub SSH authentication non-interactively (`ssh -o BatchMode=yes -T git@github.com`). If active, configures `oomaya/*` remotes with SSH (`git@github.com:...`) so you can `git push` immediately. If unauthenticated, cleanly clones via HTTPS.
+- **Isolation Shield**: Clones third-party public assets and HTTPS fallbacks under an isolated Git config environment (`GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1`), completely immunizing the installation from circular rewrite loops or host-key prompt deadlocks.
+
+---
+
+### 4. Consolidated Local Installation
+
+If you already have cloned `dwm-oomaya`:
+
 ```bash
-sudo apt install build-essential libx11-dev libxinerama-dev libxft-dev libfontconfig1-dev wmctrl xclip maim
+cd ~/.local/src/dwm-oomaya
+
+# Consolidated install (builds & installs DWM + Dmenu in lockstep)
+./install.sh
+
+# Advanced flags:
+./install.sh --profile=full          # Profiles: core, recommended, full (default: full)
+./install.sh --git-protocol=ssh      # Force SSH remotes (or --git-protocol=https)
+./install.sh --skip-dmenu            # Skip dmenu installation if managed separately
+./install.sh --dry-run               # Inspect resolved plan without making changes
 ```
 
 ---
 
-### 2. Build & Install (Dual-Path Deployment)
+### 5. Manual Build (Dual-Path Deployment for Purists)
 
-Display managers (LightDM/SDDM) execute `/usr/local/bin/dwm` before user profiles are loaded. To prevent session termination and ensure live desktop upgrades do not collide with running binaries, install both system-wide and user-locally:
+Display managers (LightDM/SDDM) execute `/usr/local/bin/dwm` before user profiles are loaded. To prevent session termination and ensure live desktop upgrades do not collide with running binaries, deploy both system-wide and user-locally:
 
 ```bash
-# Clone the repository
-git clone https://github.com/oomaya/dwm-oomaya.git ~/.local/src/dwm-oomaya
-cd ~/.local/src/dwm-oomaya
-
-# 1. Clean build
+# 1. Clean build & deploy DWM
 make clean
 make -j$(nproc) dwm
+make install-local         # Deploys user binary, configs, and autostarts to ~/.local/bin/
+sudo make install-system   # Deploys system binary, scripts, and desktop session to /usr/local/bin/
 
-# 2. Install user binary, configs, and autostarts to ~/.local/bin/
-make install-local
-
-# 3. Install system binary, scripts suite, and desktop session to /usr/local/bin/
-sudo make install-system
+# 2. Build & deploy Dmenu companion ecosystem
+make install-dmenu         # Auto-discovers and deploys ../dmenu-oomaya or ~/.local/src/dmenu-oomaya
 ```
 
 Verify binary checksum parity:
 ```bash
-sha256sum ~/.local/bin/dwm /usr/local/bin/dwm
-```
-
----
-
-### 3. Install the Dmenu Ecosystem
-
-[`dmenu-oomaya`](https://github.com/oomaya/dmenu-oomaya) provides the centered, fuzzy-matching menu suite and POSIX application discoverers (`dmenu-desktop`, `dmenu-windows`, `dmenu-power`, `dmenu-run`, `dmenu-hub`, `dmenu-scrot`, `dmenu-clip`).
-
-```bash
-git clone https://github.com/oomaya/dmenu-oomaya.git ~/.local/src/dmenu-oomaya
-cd ~/.local/src/dmenu-oomaya
-
-# Clean build
-make clean
-make -j$(nproc)
-
-# Install system-wide (binaries and all scripts to /usr/local/bin)
-sudo make install PREFIX=/usr/local
-
-# Install user-local copy for shell parity
-make install PREFIX="$HOME/.local"
+sha256sum ~/.local/bin/dwm /usr/local/bin/dwm ~/.local/bin/dmenu /usr/local/bin/dmenu
 ```
 
 Ensure `~/.local/bin` is in your `$PATH` (e.g. in `~/.bashrc` or `~/.profile`):

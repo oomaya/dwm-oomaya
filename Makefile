@@ -210,6 +210,18 @@ install-cursors:
 install-local: dwm
 	$(MAKE) install-user
 
+DMENU_DIR ?= $(firstword $(wildcard ../dmenu-oomaya ${USER_HOME}/.local/src/dmenu-oomaya))
+
+install-dmenu:
+	@if [ -n "${DMENU_DIR}" ] && [ -f "${DMENU_DIR}/Makefile" ]; then \
+		echo "==> Building and installing dmenu-oomaya from ${DMENU_DIR}..."; \
+		$(MAKE) -C "${DMENU_DIR}" all; \
+		$(MAKE) -C "${DMENU_DIR}" install PREFIX="${PREFIX}"; \
+	else \
+		echo "dmenu-oomaya source not found in ../dmenu-oomaya or ${USER_HOME}/.local/src/dmenu-oomaya." >&2; \
+		echo "Run ./install.sh to automatically clone and install dmenu-oomaya." >&2; \
+	fi
+
 install-user:
 	@test -n "${USER_HOME}" || { echo "USER_HOME could not be determined." >&2; exit 1; }
 	@test "$$(id -u)" -ne 0 || { echo "Refusing to install user files as root. Run install-user as the target user." >&2; exit 1; }
@@ -566,7 +578,8 @@ check-install-manifest: all
 		printf '%s\n' \
 			pre-existing \
 			usr/bin/dwm \
-			usr/libexec/dwm-titus/dwm-settings-display-root \
+			usr/bin/dwm-oomaya \
+			usr/libexec/dwm-oomaya/dwm-settings-display-root \
 			usr/share/man/man1/dwm.1 \
 			usr/share/xsessions/dwm.desktop; \
 		for name in ${INSTALL_COMMAND_NAMES}; do \
@@ -579,14 +592,14 @@ check-install-manifest: all
 			\( -type f -o -type l \) \
 			-printf 'usr/share/icons/${CAPITAINE_LIGHT_THEME}/%P\n'; \
 		printf '%s\n' \
-			usr/share/licenses/dwm-titus/capitaine-cursors/COPYING; \
+			usr/share/licenses/dwm-oomaya/capitaine-cursors/COPYING; \
 	} | sort > "$$expected"; \
 	find "$$stage" \( -type f -o -type l \) -printf '%P\n' | sort > "$$actual"; \
 	cmp "$$expected" "$$actual"; \
 	for name in dwm ${INSTALL_COMMAND_NAMES}; do \
 		test -x "$$stage/usr/bin/$$name"; \
 	done; \
-	test -x "$$stage/usr/libexec/dwm-titus/dwm-settings-display-root"; \
+	test -x "$$stage/usr/libexec/dwm-oomaya/dwm-settings-display-root"; \
 	grep -Fqx 'Exec=/usr/bin/dwm' \
 		"$$stage/usr/share/xsessions/dwm.desktop"; \
 	test -f "$$stage/usr/share/icons/${CAPITAINE_DARK_THEME}/cursors/default"; \

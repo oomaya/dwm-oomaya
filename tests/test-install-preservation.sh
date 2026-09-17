@@ -397,8 +397,7 @@ for user_path in \
 	"$FRESH_HOME/.local" \
 	"$FRESH_DATA_HOME" \
 	"$FRESH_CONFIG_HOME" \
-	"$FRESH_CONFIG_HOME/dwm-titus" \
-	"$FRESH_DATA_HOME/dwm-titus"; do
+	"$FRESH_DATA_HOME/dwm-oomaya"; do
 	test "$(stat -c %U "$user_path")" = "$OWNER"
 	test "$(stat -c %G "$user_path")" = "$OWNER_GROUP"
 done

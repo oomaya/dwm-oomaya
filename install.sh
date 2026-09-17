@@ -8,6 +8,9 @@ source "$REPO_DIR/scripts/dwm-utils.sh"
 # shellcheck source=scripts/dwm-packages.sh
 # shellcheck disable=SC1091
 source "$REPO_DIR/scripts/dwm-packages.sh"
+# shellcheck source=scripts/dwm-git-helper.sh
+# shellcheck disable=SC1091
+source "$REPO_DIR/scripts/dwm-git-helper.sh"
 
 RED='\033[0;31m' GREEN='\033[0;32m' YELLOW='\033[1;33m' CYAN='\033[0;36m' NC='\033[0m'
 info() { printf "${CYAN}[INFO]${NC} %s\n" "$1"; }
@@ -24,6 +27,9 @@ Options:
                          Defaults to DWM_INSTALL_PROFILE or full.
   --non-interactive      Use unattended defaults and do not prompt.
   --yes                  Accept the interactive install summary.
+  --skip-dmenu           Do not build or install dmenu-oomaya.
+  --dmenu-dir DIR        Explicit path to dmenu-oomaya source repository.
+  --git-protocol PROTO   Git transport: auto, ssh, or https. (Default: auto).
   --install-herdr        Install verified Herdr as an optional workspace.
   --skip-herdr           Do not install Herdr.
   --enable-fedora-gaming-repos
@@ -67,6 +73,9 @@ ARCH="$(uname -m)"
 FEDORA_GAMING_COPR="christitustech/copr-fedora"
 INSTALL_PROFILE="${DWM_INSTALL_PROFILE:-full}"
 HERDR_INSTALL_MODE="${DWM_INSTALL_HERDR:-false}"
+SKIP_DMENU="${DWM_SKIP_DMENU:-false}"
+DMENU_DIR="${DWM_DMENU_DIR:-}"
+GIT_PROTOCOL="${DWM_GIT_PROTOCOL:-auto}"
 NON_INTERACTIVE=false
 ASSUME_YES=false
 FEDORA_GAMING_REPOS_APPROVED=false
@@ -84,6 +93,34 @@ while (($# > 0)); do
 		;;
 	--profile=*)
 		INSTALL_PROFILE=${1#*=}
+		shift
+		;;
+	--skip-dmenu)
+		SKIP_DMENU=true
+		shift
+		;;
+	--dmenu-dir)
+		if (($# < 2)); then
+			err "--dmenu-dir requires a path."
+			exit 1
+		fi
+		DMENU_DIR="$2"
+		shift 2
+		;;
+	--dmenu-dir=*)
+		DMENU_DIR="${1#*=}"
+		shift
+		;;
+	--git-protocol)
+		if (($# < 2)); then
+			err "--git-protocol requires a value (auto, ssh, or https)."
+			exit 1
+		fi
+		GIT_PROTOCOL="$2"
+		shift 2
+		;;
+	--git-protocol=*)
+		GIT_PROTOCOL="${1#*=}"
 		shift
 		;;
 	--non-interactive)
@@ -122,6 +159,14 @@ while (($# > 0)); do
 		;;
 	esac
 done
+
+case "$GIT_PROTOCOL" in
+auto | ssh | https) ;;
+*)
+	err "Unsupported --git-protocol: $GIT_PROTOCOL (expected auto, ssh, or https)"
+	exit 1
+	;;
+esac
 
 case "$INSTALL_PROFILE" in
 core | minimal)
@@ -343,6 +388,13 @@ print_install_summary() {
 	else
 		printf '  Herdr workspace: skipped (optional; use --install-herdr to enable)\n'
 	fi
+	if [[ $SKIP_DMENU == true ]]; then
+		printf '  dmenu-oomaya ecosystem: skipped (--skip-dmenu)\n'
+	elif [[ -n $DMENU_DIR ]]; then
+		printf '  dmenu-oomaya ecosystem: local source (%s)\n' "$DMENU_DIR"
+	else
+		printf '  dmenu-oomaya ecosystem: consolidated build & deploy (transport: %s)\n' "$GIT_PROTOCOL"
+	fi
 	echo ""
 }
 
@@ -419,7 +471,7 @@ install_nordic_gtk_theme() {
 	fi
 
 	tmp_dir="$(mktemp -d)"
-	if ! git clone --depth 1 --branch "$NORDIC_THEME_REF" "$NORDIC_THEME_URL" "$tmp_dir/Nordic" 2>/dev/null; then
+	if ! dwm_git_safe_clone --depth 1 --branch "$NORDIC_THEME_REF" "$NORDIC_THEME_URL" "$tmp_dir/Nordic" 2>/dev/null; then
 		rm -rf "$tmp_dir"
 		warn "Could not download Nordic GTK theme; continuing without it."
 		return 1
@@ -716,7 +768,7 @@ if install_optional_profile; then
 	mkdir -p "$HOME/Pictures"
 	if [ ! -d "$BG_DIR" ]; then
 		info "Downloading Nord wallpapers..."
-		if git clone https://github.com/ChrisTitusTech/nord-background.git "$BG_DIR" 2>/dev/null; then
+		if dwm_git_safe_clone https://github.com/ChrisTitusTech/nord-background.git "$BG_DIR" 2>/dev/null; then
 			ok "Wallpapers downloaded to $BG_DIR"
 		else
 			warn "Failed to download wallpapers. Add your own to $BG_DIR."
@@ -748,6 +800,47 @@ if [[ $currentdm == "lightdm" ]]; then
 	ok "LightDM config deployed."
 fi
 
+install_dmenu_ecosystem() {
+	if [[ $SKIP_DMENU == true ]]; then
+		warn "Skipping dmenu-oomaya installation as requested (--skip-dmenu)."
+		return 0
+	fi
+
+	info "Consolidating dmenu-oomaya desktop ecosystem..."
+	local dmenu_source=""
+
+	if [[ -n "$DMENU_DIR" && -d "$DMENU_DIR" ]]; then
+		dmenu_source="$DMENU_DIR"
+	elif [[ -d "$REPO_DIR/../dmenu-oomaya" && -f "$REPO_DIR/../dmenu-oomaya/Makefile" ]]; then
+		dmenu_source="$(cd "$REPO_DIR/../dmenu-oomaya" && pwd)"
+	elif [[ -d "$HOME/.local/src/dmenu-oomaya" && -f "$HOME/.local/src/dmenu-oomaya/Makefile" ]]; then
+		dmenu_source="$HOME/.local/src/dmenu-oomaya"
+	fi
+
+	if [[ -z "$dmenu_source" ]]; then
+		local canonical_dir="$HOME/.local/src/dmenu-oomaya"
+		info "Cloning dmenu-oomaya into $canonical_dir..."
+		mkdir -p "$(dirname "$canonical_dir")"
+		if ! dwm_git_clone "oomaya/dmenu-oomaya" "$canonical_dir" "$GIT_PROTOCOL"; then
+			err "Failed to clone dmenu-oomaya repository."
+			return 1
+		fi
+		dmenu_source="$canonical_dir"
+	fi
+
+	info "Building dmenu-oomaya in $dmenu_source..."
+	make -C "$dmenu_source" clean
+	make -C "$dmenu_source" -j"$(nproc 2>/dev/null || echo 1)"
+
+	info "Installing dmenu-oomaya system-wide (/usr/local)..."
+	sudo make -C "$dmenu_source" install PREFIX=/usr/local
+
+	info "Installing dmenu-oomaya user-locally (~/.local)..."
+	make -C "$dmenu_source" install PREFIX="$HOME/.local"
+
+	ok "dmenu-oomaya ecosystem installed and synchronized."
+}
+
 # ── Build & Install ──────────────────────────────────────
 cd "$REPO_DIR"
 make clean
@@ -761,6 +854,7 @@ make install-user \
 	OWNER="$(id -un)" \
 	XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}" \
 	XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+install_dmenu_ecosystem
 configure_displays_after_install
 
 # ── Done ─────────────────────────────────────────────────
@@ -779,7 +873,9 @@ if [[ $currentdm == "lightdm" ]]; then
 fi
 echo ""
 echo "  SUPER+/   keybind viewer     SUPER+X  terminal"
-echo "  SUPER+F1  control center     SUPER+R  app launcher"
+echo "  SUPER+F1  control center     SUPER+R  quickshell launcher"
+echo "  SUPER+D   dmenu desktop      ALT+P    dmenu run prompt"
+echo "  ALT+X     dmenu power menu   ALT+Tab  dmenu window switcher"
 echo "  SUPER+Q   close window"
 echo ""
 echo "  Full reference: https://dwm.christitus.com/keybinds.html or SUPER+/ in dwm"
