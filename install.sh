@@ -699,6 +699,9 @@ if install_recommended_profile; then
 			"$REPO_DIR/scripts/dwm-quickshell-version-check" 2>/dev/null; then
 			warn "The installed Quickshell build may differ from the tested reference."
 		fi
+	elif package_available quickshell; then
+		info "Installing Quickshell UI toolkit from active repositories..."
+		install_packages quickshell || true
 	else
 		info "Quickshell not detected; dmenu-oomaya and standard X11 utilities will be used."
 	fi
@@ -812,11 +815,11 @@ elif [[ $HERDR_INSTALL_MODE == true ]]; then
 fi
 
 # ── XDG dirs + wallpapers ────────────────────────────────
-if install_optional_profile && command -v xdg-user-dirs-update &>/dev/null; then
+if install_recommended_profile && command -v xdg-user-dirs-update &>/dev/null; then
 	xdg-user-dirs-update
 fi
 
-if install_optional_profile; then
+if install_recommended_profile; then
 	mkdir -p "$HOME/Pictures"
 	if [ ! -d "$BG_DIR" ]; then
 		info "Downloading Nord wallpapers..."

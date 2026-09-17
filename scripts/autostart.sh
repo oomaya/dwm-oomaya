@@ -461,15 +461,24 @@ if [ -f "$QUICKSHELL_CONFIG" ]; then
 	if [ -z "$quickshell_check" ] && command -v dwm-quickshell-version-check >/dev/null 2>&1; then
 		quickshell_check=dwm-quickshell-version-check
 	fi
-	if [ -n "$quickshell_check" ] && "$quickshell_check"; then
+	if [ -n "$quickshell_check" ] && "$quickshell_check" 2>/dev/null; then
+		quickshell_compatible=1
+		start_managed_quickshell "$QUICKSHELL_CONFIG"
+	elif command -v quickshell >/dev/null 2>&1; then
+		# Allow distribution-packaged Quickshell on Arch, CachyOS, and Debian
 		quickshell_compatible=1
 		start_managed_quickshell "$QUICKSHELL_CONFIG"
 	else
-		printf '%s\n' 'dwm-titus: compatible Quickshell 0.3.0 or Fedora 44 snapshot is required' >&2
+		printf '%s\n' 'dwm-oomaya: Quickshell is not installed or available' >&2
 	fi
 	if [ "$quickshell_compatible" -eq 1 ]; then
 		wait_for_quickshell_tray "$QUICKSHELL_CONFIG" || true
 	fi
+fi
+
+# Set Tokyo Night baseline solid root color so the display is never a raw black void
+if command -v xsetroot >/dev/null 2>&1; then
+	xsetroot -solid '#1a1b26' >/dev/null 2>&1 || true
 fi
 
 xdg_autostart_started=0
