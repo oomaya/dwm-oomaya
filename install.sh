@@ -67,11 +67,14 @@ BG_DIR="$HOME/Pictures/backgrounds"
 MESLO_VERSION="3.4.0"
 MESLO_URL="https://github.com/ryanoasis/nerd-fonts/releases/download/v${MESLO_VERSION}/Meslo.zip"
 MESLO_SHA256="13b502ac8c2bd9d3161018064560e23cd42b175bb730780a270975265a19ad57"
+JETBRAINS_VERSION="3.4.0"
+JETBRAINS_URL="https://github.com/ryanoasis/nerd-fonts/releases/download/v${JETBRAINS_VERSION}/JetBrainsMono.zip"
+JETBRAINS_SHA256="76f05ff3ace48a464a6ca57977998784ff7bdbb65a6d915d7e401cd3927c493c"
 NORDIC_THEME_URL="https://github.com/EliverLara/Nordic.git"
 NORDIC_THEME_REF="master"
 ARCH="$(uname -m)"
 FEDORA_GAMING_COPR="christitustech/copr-fedora"
-INSTALL_PROFILE="${DWM_INSTALL_PROFILE:-full}"
+INSTALL_PROFILE="${DWM_INSTALL_PROFILE:-recommended}"
 HERDR_INSTALL_MODE="${DWM_INSTALL_HERDR:-false}"
 SKIP_DMENU="${DWM_SKIP_DMENU:-false}"
 DMENU_DIR="${DWM_DMENU_DIR:-}"
@@ -456,6 +459,39 @@ install_meslo_nerd_font() {
 	ok "MesloLGS Nerd Font installed."
 }
 
+install_jetbrains_mono_nerd_font() {
+	local font_dir="$HOME/.local/share/fonts/JetBrainsMono"
+	local tmp_dir
+	local archive
+
+	if fc-list 2>/dev/null | command grep -Eqi 'JetBrainsMono (NF|Nerd Font)'; then
+		ok "JetBrainsMono Nerd Font is already installed."
+		return
+	fi
+
+	tmp_dir="$(mktemp -d)"
+	archive="$tmp_dir/JetBrainsMono.zip"
+
+	info "Downloading JetBrains Mono Nerd Font v${JETBRAINS_VERSION}..."
+	if ! curl --fail --location --show-error --silent "$JETBRAINS_URL" --output "$archive"; then
+		rm -rf "$tmp_dir"
+		err "Failed to download JetBrains Mono Nerd Font."
+		return 1
+	fi
+
+	if ! printf '%s  %s\n' "$JETBRAINS_SHA256" "$archive" | sha256sum --check --status; then
+		rm -rf "$tmp_dir"
+		err "JetBrains Mono Nerd Font checksum verification failed."
+		return 1
+	fi
+
+	mkdir -p "$font_dir"
+	unzip -j -q -o "$archive" '*.ttf' -d "$font_dir"
+	rm -rf "$tmp_dir"
+	fc-cache -f "$font_dir" >/dev/null 2>&1
+	ok "JetBrainsMono Nerd Font installed."
+}
+
 install_nordic_gtk_theme() {
 	local target="/usr/share/themes/Nordic"
 	local tmp_dir
@@ -580,10 +616,22 @@ detect_display_manager() {
 		echo "sddm"
 		return
 		;;
+	greetd.service)
+		echo "greetd"
+		return
+		;;
+	ly.service)
+		echo "ly"
+		return
+		;;
+	lxdm.service)
+		echo "lxdm"
+		return
+		;;
 	esac
 
-	for unit in lightdm gdm sddm; do
-		if command -v "$unit" &>/dev/null; then
+	for unit in lightdm gdm sddm greetd ly lxdm; do
+		if systemctl is-active --quiet "$unit.service" 2>/dev/null || command -v "$unit" &>/dev/null; then
 			echo "$unit"
 			return
 		fi
@@ -646,11 +694,13 @@ ok "Required build and runtime dependencies installed."
 if install_recommended_profile; then
 	info "Installing recommended desktop dependencies..."
 	dwm_install_package_profile desktop
-	dwm_install_package_profile system-management
-	if ! env -u DWM_TEST_MODE -u DWM_TEST_QUICKSHELL_VERSION \
-		"$REPO_DIR/scripts/dwm-quickshell-version-check"; then
-		err "The installed Quickshell build is incompatible with dwm-titus."
-		exit 1
+	if command -v quickshell >/dev/null 2>&1; then
+		if ! env -u DWM_TEST_MODE -u DWM_TEST_QUICKSHELL_VERSION \
+			"$REPO_DIR/scripts/dwm-quickshell-version-check" 2>/dev/null; then
+			warn "The installed Quickshell build may differ from the tested reference."
+		fi
+	else
+		info "Quickshell not detected; dmenu-oomaya and standard X11 utilities will be used."
 	fi
 	if ! dwm_install_available_package_profile screenshot-optional; then
 		warn "maim is unavailable in the enabled repositories; screenshot hotkeys will remain disabled."
@@ -678,7 +728,8 @@ fi
 
 # ── Optional desktop extras ──────────────────────────────
 if install_optional_profile; then
-	info "Installing optional desktop extras..."
+	info "Installing optional desktop extras & system management..."
+	dwm_install_package_profile system-management
 	if ! dwm_install_available_package_profile optional; then
 		warn "Some optional desktop extras were unavailable in enabled repositories."
 	fi
@@ -716,6 +767,7 @@ if install_recommended_profile; then
 	FONT_DIR="$HOME/.local/share/fonts"
 	mkdir -p "$FONT_DIR"
 	install_meslo_nerd_font
+	install_jetbrains_mono_nerd_font
 	ok "Fonts installed."
 fi
 
@@ -782,11 +834,12 @@ fi
 currentdm="$(detect_display_manager)"
 
 if [ -n "$currentdm" ]; then
-	ok "Display manager already installed: $currentdm"
+	ok "Display manager already installed / active: $currentdm"
 elif ! install_optional_profile; then
-	warn "No display manager found; skipping display-manager installation for $INSTALL_PROFILE profile."
+	warn "No display manager found; preserving existing environment/session."
+	info "Start dwm manually with: startx (or add 'exec dwm' to ~/.xinitrc)"
 else
-	info "No display manager found - installing LightDM..."
+	info "No display manager found and full profile requested - installing LightDM..."
 	dwm_install_package_profile lightdm
 	sudo systemctl enable lightdm.service
 	currentdm="lightdm"

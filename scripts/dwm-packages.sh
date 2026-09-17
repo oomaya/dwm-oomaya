@@ -127,14 +127,18 @@ dwm_packages() {
 		;;
 	arch:runtime-required)
 		printf '%s\n' \
-			dbus curl git procps-ng psmisc unzip util-linux xclip xdotool xprop xdg-utils
+			dbus curl git procps-ng psmisc unzip util-linux xclip xdotool xorg-xprop xdg-utils
 		;;
 	arch:desktop)
 		printf '%s\n' \
 			picom feh dex inotify-tools jq \
-			alsa-utils brightnessctl libnotify pipewire pipewire-pulse wireplumber \
-			pavucontrol bluez blueman playerctl upower power-profiles-daemon flatpak \
-			xdg-desktop-portal-gtk
+			alsa-utils brightnessctl libnotify playerctl
+		;;
+	arch:desktop-optional)
+		printf '%s\n' \
+			pipewire pipewire-pulse wireplumber pavucontrol \
+			bluez blueman upower power-profiles-daemon flatpak \
+			xdg-desktop-portal-gtk thunar gvfs file-roller
 		;;
 	arch:system-management)
 		printf '%s\n' packagekit python-gobject accountsservice cups system-config-printer
@@ -160,6 +164,9 @@ dwm_packages() {
 	arch:theme-optional)
 		printf '%s\n' qt6ct qt5ct
 		;;
+	arch:lightdm)
+		printf '%s\n' lightdm slick-greeter
+		;;
 	arch:qml-development)
 		printf '%s\n' qt6-declarative
 		;;
@@ -180,8 +187,83 @@ dwm_packages() {
 		;;
 	arch:optional)
 		dwm_packages "$family" theme-optional
+		dwm_packages "$family" desktop-optional
+		dwm_packages "$family" system-management
 		;;
 	arch:full)
+		dwm_packages "$family" required
+		dwm_packages "$family" recommended
+		dwm_packages "$family" optional
+		;;
+	debian:build)
+		printf '%s\n' \
+			build-essential pkg-config libx11-dev libxft-dev \
+			libxinerama-dev libxrender-dev libimlib2-dev libxcb1-dev \
+			libxcb-res0-dev libxcb-util-dev libfontconfig1-dev libfreetype-dev
+		;;
+	debian:x11)
+		printf '%s\n' \
+			xorg x11-xserver-utils x11-utils x11-xkb-utils xinput
+		;;
+	debian:runtime-required)
+		printf '%s\n' \
+			dbus-x11 curl git procps psmisc unzip util-linux xclip xdotool xdg-utils
+		;;
+	debian:desktop)
+		printf '%s\n' \
+			picom feh dex inotify-tools jq \
+			alsa-utils brightnessctl libnotify-bin pulseaudio-utils playerctl
+		;;
+	debian:desktop-optional)
+		printf '%s\n' \
+			thunar gvfs file-roller bluez blueman upower \
+			flatpak xdg-desktop-portal-gtk
+		;;
+	debian:system-management)
+		printf '%s\n' packagekit python3-gi accountsservice cups system-config-printer
+		;;
+	debian:terminal)
+		printf '%s\n' alacritty kitty
+		;;
+	debian:terminal-primary)
+		printf '%s\n' alacritty
+		;;
+	debian:screenshot-optional)
+		printf '%s\n' maim
+		;;
+	debian:fonts)
+		printf '%s\n' fonts-noto-core fonts-noto-color-emoji
+		;;
+	debian:theme)
+		printf '%s\n' dconf-cli
+		;;
+	debian:theme-gtk)
+		printf '%s\n' arc-theme
+		;;
+	debian:theme-optional)
+		printf '%s\n' qt6ct qt5ct
+		;;
+	debian:lightdm)
+		printf '%s\n' lightdm slick-greeter
+		;;
+	debian:required)
+		dwm_packages "$family" build
+		dwm_packages "$family" x11
+		dwm_packages "$family" runtime-required
+		;;
+	debian:recommended)
+		dwm_packages "$family" desktop
+		dwm_packages "$family" screenshot-optional
+		dwm_packages "$family" theme
+		dwm_packages "$family" theme-gtk
+		dwm_packages "$family" fonts
+		;;
+	debian:optional)
+		dwm_packages "$family" theme-optional
+		dwm_packages "$family" desktop-optional
+		dwm_packages "$family" system-management
+		;;
+	debian:full)
 		dwm_packages "$family" required
 		dwm_packages "$family" recommended
 		dwm_packages "$family" optional

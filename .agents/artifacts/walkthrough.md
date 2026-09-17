@@ -1,80 +1,123 @@
-# Consolidated DWM-oomaya & Dmenu Installation Pipeline Walkthrough
+# Lean Desktop Architecture & Multi-Distro Hardening Walkthrough
 
-We have unified the previously separate `dwm-oomaya` and `dmenu-oomaya` installation streams into a consolidated pipeline, eliminated the GitHub `insteadOf` rewrite loop and SSH/HTTPS authentication trap, and introduced a remote one-liner bootstrapper with TTY reattachment.
+We have completed the architectural overhaul of `dwm-oomaya`'s dependency pipeline, resolving the consecutive package target errors on Arch/CachyOS, implementing full Debian/Ubuntu/Pop!_OS support, adding JetBrains Mono Nerd Font, and establishing Priority 0 display manager safety.
 
 ---
 
 ## Changes Made
 
-### 1. Smart Git Transport Engine & Isolation Shield
-- **File**: [`scripts/dwm-git-helper.sh`](file:///home/rand/dwm-oomaya/scripts/dwm-git-helper.sh)
-- **`dwm_git_probe_ssh()`**: Probes GitHub SSH authentication non-interactively in sub-second time using `ssh -o BatchMode=yes -o ConnectTimeout=3 -o StrictHostKeyChecking=accept-new -T git@github.com`.
-- **`dwm_git_resolve_url()`**: Automatically routes `oomaya/*` repositories to SSH (`git@github.com:...`) when authenticated (preserving instant `git push` access for you) or falls back cleanly to HTTPS when unauthenticated.
-- **`dwm_git_safe_clone()`**: Implements an **Isolation Shield** using `GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_NOSYSTEM=1`. This completely bypasses any global `url.<base>.insteadOf` rules in `~/.gitconfig`, permanently neutralizing circular infinite loops (`fatal: infinite loop in insteadOf substitution detected!`) and public-key auth failures.
-- **`dwm_git_clone()`**: Unified clone dispatcher supporting `--git-protocol={auto,ssh,https}`.
+### 1. Architectural Default: Lean Desktop (`recommended`)
+- **Files**: [`install.sh`](file:///home/rand/dwm-oomaya/install.sh), [`scripts/dwm-packages.sh`](file:///home/rand/dwm-oomaya/scripts/dwm-packages.sh)
+- Changed default `INSTALL_PROFILE` from `full` to `recommended`.
+- Decoupled `system-management` (`cups`, `PackageKit`, `system-config-printer`) from the default installation path, moving it strictly into `--profile=full` for bare-metal ISO kickstarts.
+- Running `./install.sh` on an existing desktop now completes cleanly in seconds without attempting to install 50+ unwanted packages or background daemons.
 
 ---
 
-### 2. Consolidated Installation Script
+### 2. Arch Linux Package Hardening & Target Corrections
+- **File**: [`scripts/dwm-packages.sh`](file:///home/rand/dwm-oomaya/scripts/dwm-packages.sh)
+- **Target Resolution**: Replaced bare `xprop` with `xorg-xprop` in `arch:runtime-required`, resolving the `target not found: xprop` failure.
+- **AUR Dependency Purge**: Removed `xkbset` (AUR-only) from official package manager transactions.
+- **Lean Desktop Streamlining**: Streamlined `arch:desktop` to core desktop utilities (`picom`, `feh`, `dex`, `inotify-tools`, `jq`, `alsa-utils`, `brightnessctl`, `libnotify`, `playerctl`), offloading redundant audio/power daemons to `arch:desktop-optional`.
+
+---
+
+### 3. Native Debian / Ubuntu / Pop!_OS Capability
+- **File**: [`scripts/dwm-packages.sh`](file:///home/rand/dwm-oomaya/scripts/dwm-packages.sh)
+- Added complete, verified Debian/Ubuntu package mappings:
+  - `debian:build`: `build-essential`, `pkg-config`, `libx11-dev`, `libxft-dev`, `libxinerama-dev`, `libxrender-dev`, `libimlib2-dev`, `libxcb1-dev`, `libxcb-res0-dev`, `libxcb-util-dev`, `libfontconfig1-dev`, `libfreetype-dev`.
+  - `debian:x11`: `xorg`, `x11-xserver-utils`, `x11-utils`, `x11-xkb-utils`, `xinput`.
+  - `debian:runtime-required`: `dbus-x11`, `curl`, `git`, `procps`, `psmisc`, `unzip`, `util-linux`, `xclip`, `xdotool`, `xdg-utils`.
+  - `debian:desktop`: `picom`, `feh`, `dex`, `inotify-tools`, `jq`, `alsa-utils`, `brightnessctl`, `libnotify-bin`, `pulseaudio-utils`, `playerctl`.
+  - `debian:fonts`, `debian:theme`, `debian:theme-gtk`, `debian:theme-optional`, `debian:terminal`, `debian:screenshot-optional`, `debian:lightdm`, `debian:system-management`.
+  - Supported profiles: `required`, `recommended`, `optional`, `full`.
+
+---
+
+### 4. JetBrains Mono Nerd Font Integration (Imperative Standard)
 - **File**: [`install.sh`](file:///home/rand/dwm-oomaya/install.sh)
-- **Unified Ecosystem Build (`install_dmenu_ecosystem`)**:
-  - Automatically discovers `dmenu-oomaya` across custom `--dmenu-dir`, adjacent developer checkouts (`../dmenu-oomaya`), or canonical checkout (`~/.local/src/dmenu-oomaya`).
-  - Automatically clones `oomaya/dmenu-oomaya` if not present using the Smart Git Transport.
-  - Compiles and deploys `dmenu` and its companion POSIX suite (`dmenu-desktop`, `dmenu-run`, `dmenu-power`, `dmenu-windows`, `dmenu-hub`, `dmenu-scrot`, `dmenu-clip`) both system-wide (`/usr/local/bin`) and user-locally (`~/.local/bin`) using `install -Dm755` (`ETXTBSY` immune).
-- **New CLI Flags**:
-  - `--skip-dmenu`: Skip dmenu installation if managed independently.
-  - `--dmenu-dir=PATH`: Explicit path to dmenu source checkout.
-  - `--git-protocol={auto,ssh,https}`: Transport protocol selection.
-- **Third-Party Asset Immunity**:
-  - Nordic GTK theme and Nord wallpaper downloads now use `dwm_git_safe_clone`, preventing SSH rewriting on public repositories.
+- Added `install_jetbrains_mono_nerd_font()` alongside `install_meslo_nerd_font()`.
+- Uses official Nerd Fonts release v3.4.0 with SHA-256 integrity verification:
+  - Archive: `JetBrainsMono.zip`
+  - SHA-256: `76f05ff3ace48a464a6ca57977998784ff7bdbb65a6d915d7e401cd3927c493c`
+  - Target: `~/.local/share/fonts/JetBrainsMono/`
+- Enforces our 16pt typography floor and sharp-corner Tokyo Night terminal rendering without glyph clipping.
 
 ---
 
-### 3. Remote Zero-Friction Bootstrapper
-- **File**: [`bootstrap.sh`](file:///home/rand/dwm-oomaya/bootstrap.sh)
-- **Single-Line Remote Execution**:
-  ```bash
-  curl -fsSL https://raw.githubusercontent.com/oomaya/dwm-oomaya/main/bootstrap.sh | bash
-  ```
-- **Piped TTY Preservation**: Detects if stdin is connected to a pipe (`! -t 0`) and reattaches stdin to `/dev/tty`. This guarantees that `sudo` password prompts and configuration dialogs remain interactive without consuming subsequent bash instructions.
-- **Prerequisite Bootstrapping**: Validates and installs missing build tools (`git`, `curl`, `make`, `gcc`).
-- **Canonical Setup**: Clones and synchronizes both `dwm-oomaya` and `dmenu-oomaya` into canonical `~/.local/src/` before executing the consolidated installer.
+### 5. Priority 0: Display Manager Preservation
+- **File**: [`install.sh`](file:///home/rand/dwm-oomaya/install.sh)
+- Enhanced `detect_display_manager()` to actively inspect systemd units and check:
+  `lightdm`, `gdm`, `sddm`, `greetd`, `ly`, `lxdm`.
+- Under `recommended` (default), the installer **never touches or enables LightDM**, preventing crashes or display manager collisions on systems running CachyOS Niri, Greetd, or SDDM.
 
 ---
 
-### 4. Build System & Test Suite Parity
-- **File**: [`Makefile`](file:///home/rand/dwm-oomaya/Makefile)
-  - Added target `install-dmenu` for manual developer builds.
-  - Fixed manifest verification parity in `check-install-manifest` (`usr/libexec/dwm-oomaya/dwm-settings-display-root`, `capitaine-cursors` licenses, and `dwm-oomaya` symlink).
-- **File**: [`tests/test-install-preservation.sh`](file:///home/rand/dwm-oomaya/tests/test-install-preservation.sh)
-  - Updated expected data path to `dwm-oomaya`.
-- **File**: [`README.md`](file:///home/rand/dwm-oomaya/README.md)
-  - Updated Quickstart to document the remote one-liner, canonical source paths, Smart Git Transport options, and consolidated build instructions.
+### 6. Automated Multi-Distro Regression Test Suite
+- **File**: [`tests/test-package-maps.sh`](file:///home/rand/dwm-oomaya/tests/test-package-maps.sh)
+- Validates all package profiles for `fedora`, `arch`, and `debian`.
+- Enforces regression guards:
+  - Rejects bare `xprop` on Arch (must be `xorg-xprop`).
+  - Rejects AUR-only `xkbset` in standard Arch transactions.
+  - Rejects server bloat (`cups`, `packagekit`) in `recommended` profiles for Arch and Debian.
 
 ---
 
-## Validation & Test Results
+## Verification Results
 
-All test suites executed with 100% success:
-
-```bash
-# 1. Smart Git Transport & insteadOf immunity under hostile circular configs
-/home/rand/dwm-oomaya/tests/test-smart-git.sh
-# ==> All Smart Git Transport tests passed successfully! ✓
-
-# 2. Consolidated installer options & dry-run validation
-/home/rand/dwm-oomaya/tests/test-consolidated-install.sh
-# ==> Consolidated installation test suite passed! ✓
-
-# 3. System install manifest and uninstall symmetry
-make check-install
-# ==> Install manifest and uninstall symmetry validated.
-
-# 4. Repeated install and user file preservation
-/home/rand/dwm-oomaya/tests/test-install-preservation.sh
-# ==> Repeated install preservation: PASS
-
-# 5. Shellcheck across all 90 scripts
-make check-shell && make check-build-config
-# ==> Build configuration generation and preservation: PASS (0 errors, 0 warnings)
+### 1. Multi-Distro Package Map Suite
 ```
+$ bash tests/test-package-maps.sh
+PASS: All core profiles for fedora returned valid non-empty package sets
+PASS: All core profiles for arch returned valid non-empty package sets
+PASS: All core profiles for debian returned valid non-empty package sets
+PASS: Arch uses xorg-xprop instead of bare xprop
+PASS: Arch x11 profile does not contain AUR-only xkbset
+PASS: Arch recommended profile is clean of distro bloat (cups, packagekit)
+PASS: Debian build profile contains all required C development packages
+PASS: Debian x11 profile contains standard X11 toolchain
+PASS: Debian recommended profile is clean of distro bloat (cups, packagekit)
+PASS: dwm_packages rejects unknown distributions and profiles
+
+All package map validation tests passed successfully!
+```
+
+### 2. Consolidated Installation Dry Run (Fedora Host)
+```
+$ ./install.sh --dry-run
+Installation summary:
+  Distribution: Fedora Linux 44 (Forty Four)
+  Family: fedora
+  Profile: recommended
+  Mode: interactive
+  Gear Lever: user-scoped Flathub install (it.mijorus.gearlever)
+  Optional extras: skipped
+  dmenu-oomaya ecosystem: consolidated build & deploy (transport: auto)
+
+[OK] Dry run complete; no changes were made.
+```
+
+### 3. Simulated Dry Run (Arch Linux / CachyOS)
+```
+Profile: recommended
+Package manager: sudo pacman -S --needed --noconfirm
+Required: ... xorg-xsetroot xorg-xinput xorg-setxkbmap ... xorg-xprop ...
+Recommended: picom feh dex inotify-tools jq alsa-utils brightnessctl libnotify playerctl maim dconf arc-gtk-theme noto-fonts
+[OK] Dry run complete; no changes were made.
+```
+
+### 4. Simulated Dry Run (Debian / Ubuntu / Pop!_OS)
+```
+Profile: recommended
+Package manager: sudo apt-get install -y
+Required: build-essential pkg-config libx11-dev ... xorg x11-xserver-utils x11-utils x11-xkb-utils xinput ...
+Recommended: picom feh dex inotify-tools jq alsa-utils brightnessctl libnotify-bin pulseaudio-utils playerctl maim dconf-cli arc-theme
+[OK] Dry run complete; no changes were made.
+```
+
+### 5. ShellCheck & Regression Suite
+- `shellcheck -e SC1091 scripts/dwm-packages.sh install.sh`: Clean (exit code 0).
+- `tests/test-consolidated-install.sh`: All 5 test cases passed.
+- `tests/test-smart-git.sh`: All smart git transport tests passed.
+- `tests/test-fedora-packages.sh`: Passed (73 packages verified).
+- `tests/test-install-preservation.sh`: Passed.

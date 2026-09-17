@@ -238,22 +238,31 @@ In naive scripts, this causes severe friction:
 
 ---
 
-### 4. Consolidated Local Installation
+### 4. Consolidated Local Installation & Profiles
 
 If you already have cloned `dwm-oomaya`:
 
 ```bash
 cd ~/.local/src/dwm-oomaya
 
-# Consolidated install (builds & installs DWM + Dmenu in lockstep)
+# Recommended install (Lean desktop, lockstep DWM + Dmenu build, zero bloat)
 ./install.sh
 
-# Advanced flags:
-./install.sh --profile=full          # Profiles: core, recommended, full (default: full)
+# Advanced profiles & options:
+./install.sh                         # Default: --profile=recommended (Lean Desktop)
+./install.sh --profile=core          # Pure suckless core: C compiler, X11 libs & dmenu only
+./install.sh --profile=full          # Full bare-metal kickstart (optional daemons, print, gaming)
 ./install.sh --git-protocol=ssh      # Force SSH remotes (or --git-protocol=https)
 ./install.sh --skip-dmenu            # Skip dmenu installation if managed separately
 ./install.sh --dry-run               # Inspect resolved plan without making changes
 ```
+
+#### 🛡️ Priority 0: Zero-Friction Desktop Preservation
+
+When deploying `dwm-oomaya` onto an active desktop installation (e.g. CachyOS Niri, Fedora Workstation, Pop!_OS):
+- **Display Manager Immunity**: The installer automatically detects active greeters and display managers (`sddm`, `gdm`, `greetd`, `ly`, `lxdm`, `lightdm`). Under `recommended` (default), it **never clobbers or forces LightDM**, keeping your existing Wayland and X11 sessions completely intact.
+- **Zero Distro Bloat**: CUPS print spoolers, PackageKit background daemons, Steam/Gamescope, and legacy GTK themes are completely bypassed in default runs.
+- **Typography Standard**: Automatically downloads and verifies SHA-256 checksums for both **JetBrains Mono Nerd Font** and **Meslo Nerd Font** into `~/.local/share/fonts/`, ensuring Tokyo Night sharpness and zero glyph clipping without polluting system package repositories.
 
 ---
 
