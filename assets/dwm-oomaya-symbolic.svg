@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1200" width="1200" height="1200" fill="none" stroke="currentColor" stroke-width="84" stroke-linecap="square" stroke-linejoin="miter">
+  <!-- Outer Omarchy maze boundary with bottom and top ports -->
+  <path d="M 675 1125 H 75 V 75 H 1125 V 1125 H 525" />
+  <path d="M 600 75 V 225" />
+  <path d="M 660 225 H 225 V 975 H 975 V 225 H 870" />
+  <path d="M 600 1125 V 975" />
+  <path d="M 75 600 H 225" />
+  <!-- DWM dynamic tiling core: Master (left) + Stack (right top, right bottom) -->
+  <path d="M 375 375 H 825 V 825 H 375 Z" />
+  <path d="M 600 375 V 825" />
+  <path d="M 600 600 H 825" />
+</svg>
