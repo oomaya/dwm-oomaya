@@ -12,7 +12,7 @@ dwm_git_probe_ssh() {
 		return 1
 	fi
 	local probe_output
-	probe_output=$(ssh -o BatchMode=yes \
+	probe_output=$(ssh -n -o BatchMode=yes \
 		-o ConnectTimeout=3 \
 		-o StrictHostKeyChecking=accept-new \
 		-T git@github.com 2>&1 || true)
@@ -60,7 +60,7 @@ dwm_git_safe_clone() {
 	env GIT_CONFIG_GLOBAL=/dev/null \
 		GIT_CONFIG_SYSTEM=/dev/null \
 		GIT_CONFIG_NOSYSTEM=1 \
-		git clone "$@"
+		git clone "$@" < /dev/null
 }
 
 # Smart clone for ecosystem repositories (e.g. dwm-oomaya, dmenu-oomaya)
@@ -78,7 +78,7 @@ dwm_git_clone() {
 
 	if [[ "$resolved_url" =~ ^git@ ]]; then
 		# SSH clone: use user environment (ssh-agent, ~/.ssh/config)
-		git clone "${extra_args[@]}" "$resolved_url" "$target_dir"
+		git clone "${extra_args[@]}" "$resolved_url" "$target_dir" < /dev/null
 	else
 		# HTTPS clone: use isolation shield to eliminate insteadOf traps
 		dwm_git_safe_clone "${extra_args[@]}" "$resolved_url" "$target_dir"

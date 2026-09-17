@@ -14,11 +14,6 @@
 # ==============================================================================
 set -euo pipefail
 
-# Reattach stdin to /dev/tty if running from a pipe (curl ... | bash)
-if [[ ! -t 0 ]] && [[ -r /dev/tty ]]; then
-	exec 0</dev/tty
-fi
-
 BOLD='\033[1m'
 CYAN='\033[0;36m'
 GREEN='\033[0;32m'
@@ -38,7 +33,10 @@ if [[ $EUID -eq 0 ]]; then
 fi
 
 SRC_ROOT="${XDG_SRC_HOME:-$HOME/.local/src}"
-REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || echo "")"
+REPO_DIR=""
+if [[ -n "${BASH_SOURCE[0]:-}" ]]; then
+	REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || echo "")"
+fi
 
 if [[ -n "$REPO_DIR" && -f "$REPO_DIR/install.sh" && -f "$REPO_DIR/dwm.c" ]]; then
 	DWM_DIR="${DWM_DIR:-$REPO_DIR}"
@@ -125,7 +123,7 @@ dwm_git_probe_ssh() {
 		return 1
 	fi
 	local probe_output
-	probe_output=$(ssh -o BatchMode=yes \
+	probe_output=$(ssh -n -o BatchMode=yes \
 		-o ConnectTimeout=3 \
 		-o StrictHostKeyChecking=accept-new \
 		-T git@github.com 2>&1 || true)
@@ -164,7 +162,7 @@ dwm_git_safe_clone() {
 	env GIT_CONFIG_GLOBAL=/dev/null \
 		GIT_CONFIG_SYSTEM=/dev/null \
 		GIT_CONFIG_NOSYSTEM=1 \
-		git clone "$@"
+		git clone "$@" < /dev/null
 }
 
 dwm_git_checkout() {
@@ -178,7 +176,7 @@ dwm_git_checkout() {
 	if [[ -d "$target_dir/.git" ]]; then
 		b_ok "$repo_slug already present at $target_dir"
 		b_info "Fetching latest remote changes..."
-		git -C "$target_dir" pull --ff-only 2>/dev/null || b_warn "Local modifications present; keeping existing checkout."
+		git -C "$target_dir" pull --ff-only < /dev/null 2>/dev/null || b_warn "Local modifications present; keeping existing checkout."
 		return 0
 	fi
 
@@ -186,9 +184,9 @@ dwm_git_checkout() {
 	b_info "Cloning $repo_slug into $target_dir using $resolved_url..."
 
 	if [[ "$resolved_url" =~ ^git@ ]]; then
-		git clone "$resolved_url" "$target_dir"
+		git clone "$resolved_url" "$target_dir" < /dev/null
 	else
-		dwm_git_safe_clone "$resolved_url" "$target_dir"
+		dwm_git_safe_clone "$resolved_url" "$target_dir" < /dev/null
 	fi
 	b_ok "$repo_slug synchronized to $target_dir"
 }
