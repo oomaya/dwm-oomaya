@@ -53,11 +53,17 @@ else
 fi
 
 GIT_PROTOCOL="${DWM_GIT_PROTOCOL:-auto}"
+IS_DRY_RUN=false
 
 # Parse any bootstrap-level flags before handoff
 FORWARD_ARGS=()
 while (($# > 0)); do
 	case "$1" in
+	--dry-run)
+		IS_DRY_RUN=true
+		FORWARD_ARGS+=("$1")
+		shift
+		;;
 	--git-protocol=*)
 		GIT_PROTOCOL="${1#*=}"
 		FORWARD_ARGS+=("$1")
@@ -93,6 +99,10 @@ ensure_prerequisites() {
 	fi
 
 	b_info "Missing minimal prerequisites: ${missing[*]}"
+	if [[ "$IS_DRY_RUN" == true ]]; then
+		b_warn "Dry-run mode active; skipping prerequisite installation."
+		return 0
+	fi
 	b_info "Attempting to install required base tools via system package manager..."
 
 	if command -v dnf >/dev/null 2>&1; then
