@@ -851,9 +851,6 @@ buttonpress(XEvent *e)
 			/* Only consider tags that belong to this monitor */
 			if (!(montags & (1 << i)))
 				continue;
-			/* Do not reserve space for vacant tags */
-			if (!(occ & 1 << i || m->tagset[m->seltags] & 1 << i))
-				continue;
  			x += TEXTW(tags[i]);
 		} while (ev->x >= x && ++i < LENGTH(tags));
 		if (i < LENGTH(tags)) {
@@ -1389,12 +1386,13 @@ drawbar(Monitor *m)
 		/* Only draw tags that belong to this monitor */
 		if (!(montags & (1 << i)))
 			continue;
-		/* Do not draw vacant tags */
-		if (!(occ & 1 << i || m->tagset[m->seltags] & 1 << i))
-			continue;
 		w = TEXTW(tags[i]);
 		drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? SchemeSel : SchemeNorm]);
 		drw_text(drw, x, 0, w, m->bh, lrpad / 2, tags[i], urg & 1 << i);
+		if (occ & 1 << i)
+			drw_rect(drw, x + boxs, boxs, boxw, boxw,
+			         m == selmon && selmon->sel && selmon->sel->tags & 1 << i,
+			         urg & 1 << i);
 		x += w;
 	}
 

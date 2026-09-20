@@ -478,7 +478,11 @@ fi
 
 # Notification daemon fallback: start dunst if Quickshell is absent or not running
 if [ "${quickshell_compatible:-0}" -ne 1 ] && ! pgrep -u "$(id -u)" -x quickshell >/dev/null 2>&1; then
-	start_once dunst dunst
+	if command -v systemctl >/dev/null 2>&1 && systemctl --user list-unit-files dunst.service >/dev/null 2>&1; then
+		systemctl --user start dunst.service 2>/dev/null || start_once dunst dunst
+	else
+		start_once dunst dunst
+	fi
 fi
 
 # Set Tokyo Night baseline solid root color so the display is never a raw black void

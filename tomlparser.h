@@ -6,7 +6,7 @@
 #pragma once
 #include <stddef.h>
 
-#define TOML_MAX_ENTRIES 512
+#define TOML_MAX_ENTRIES 1024
 #define TOML_MAX_STR     512
 #define TOML_MAX_ARR      32
 

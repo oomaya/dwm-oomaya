@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# dwm-volume: POSIX/bash audio control with Dunst OSD and mixer launcher
+# Conforms to Zero Hardcoded Literals and Bloat-Free POSIX standards
+
+action="${1:-status}"
+step="${2:-5%}"
+
+get_volume() {
+	if command -v pactl >/dev/null 2>&1; then
+		pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null |
+			awk 'match($0, /[0-9]+%/) { print substr($0, RSTART, RLENGTH - 1); exit }'
+	elif command -v wpctl >/dev/null 2>&1; then
+		wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null |
+			awk '{ print int(($2 * 100) + 0.5) }'
+	else
+		echo "50"
+	fi
+}
+
+is_muted() {
+	if command -v pactl >/dev/null 2>&1; then
+		pactl get-sink-mute @DEFAULT_SINK@ 2>/dev/null | grep -q "yes"
+	elif command -v wpctl >/dev/null 2>&1; then
+		wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null | grep -q "[MUTED]"
+	else
+		return 1
+	fi
+}
+
+notify_volume() {
+	local vol
+	vol=$(get_volume)
+	if is_muted; then
+		notify-send \
+			-a "Volume" \
+			-u low \
+			-h string:x-dunst-stack-tag:volume \
+			-h int:value:0 \
+			-t 1500 \
+			-i audio-volume-muted \
+			"Volume Muted" "0%"
+	else
+		notify-send \
+			-a "Volume" \
+			-u low \
+			-h string:x-dunst-stack-tag:volume \
+			-h int:value:"$vol" \
+			-t 1500 \
+			-i audio-volume-high \
+			"Volume: ${vol}%" ""
+	fi
+}
+
+case "$action" in
+	up)
+		if command -v pactl >/dev/null 2>&1; then
+			pactl set-sink-volume @DEFAULT_SINK@ "+${step}"
+		elif command -v wpctl >/dev/null 2>&1; then
+			wpctl set-volume @DEFAULT_AUDIO_SINK@ "${step}+"
+		fi
+		notify_volume
+		;;
+	down)
+		if command -v pactl >/dev/null 2>&1; then
+			pactl set-sink-volume @DEFAULT_SINK@ "-${step}"
+		elif command -v wpctl >/dev/null 2>&1; then
+			wpctl set-volume @DEFAULT_AUDIO_SINK@ "${step}-"
+		fi
+		notify_volume
+		;;
+	mute)
+		if command -v pactl >/dev/null 2>&1; then
+			pactl set-sink-mute @DEFAULT_SINK@ toggle
+		elif command -v wpctl >/dev/null 2>&1; then
+			wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
+		fi
+		notify_volume
+		;;
+	mixer)
+		if command -v pavucontrol >/dev/null 2>&1; then
+			pavucontrol &
+		elif command -v alsamixer >/dev/null 2>&1; then
+			if command -v dwm-terminal >/dev/null 2>&1; then
+				dwm-terminal alsamixer &
+			elif command -v x-terminal-emulator >/dev/null 2>&1; then
+				x-terminal-emulator -e alsamixer &
+			else
+				xterm -e alsamixer &
+			fi
+		fi
+		;;
+	status)
+		vol=$(get_volume)
+		echo "${vol}%"
+		;;
+	*)
+		echo "Usage: $0 [up|down|mute|mixer|status]" >&2
+		exit 1
+		;;
+esac

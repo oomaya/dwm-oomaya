@@ -60,6 +60,13 @@ echo "dunst_started" > "${TEST_STATE}/dunst.invoked"
 EOF
 	chmod +x "$work/bin/dunst"
 
+	# Mock pgrep to simulate no running dunst or quickshell
+	cat >"$work/bin/pgrep" <<'EOF'
+#!/bin/sh
+exit 1
+EOF
+	chmod +x "$work/bin/pgrep"
+
 	# Mock quickshell to NOT exist
 	rm -f "$work/bin/quickshell"
 

@@ -5,7 +5,7 @@
     monitor = 0
     follow = keyboard
     width = (320, 500)
-    height = (60, 300)
+    height = 300
     origin = top-right
     offset = 16x46
     scale = 0

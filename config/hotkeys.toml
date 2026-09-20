@@ -108,9 +108,9 @@ keys = [
   { mod="SUPER",            key="p",       desc="Screenshot Active Screen",func="spawn",       cmd="dwm-screenshot screen" },
 
   # ── Volume & Brightness ───────────────────────────────────────────────────────
-  { mod="",                 key="XF86AudioRaiseVolume",   desc="Volume up",     func="spawn",  cmd="pactl set-sink-volume @DEFAULT_SINK@ +5%" },
-  { mod="",                 key="XF86AudioLowerVolume",   desc="Volume down",   func="spawn",  cmd="pactl set-sink-volume @DEFAULT_SINK@ -5%" },
-  { mod="",                 key="XF86AudioMute",          desc="Mute toggle",   func="spawn",  cmd="pactl set-sink-mute @DEFAULT_SINK@ toggle" },
+  { mod="",                 key="XF86AudioRaiseVolume",   desc="Volume up",     func="spawn",  cmd="dwm-volume up" },
+  { mod="",                 key="XF86AudioLowerVolume",   desc="Volume down",   func="spawn",  cmd="dwm-volume down" },
+  { mod="",                 key="XF86AudioMute",          desc="Mute toggle",   func="spawn",  cmd="dwm-volume mute" },
   { mod="",                 key="XF86MonBrightnessUp",    desc="Brightness +",  func="spawn",  cmd="brightnessctl set 10%+" },
   { mod="",                 key="XF86MonBrightnessDown",  desc="Brightness -",  func="spawn",  cmd="brightnessctl set 10%-" },
 
@@ -259,6 +259,12 @@ buttons = [
 
   # ── Tab Bar (Monocle) ──────────────────────────────────────────────────────
   { click="ClkTabBar",    mod="",       button=1,  func="focuswin" },
+
+  # ── Status Text (Audio & Volume Controls) ──────────────────────────────────
+  { click="ClkStatusText", mod="",       button=1,  func="spawn",        cmd="dwm-volume mixer" },
+  { click="ClkStatusText", mod="",       button=3,  func="spawn",        cmd="dwm-volume mute" },
+  { click="ClkStatusText", mod="",       button=4,  func="spawn",        cmd="dwm-volume up" },
+  { click="ClkStatusText", mod="",       button=5,  func="spawn",        cmd="dwm-volume down" },
 
   # ── Client Window Actions ──────────────────────────────────────────────────
   { click="ClkClientWin", mod="SUPER",  button=1,  func="moveorplace",  i=2 },
