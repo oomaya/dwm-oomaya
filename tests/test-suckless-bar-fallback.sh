@@ -74,4 +74,14 @@ else
 	exit 1
 fi
 
+# Test 8: unmapnotify() and destroynotify() only unmanage external altbars
+printf 'Test 8: unmapnotify() protects native barwin on togglebar unmap... '
+if grep -A 15 "unmapnotify(XEvent \*e)" "$repo_dir/dwm.c" | grep -q "m->barwin == ev->window && m->isaltbar" && \
+   grep -A 15 "destroynotify(XEvent \*e)" "$repo_dir/dwm.c" | grep -q "m->barwin == ev->window && m->isaltbar"; then
+	printf 'PASS\n'
+else
+	printf 'FAIL: unmapnotify or destroynotify unconditionally unmanages barwin\n' >&2
+	exit 1
+fi
+
 printf '\nALL SUCKLESS BAR FALLBACK INVARIANT TESTS PASSED\n'

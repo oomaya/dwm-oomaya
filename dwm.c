@@ -1310,7 +1310,7 @@ destroynotify(XEvent *e)
 		unmanage(c, 1);
 	else if ((c = swallowingclient(ev->window)))
 		unmanage(c->swallowing, 1);
-	else if ((m = wintomon(ev->window)) && m->barwin == ev->window)
+	else if ((m = wintomon(ev->window)) && m->barwin == ev->window && m->isaltbar)
 		unmanagealtbar(ev->window);
 	else if (m && m->traywin == ev->window)
 		unmanagetray(ev->window);
@@ -5039,17 +5039,17 @@ togglebar(const Arg *arg)
 	if (selmon->barwin) {
 		XMoveResizeWindow(dpy, selmon->barwin, selmon->wx, selmon->by, selmon->ww, selmon->bh);
 		if (!selmon->isaltbar) {
-			if (selmon->showbar)
+			if (selmon->showbar) {
 				XMapRaised(dpy, selmon->barwin);
-			else
+				drawbar(selmon);
+			} else {
 				XUnmapWindow(dpy, selmon->barwin);
+			}
 		}
 	}
 	if (selmon->traywin)
 		XMoveResizeWindow(dpy, selmon->traywin, selmon->tx, selmon->by, selmon->tw, selmon->bh);
 	arrange(selmon);
-	if (!selmon->isaltbar)
-		drawbar(selmon);
 }
 
 void
@@ -5227,31 +5227,22 @@ unmanagealtbar(Window w)
 {
 	Monitor *m = wintomon(w);
 
-	if (!m)
+	if (!m || !m->isaltbar || m->barwin != w)
 		return;
 
-	if (m->isaltbar && m->barwin == w) {
-		m->isaltbar = 0;
-		m->bh = default_bh;
-		if (!m->nativebarwin)
-			updatebars();
-		else {
-			m->barwin = m->nativebarwin;
-			if (m->showbar)
-				XMapRaised(dpy, m->nativebarwin);
-		}
-		updatebarpos(m);
-		arrange(m);
-		updateclientlist();
-		drawbar(m);
-	} else if (m->barwin == w) {
-		m->barwin = 0;
-		m->by = 0;
-		m->bh = 0;
-		updatebarpos(m);
-		arrange(m);
-		updateclientlist();
+	m->isaltbar = 0;
+	m->bh = default_bh;
+	if (!m->nativebarwin)
+		updatebars();
+	else {
+		m->barwin = m->nativebarwin;
+		if (m->showbar)
+			XMapRaised(dpy, m->nativebarwin);
 	}
+	updatebarpos(m);
+	arrange(m);
+	updateclientlist();
+	drawbar(m);
 }
 
 void
@@ -5283,7 +5274,7 @@ unmapnotify(XEvent *e)
 			setclientstate(c, WithdrawnState);
 		else
 			unmanage(c, 0);
-	} else if ((m = wintomon(ev->window)) && m->barwin == ev->window)
+	} else if ((m = wintomon(ev->window)) && m->barwin == ev->window && m->isaltbar)
 		unmanagealtbar(ev->window);
 	else if (m && m->traywin == ev->window)
 		unmanagetray(ev->window);
