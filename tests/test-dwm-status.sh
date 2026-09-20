@@ -139,9 +139,13 @@ status_runner=$!
 track_runner "$status_runner"
 
 display_key=$(printf '%s' :199 | sha256sum | awk '{ print $1 }')
-identity_file=$work/runtime/dwm-titus/dwm-status.$display_key.identity
+identity_file=$work/runtime/dwm-oomaya/dwm-status.$display_key.identity
 for _ in 1 2 3 4 5 6 7 8 9 10; do
 	[ -s "$identity_file" ] && break
+	if [ -s "$work/runtime/dwm-titus/dwm-status.$display_key.identity" ]; then
+		identity_file=$work/runtime/dwm-titus/dwm-status.$display_key.identity
+		break
+	fi
 	sleep 0.02
 done
 [ "$(cat "$identity_file")" = "$status_runner:$(awk '{ line = $0; sub(/^.*\) /, "", line); split(line, fields, " "); print fields[20] }' "/proc/$status_runner/stat")" ]
@@ -149,7 +153,7 @@ done
 sleep 0.3
 printf '81\n' >"$work/power/BAT0/capacity"
 for _ in 1 2 3 4 5 6 7 8 9 10; do
-	grep -Fq 'BAT 81% Discharging |' "$work/status.log" && break
+	grep -Fq 'BAT 81% Discharging' "$work/status.log" && break
 	sleep 0.05
 done
 kill "$status_runner" 2>/dev/null || true
@@ -170,8 +174,8 @@ for pid_file in "$work/pactl.pid" "$work/udevadm.pid"; do
 	fi
 done
 
-grep -Fq 'BAT 82% Discharging |' "$work/status.log"
-grep -Fq 'BAT 81% Discharging |' "$work/status.log"
+grep -Fq 'BAT 82% Discharging' "$work/status.log"
+grep -Fq 'BAT 81% Discharging' "$work/status.log"
 
 : >"$work/invalid-status.log"
 PATH="$work/bin:/usr/bin:/bin" \

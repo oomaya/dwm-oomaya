@@ -1,0 +1,100 @@
+#!/bin/sh
+set -eu
+# dwm-weather: fetch, cache, and display weather for dwm-status bar
+# Usage: dwm-weather status|detail|full
+
+cache_dir="${XDG_RUNTIME_DIR:-/tmp}"
+if [ ! -d "$cache_dir" ] || [ ! -w "$cache_dir" ]; then
+    cache_dir="${TMPDIR:-/tmp}"
+fi
+cache_file="$cache_dir/dwm-status-weather.cache"
+detail_cache="$cache_dir/dwm-status-weather-detail.cache"
+ttl=1200  # 20 minutes
+location="${DWM_WEATHER_LOCATION:-}"  # empty = auto-detect by IP
+
+wttr_url="wttr.in/${location}"
+
+fetch_compact() {
+    local temp result
+    temp="$cache_file.$$"
+    if result=$(curl -s --connect-timeout 2 --max-time 3 \
+        "${wttr_url}?format=%c+%t" 2>/dev/null) && [ -n "$result" ]; then
+        result=$(printf '%s' "$result" | sed 's/\xef\xb8\x8f//g; s/\xef\xb8\x8e//g')
+        printf '%s\n' "$result" > "$temp"
+        mv -f "$temp" "$cache_file"
+    else
+        rm -f "$temp"
+    fi
+}
+
+fetch_detail() {
+    local temp result
+    temp="$detail_cache.$$"
+    if result=$(curl -s --connect-timeout 3 --max-time 5 \
+        "${wttr_url}?format=%c+%C+%t+|+Feels:+%f+|+Humidity:+%h+|+Wind:+%w" \
+        2>/dev/null) && [ -n "$result" ]; then
+        result=$(printf '%s' "$result" | sed 's/\xef\xb8\x8f//g; s/\xef\xb8\x8e//g')
+        printf '%s\n' "$result" > "$temp"
+        mv -f "$temp" "$detail_cache"
+    else
+        rm -f "$temp"
+    fi
+}
+
+case "${1:-status}" in
+    status)
+        # Return cached compact weather, fetch in background if stale
+        if [ -f "$cache_file" ]; then
+            age=$(( $(date +%s) - $(stat -c %Y "$cache_file" 2>/dev/null || echo 0) ))
+            if [ "$age" -gt "$ttl" ]; then
+                ( fetch_compact ) &
+            fi
+            sed 's/\xef\xb8\x8f//g; s/\xef\xb8\x8e//g' "$cache_file"
+        else
+            ( fetch_compact ) &
+            printf '\342\230\201 --\n'
+        fi
+        ;;
+    detail)
+        # Fetch detail and show Dunst notification
+        fetch_detail
+        if [ -f "$detail_cache" ]; then
+            detail=$(cat "$detail_cache")
+        else
+            detail="Weather data unavailable"
+        fi
+        if command -v notify-send >/dev/null 2>&1; then
+            notify-send \
+                -a "Weather" \
+                -u low \
+                -h string:x-dunst-stack-tag:weather \
+                -t 8000 \
+                -i weather-clear \
+                "Weather" "$detail"
+        fi
+        ;;
+    full)
+        if command -v xdotool >/dev/null 2>&1; then
+            win_id=$(xdotool search --class "dwm-weather" 2>/dev/null | tail -n 1)
+            if [ -n "$win_id" ]; then
+                xdotool windowkill "$win_id" 2>/dev/null || true
+                exit 0
+            fi
+        fi
+        if command -v ghostty >/dev/null 2>&1; then
+            ghostty --class="dwm-weather" --x11-instance-name="dwm-weather" --window-width=125 --window-height=40 -e sh -c "curl -s '${wttr_url}' 2>/dev/null | head -40; echo; echo 'Press any key to close'; read -n1 _" &
+        elif command -v alacritty >/dev/null 2>&1; then
+            alacritty --class "dwm-weather,dwm-weather" -o window.dimensions.columns=125 -o window.dimensions.lines=40 -e sh -c "curl -s '${wttr_url}' 2>/dev/null | head -40; echo; echo 'Press any key to close'; read -n1 _" &
+        elif command -v kitty >/dev/null 2>&1; then
+            kitty --class "dwm-weather" -o initial_window_width=125c -o initial_window_height=40c sh -c "curl -s '${wttr_url}' 2>/dev/null | head -40; echo; echo 'Press any key to close'; read -n1 _" &
+        elif command -v dwm-terminal >/dev/null 2>&1; then
+            dwm-terminal -e sh -c "curl -s '${wttr_url}' 2>/dev/null | head -40; echo; echo 'Press any key to close'; read -n1 _" &
+        else
+            xterm -class "dwm-weather" -geometry 125x40 -e sh -c "curl -s '${wttr_url}' 2>/dev/null | head -40; echo; echo 'Press any key to close'; read -n1 _" &
+        fi
+        ;;
+    *)
+        printf 'Usage: dwm-weather [status|detail|full]\n' >&2
+        exit 1
+        ;;
+esac

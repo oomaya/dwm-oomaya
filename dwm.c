@@ -107,6 +107,7 @@ typedef struct {
 	unsigned int button;
 	void (*func)(const Arg *arg);
 	const Arg arg;
+	int signum;
 } Button;
 
 typedef struct Monitor Monitor;
@@ -905,10 +906,28 @@ buttonpress(XEvent *e)
 		nbuttons_active = (unsigned int)rt_nbuttons;
 	}
 #endif
-	for (i = 0; abuttons && i < nbuttons_active; i++)
-		if (click == abuttons[i].click && abuttons[i].func && abuttons[i].button == ev->button
-		&& CLEANMASK(abuttons[i].mask) == CLEANMASK(ev->state))
-			abuttons[i].func(click == ClkTagBar && abuttons[i].arg.i == 0 ? &arg : &abuttons[i].arg);
+	int matched = 0;
+	if (click == ClkStatusText && statussig != 0) {
+		for (i = 0; abuttons && i < nbuttons_active; i++) {
+			if (click == abuttons[i].click && abuttons[i].func && abuttons[i].button == ev->button
+			&& CLEANMASK(abuttons[i].mask) == CLEANMASK(ev->state)
+			&& abuttons[i].signum == statussig) {
+				abuttons[i].func(&abuttons[i].arg);
+				matched = 1;
+				break;
+			}
+		}
+	}
+	if (!matched) {
+		for (i = 0; abuttons && i < nbuttons_active; i++) {
+			if (click == abuttons[i].click && abuttons[i].func && abuttons[i].button == ev->button
+			&& CLEANMASK(abuttons[i].mask) == CLEANMASK(ev->state)
+			&& (click != ClkStatusText || abuttons[i].signum == 0)) {
+				abuttons[i].func(click == ClkTagBar && abuttons[i].arg.i == 0 ? &arg : &abuttons[i].arg);
+				break;
+			}
+		}
+	}
 }
 
 void
@@ -1367,9 +1386,23 @@ drawbar(Monitor *m)
 
 	/* draw status first so it can be overdrawn by tags later */
 	if (m == selmon) { /* status is only drawn on selected monitor */
+		char *text, *s, ch;
 		drw_setscheme(drw, scheme[SchemeNorm]);
-		tw = TEXTW(stext) - lrpad + 2; /* 2px right padding */
-		drw_text(drw, m->ww - tw, 0, tw, m->bh, 0, stext, 0);
+		tw = statusw;
+		x = m->ww - tw;
+		for (text = s = stext; *s; s++) {
+			if ((unsigned char)(*s) < ' ') {
+				ch = *s;
+				*s = '\0';
+				w = TEXTW(text) - lrpad;
+				drw_text(drw, x, 0, w, m->bh, 0, text, 0);
+				x += w;
+				*s = ch;
+				text = s + 1;
+			}
+		}
+		w = TEXTW(text) - lrpad + 2;
+		drw_text(drw, x, 0, w, m->bh, 0, text, 0);
 	}
 
 	for (c = m->clients; c; c = c->next) {
@@ -3957,6 +3990,9 @@ load_hotkeys_toml(const char *user_path, const char *default_path)
 			b->func   = fn;
 			Arg tmp_arg = build_arg(vfunc->s, &doc, "buttons", i);
 			memcpy((void *)&b->arg, &tmp_arg, sizeof(Arg));
+			const TomlValue *vsignal = toml_table_get(&doc, "buttons", i, "signal");
+			if (!vsignal) vsignal = toml_table_get(&doc, "buttons", i, "signum");
+			b->signum = (vsignal && vsignal->type == TOML_INT) ? (int)vsignal->i : 0;
 			nb++;
 		}
 		rt_buttons  = nb > 0 ? rt_buttons_buf : NULL;

@@ -260,11 +260,20 @@ buttons = [
   # ── Tab Bar (Monocle) ──────────────────────────────────────────────────────
   { click="ClkTabBar",    mod="",       button=1,  func="focuswin" },
 
-  # ── Status Text (Audio & Volume Controls) ──────────────────────────────────
-  { click="ClkStatusText", mod="",       button=1,  func="spawn",        cmd="dwm-volume mixer" },
-  { click="ClkStatusText", mod="",       button=3,  func="spawn",        cmd="dwm-volume mute" },
-  { click="ClkStatusText", mod="",       button=4,  func="spawn",        cmd="dwm-volume up" },
-  { click="ClkStatusText", mod="",       button=5,  func="spawn",        cmd="dwm-volume down" },
+  # ── Status Text (Weather, Clock, Volume & Power) ───────────────────────────
+  # Signal 1: Weather (left=detail, right=full)
+  { click="ClkStatusText", signal=1, mod="", button=1, func="spawn", cmd="dwm-weather detail" },
+  { click="ClkStatusText", signal=1, mod="", button=3, func="spawn", cmd="dwm-weather full" },
+
+  # Signal 2: Clock (left=cycle format, right=toggle 12/24)
+  { click="ClkStatusText", signal=2, mod="", button=1, func="spawn", cmd="dwm-clock cycle" },
+  { click="ClkStatusText", signal=2, mod="", button=3, func="spawn", cmd="dwm-clock toggle" },
+
+  # Signal 3 / fallback: Volume & Power
+  { click="ClkStatusText", signal=3, mod="", button=1, func="spawn", cmd="dwm-volume mixer" },
+  { click="ClkStatusText", signal=3, mod="", button=3, func="spawn", cmd="dwm-volume mute" },
+  { click="ClkStatusText", mod="",           button=4, func="spawn", cmd="dwm-volume up" },
+  { click="ClkStatusText", mod="",           button=5, func="spawn", cmd="dwm-volume down" },
 
   # ── Client Window Actions ──────────────────────────────────────────────────
   { click="ClkClientWin", mod="SUPER",  button=1,  func="moveorplace",  i=2 },

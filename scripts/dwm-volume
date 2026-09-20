@@ -8,25 +8,29 @@ action="${1:-status}"
 step="${2:-5%}"
 
 get_volume() {
+	local vol=""
 	if command -v pactl >/dev/null 2>&1; then
-		pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null |
-			awk 'match($0, /[0-9]+%/) { print substr($0, RSTART, RLENGTH - 1); exit }'
-	elif command -v wpctl >/dev/null 2>&1; then
-		wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null |
-			awk '{ print int(($2 * 100) + 0.5) }'
-	else
-		echo "50"
+		vol=$(pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null |
+			awk 'match($0, /[0-9]+%/) { print substr($0, RSTART, RLENGTH - 1); exit }') || vol=""
 	fi
+	if [[ -z $vol ]] && command -v wpctl >/dev/null 2>&1; then
+		vol=$(wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null |
+			awk '{ print int(($2 * 100) + 0.5) }') || vol=""
+	fi
+	echo "${vol:-50}"
 }
 
 is_muted() {
 	if command -v pactl >/dev/null 2>&1; then
-		pactl get-sink-mute @DEFAULT_SINK@ 2>/dev/null | grep -q "yes"
+		if pactl get-sink-mute @DEFAULT_SINK@ 2>/dev/null | grep -q "yes"; then
+			return 0
+		fi
 	elif command -v wpctl >/dev/null 2>&1; then
-		wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null | grep -q "[MUTED]"
-	else
-		return 1
+		if wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null | grep -q "[MUTED]"; then
+			return 0
+		fi
 	fi
+	return 1
 }
 
 notify_volume() {
@@ -82,12 +86,23 @@ case "$action" in
 		if command -v pavucontrol >/dev/null 2>&1; then
 			pavucontrol &
 		elif command -v alsamixer >/dev/null 2>&1; then
-			if command -v dwm-terminal >/dev/null 2>&1; then
-				dwm-terminal alsamixer &
-			elif command -v x-terminal-emulator >/dev/null 2>&1; then
-				x-terminal-emulator -e alsamixer &
+			if command -v xdotool >/dev/null 2>&1; then
+				win_id=$(xdotool search --class "alsamixer" 2>/dev/null | tail -n 1)
+				if [[ -n $win_id ]]; then
+					xdotool windowkill "$win_id" 2>/dev/null || true
+					exit 0
+				fi
+			fi
+			if command -v ghostty >/dev/null 2>&1; then
+				ghostty --class="alsamixer" --x11-instance-name="alsamixer" --window-width=90 --window-height=26 -e alsamixer &
+			elif command -v alacritty >/dev/null 2>&1; then
+				alacritty --class "alsamixer,alsamixer" -o window.dimensions.columns=90 -o window.dimensions.lines=26 -e alsamixer &
+			elif command -v kitty >/dev/null 2>&1; then
+				kitty --class "alsamixer" -o initial_window_width=90c -o initial_window_height=26c alsamixer &
+			elif command -v dwm-terminal >/dev/null 2>&1; then
+				dwm-terminal -e alsamixer &
 			else
-				xterm -e alsamixer &
+				xterm -class "alsamixer" -geometry 90x26 -e alsamixer &
 			fi
 		fi
 		;;

@@ -25,7 +25,7 @@ static const int swallowfloating        = 0;    /* 1 means swallow floating wind
 
 /* Fonts */
 static const char dmenufont[]           = "MesloLGS Nerd Font Mono:size=16";
-static const char *fonts[]              = { "JetBrainsMono Nerd Font:size=14:antialias=true:autohint=true", "MesloLGS Nerd Font Mono:size=14:antialias=true:autohint=true", "NotoColorEmoji:pixelsize=14:antialias=true:autohint=true" };
+static const char *fonts[]              = { "JetBrainsMono Nerd Font:size=14:antialias=true:autohint=true", "MesloLGS Nerd Font Mono:size=14:antialias=true:autohint=true", "Noto Sans CJK KR:size=14:antialias=true:autohint=true", "NotoColorEmoji:pixelsize=14:antialias=true:autohint=true" };
 
 /* Theme (TokyoNight) */
 #include "themes/tokyonight.h"
@@ -67,6 +67,8 @@ static const Rule rules[] = {
 	{ "ghostty",  NULL,       NULL,       0,            0,           0,           1,          0,         -1,      0 },
 	{ "kitty",    NULL,       NULL,       0,            0,           0,           1,          0,         -1,      0 },
 	{ "dwm-scratchpad", NULL, NULL,       0,            1,           1,           1,          0,         -1,      0 },
+	{ "alsamixer",      NULL, NULL,       0,            1,           1,           1,          0,         -1,      0 },
+	{ "dwm-weather",    NULL, NULL,       0,            1,           1,           1,          0,         -1,      0 },
 	{ "vmware-user", NULL,    NULL,       0,            0,           0,           0,          0,         -1,      1 },
 	{ "vmtoolsd",    NULL,    NULL,       0,            0,           0,           0,          0,         -1,      1 },
 	{ "VBoxClient",  NULL,    NULL,       0,            0,           0,           0,          0,         -1,      1 },
@@ -255,15 +257,22 @@ static const Key keys[] = {
 
 /* button definitions */
 static const Button buttons[] = {
-    /* click                event mask      button          function        argument */
+    /* click                event mask      button          function        argument                        signum */
     { ClkLtSymbol,          0,              Button1,        setlayout,      {0} },
     { ClkLtSymbol,          0,              Button3,        setlayout,      {.v = &layouts[1]} },
     { ClkWinTitle,          0,              Button2,        zoom,           {0} },
-    { ClkStatusText,        0,              Button1,        spawn,          SHCMD("dwm-volume mixer") },
-    { ClkStatusText,        0,              Button2,        spawn,          SHCMD("ghostty || kitty") },
-    { ClkStatusText,        0,              Button3,        spawn,          SHCMD("dwm-volume mute") },
-    { ClkStatusText,        0,              Button4,        spawn,          SHCMD("dwm-volume up") },
-    { ClkStatusText,        0,              Button5,        spawn,          SHCMD("dwm-volume down") },
+    /* Status segment 1 (Weather): left=detail, right=full */
+    { ClkStatusText,        0,              Button1,        spawn,          SHCMD("dwm-weather detail"),    1 },
+    { ClkStatusText,        0,              Button3,        spawn,          SHCMD("dwm-weather full"),      1 },
+    /* Status segment 2 (Clock): left=cycle, right=toggle */
+    { ClkStatusText,        0,              Button1,        spawn,          SHCMD("dwm-clock cycle"),       2 },
+    { ClkStatusText,        0,              Button3,        spawn,          SHCMD("dwm-clock toggle"),      2 },
+    /* Status segment 3 / fallback (Volume & AC/Battery): click=mixer, right=mute, scroll=volume */
+    { ClkStatusText,        0,              Button1,        spawn,          SHCMD("dwm-volume mixer"),      3 },
+    { ClkStatusText,        0,              Button2,        spawn,          SHCMD("ghostty || kitty"),      0 },
+    { ClkStatusText,        0,              Button3,        spawn,          SHCMD("dwm-volume mute"),       3 },
+    { ClkStatusText,        0,              Button4,        spawn,          SHCMD("dwm-volume up"),         0 },
+    { ClkStatusText,        0,              Button5,        spawn,          SHCMD("dwm-volume down"),       0 },
     { ClkClientWin,         MODKEY,         Button1,        moveorplace,    {.i = 0} },
     { ClkClientWin,         MODKEY,         Button2,        togglefloating, {0} },
     { ClkClientWin,         MODKEY,         Button3,        resizemouse,    {0} },

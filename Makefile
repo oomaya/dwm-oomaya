@@ -28,6 +28,7 @@ INSTALL_COMMANDS = \
 	scripts/dwm-app-install \
 	scripts/check-deps.sh \
 	scripts/disable-powersaving \
+	scripts/dwm-clock \
 	scripts/dwm-controlcenter \
 	scripts/dwm-default-apps \
 	scripts/dwm-diagnostics \
@@ -65,6 +66,8 @@ INSTALL_COMMANDS = \
 	scripts/dwm-settings-theme \
 	scripts/dwm-settings-provider \
 	scripts/dwm-session-launch \
+	scripts/dwm-volume \
+	scripts/dwm-weather \
 	scripts/dwm-xsettings \
 	scripts/dwm-terminal \
 	scripts/dwm-utils.sh \

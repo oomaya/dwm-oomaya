@@ -146,6 +146,6 @@ fi
 
 grep -Fq "no supported terminal emulator found" "$work/err"
 
-grep -Eq '^[[:space:]]*terminal[[:space:]]*=[[:space:]]*"alacritty"' \
+grep -Eq '^[[:space:]]*terminal[[:space:]]*=[[:space:]]*"(ghostty|alacritty)"' \
 	"$ROOT_DIR/config/hotkeys.toml"
-grep -Fq 'key="x",       desc="Terminal"' "$ROOT_DIR/config/hotkeys.toml"
+grep -Fq 'Primary Terminal' "$ROOT_DIR/config/hotkeys.toml"

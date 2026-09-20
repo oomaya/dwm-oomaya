@@ -13,17 +13,17 @@
 
     ### Progress bar ###
     progress_bar = true
-    progress_bar_height = 8
+    progress_bar_height = 12
     progress_bar_frame_width = 1
-    progress_bar_min_width = 150
-    progress_bar_max_width = 300
+    progress_bar_min_width = 220
+    progress_bar_max_width = 360
     progress_bar_corner_radius = 0
 
     ### Spacing & Borders ###
     indicate_hidden = yes
     transparency = 0
     separator_height = 2
-    padding = 14
+    padding = 18
     horizontal_padding = 16
     text_icon_padding = 14
     frame_width = 2
@@ -66,6 +66,7 @@
     foreground = "#a9b1d6"
     frame_color = "#414868"
     timeout = 4
+    highlight = "#7aa2f7"
 
 [urgency_normal]
     background = "#1a1b26"

@@ -18,7 +18,7 @@ pactl_restart_count=0
 udev_restart_count=0
 provider_restart_limit=${DWM_STATUS_PROVIDER_RESTART_LIMIT:-3}
 publish_timeout=${DWM_STATUS_PUBLISH_TIMEOUT:-0.5}
-power_poll_interval=${DWM_STATUS_POWER_POLL_INTERVAL:-30}
+power_poll_interval=${DWM_STATUS_POWER_POLL_INTERVAL:-15}
 power_supply_dir=${DWM_STATUS_POWER_SUPPLY_DIR:-/sys/class/power_supply}
 signal_exit=0
 
@@ -32,7 +32,7 @@ fi
 
 if ! [[ $power_poll_interval =~ ^[0-9]+([.][0-9]+)?$ ]] ||
 	! awk -v interval="$power_poll_interval" 'BEGIN { exit !(interval >= 0.05 && interval <= 86400) }'; then
-	power_poll_interval=30
+	power_poll_interval=15
 fi
 
 child_starttime() {
@@ -175,14 +175,72 @@ stop_child() {
 	wait "$child_pid" 2>/dev/null || true
 }
 
+weather_text() {
+	local w=""
+	if command -v dwm-weather >/dev/null 2>&1; then
+		w=$(dwm-weather status 2>/dev/null) || w='☁ --'
+	elif [[ -x $HOME/.local/src/dwm-oomaya/scripts/dwm-weather ]]; then
+		w=$("$HOME/.local/src/dwm-oomaya/scripts/dwm-weather" status 2>/dev/null) || w='☁ --'
+	else
+		w='☁ --'
+	fi
+	printf '%s\n' "$w" | sed 's/\xef\xb8\x8f//g; s/\xef\xb8\x8e//g'
+}
+
+time_text() {
+	local runtime_dir="${XDG_RUNTIME_DIR:-/tmp}"
+	if [[ ! -d $runtime_dir || ! -w $runtime_dir ]]; then
+		runtime_dir="${TMPDIR:-/tmp}"
+	fi
+	local state_file="$runtime_dir/dwm-status-clock.state"
+	local level=0 mode=12
+	if [[ -f $state_file ]]; then
+		IFS=: read -r level mode <"$state_file" 2>/dev/null || { level=0; mode=12; }
+	fi
+
+	local day_kr=""
+	case $(date +%u) in
+		1) day_kr="월" ;;
+		2) day_kr="화" ;;
+		3) day_kr="수" ;;
+		4) day_kr="목" ;;
+		5) day_kr="금" ;;
+		6) day_kr="토" ;;
+		7) day_kr="일" ;;
+	esac
+
+	local fmt
+	if [[ $mode == 24 ]]; then
+		case $level in
+			0) fmt='%H:%M' ;;
+			1) fmt='%m/%d %a %H:%M' ;;
+			2) fmt="%Y-%m-%d (${day_kr}) %H:%M" ;;
+			*) fmt='%H:%M' ;;
+		esac
+	else
+		case $level in
+			0) fmt='%I:%M %p' ;;
+			1) fmt='%m/%d %a %I:%M %p' ;;
+			2) fmt="%Y-%m-%d (${day_kr}) %I:%M %p" ;;
+			*) fmt='%I:%M %p' ;;
+		esac
+	fi
+
+	date "+$fmt"
+}
+
 publish() {
-	local power volume
+	local power volume weather clock status_name
 
 	power=$(power_text)
 	volume=$(volume_text)
+	weather=$(weather_text)
+	clock=$(time_text)
+
+	status_name=$(printf '\x01%s \x02%s \x03%s | %s' "$weather" "$clock" "$volume" "$power")
 
 	if ! timeout --kill-after=0.2 "$publish_timeout" \
-		xsetroot -name "$power | $volume" 2>/dev/null; then
+		xsetroot -name "$status_name" 2>/dev/null; then
 		((signal_exit != 0)) && return 0
 		return 1
 	fi
@@ -302,7 +360,11 @@ start_udev_source() {
 	rebuild_pids
 }
 
-fifo_dir=$(mktemp -d "${XDG_RUNTIME_DIR:-/tmp}/dwm-status.XXXXXX")
+status_runtime_dir="${XDG_RUNTIME_DIR:-/tmp}"
+if [[ ! -d $status_runtime_dir || ! -w $status_runtime_dir ]]; then
+	status_runtime_dir="${TMPDIR:-/tmp}"
+fi
+fifo_dir=$(mktemp -d "$status_runtime_dir/dwm-status.XXXXXX")
 fifo=$fifo_dir/events
 mkfifo "$fifo"
 trap cleanup EXIT
@@ -327,12 +389,16 @@ fi
 exec 3<>"$fifo"
 trap 'signal_exit=130; printf "terminate\n" >&3' INT
 trap 'signal_exit=143; printf "terminate\n" >&3' TERM
+trap 'printf "refresh\n" >&3' USR1
 while :; do
 	((signal_exit == 0)) || break
 	_event=
 	IFS= read -r -t "$power_poll_interval" _event <&3 || true
 	((signal_exit == 0)) || break
 	case $_event in
+	refresh)
+		publish
+		;;
 	restart-pactl)
 		stop_child "$pactl_provider_pid" "$pactl_provider_starttime"
 		stop_child "$pactl_parser_pid" "$pactl_parser_starttime"
