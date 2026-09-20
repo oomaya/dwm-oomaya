@@ -20,30 +20,29 @@ fi
 
 # Fallback: interactive executable dmenu palette
 if command -v dmenu >/dev/null 2>&1; then
-	control_helper="dwm-quickshell-controlcenter"
-	exec_helper="dwm-keybind-exec"
-
-	if ! command -v "$control_helper" >/dev/null 2>&1; then
-		if [ -x "${XDG_DATA_HOME:-$HOME/.local/share}/dwm-oomaya/scripts/$control_helper" ]; then
-			control_helper="${XDG_DATA_HOME:-$HOME/.local/share}/dwm-oomaya/scripts/$control_helper"
-		elif [ -x "$(dirname -- "$0")/$control_helper" ]; then
-			control_helper="$(dirname -- "$0")/$control_helper"
-		fi
+	control_helper=""
+	if command -v dwm-quickshell-controlcenter >/dev/null 2>&1; then
+		control_helper=$(command -v dwm-quickshell-controlcenter)
+	elif [ -x "${XDG_DATA_HOME:-$HOME/.local/share}/dwm-oomaya/scripts/dwm-quickshell-controlcenter" ]; then
+		control_helper="${XDG_DATA_HOME:-$HOME/.local/share}/dwm-oomaya/scripts/dwm-quickshell-controlcenter"
+	elif [ -x "$(dirname -- "$0")/dwm-quickshell-controlcenter" ]; then
+		control_helper="$(dirname -- "$0")/dwm-quickshell-controlcenter"
 	fi
 
-	if ! command -v "$exec_helper" >/dev/null 2>&1; then
-		if [ -x "${XDG_DATA_HOME:-$HOME/.local/share}/dwm-oomaya/scripts/$exec_helper" ]; then
-			exec_helper="${XDG_DATA_HOME:-$HOME/.local/share}/dwm-oomaya/scripts/$exec_helper"
-		elif [ -x "$(dirname -- "$0")/$exec_helper" ]; then
-			exec_helper="$(dirname -- "$0")/$exec_helper"
-		fi
+	exec_helper=""
+	if command -v dwm-keybind-exec >/dev/null 2>&1; then
+		exec_helper=$(command -v dwm-keybind-exec)
+	elif [ -x "${XDG_DATA_HOME:-$HOME/.local/share}/dwm-oomaya/scripts/dwm-keybind-exec" ]; then
+		exec_helper="${XDG_DATA_HOME:-$HOME/.local/share}/dwm-oomaya/scripts/dwm-keybind-exec"
+	elif [ -x "$(dirname -- "$0")/dwm-keybind-exec" ]; then
+		exec_helper="$(dirname -- "$0")/dwm-keybind-exec"
 	fi
 
-	if [ -x "$control_helper" ]; then
+	if [ -n "$control_helper" ] && [ -x "$control_helper" ]; then
 		choice=$("$control_helper" keybinds | awk -F'\t' '{ printf "%-24s │ %-32s │ [%s]\t%s\n", $1, $2, $3, $0 }' | dmenu -i -l 22 -p "DWM Palette >")
 		if [ -n "$choice" ]; then
 			raw=$(printf '%s\n' "$choice" | cut -f2-)
-			exec "$exec_helper" "$raw"
+			[ -n "$exec_helper" ] && exec "$exec_helper" "$raw"
 		fi
 	fi
 fi
