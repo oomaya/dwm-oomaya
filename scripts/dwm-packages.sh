@@ -199,7 +199,8 @@ dwm_packages() {
 		printf '%s\n' \
 			build-essential pkg-config libx11-dev libxft-dev \
 			libxinerama-dev libxrender-dev libimlib2-dev libxcb1-dev \
-			libxcb-res0-dev libxcb-util-dev libfontconfig1-dev libfreetype-dev
+			libxcb-res0-dev libxcb-util-dev libfontconfig1-dev libfreetype-dev \
+			libx11-xcb-dev
 		;;
 	debian:x11)
 		printf '%s\n' \
