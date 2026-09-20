@@ -39,10 +39,26 @@ if command -v dmenu >/dev/null 2>&1; then
 	fi
 
 	if [ -n "$control_helper" ] && [ -x "$control_helper" ]; then
-		choice=$("$control_helper" keybinds | awk -F'\t' '{ printf "%-24s │ %-32s │ [%s]\t%s\n", $1, $2, $3, $0 }' | dmenu -i -l 22 -p "DWM Palette >")
+		palette_data=$("$control_helper" keybinds-palette 2>/dev/null || "$control_helper" keybinds)
+		display_items=$(printf '%s\n' "$palette_data" | awk -F'\t' '{
+			cat = ($3 != "" ? $3 : "")
+			sub(/[[:space:]─]+$/, "", cat)
+			if (cat != "") {
+				printf "%-24s │ %-34s │ [%s]\n", $1, $2, cat
+			} else {
+				printf "%-24s │ %s\n", $1, $2
+			}
+		}')
+		choice=$(printf '%s\n' "$display_items" | dmenu -i -l 22 -p "DWM Palette >")
 		if [ -n "$choice" ]; then
-			raw=$(printf '%s\n' "$choice" | cut -f2-)
-			[ -n "$exec_helper" ] && exec "$exec_helper" "$raw"
+			sel_label=$(printf '%s\n' "$choice" | awk -F'│' '{ gsub(/^[ \t]+|[ \t]+$/, "", $1); print $1 }')
+			sel_desc=$(printf '%s\n' "$choice" | awk -F'│' '{ gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2 }')
+			raw=$(printf '%s\n' "$palette_data" | awk -F'\t' -v lbl="$sel_label" -v dsc="$sel_desc" '
+				$1 == lbl && $2 == dsc { print; exit }
+			')
+			if [ -n "$raw" ] && [ -n "$exec_helper" ]; then
+				exec "$exec_helper" "$raw"
+			fi
 		fi
 	fi
 fi
