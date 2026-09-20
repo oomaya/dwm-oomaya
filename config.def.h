@@ -25,7 +25,7 @@ static const int swallowfloating        = 0;    /* 1 means swallow floating wind
 
 /* Fonts */
 static const char dmenufont[]           = "MesloLGS Nerd Font Mono:size=16";
-static const char *fonts[]              = { "MesloLGS Nerd Font Mono:size=14:antialias=true:autohint=true", "NotoColorEmoji:pixelsize=14:antialias=true:autohint=true" };
+static const char *fonts[]              = { "JetBrainsMono Nerd Font:size=14:antialias=true:autohint=true", "MesloLGS Nerd Font Mono:size=14:antialias=true:autohint=true", "NotoColorEmoji:pixelsize=14:antialias=true:autohint=true" };
 
 /* Theme (TokyoNight) */
 #include "themes/tokyonight.h"

@@ -174,6 +174,8 @@ struct Monitor {
 	Client *stack;
 	Monitor *next;
 	Window barwin;
+	Window nativebarwin;
+	int isaltbar;
 	Window traywin;
 	const Layout *lt[2];
 	Pertag *pertag;
@@ -420,6 +422,7 @@ static pid_t statuspid = -1;
 static int screen;
 static int sw, sh;           /* X display screen geometry width, height */
 static int bh;               /* bar height */
+static int default_bh;       /* default native bar height */
 static int lrpad;            /* sum of left and right padding for text */
 static int (*xerrorxlib)(Display *, XErrorEvent *);
 static unsigned int numlockmask = 0;
@@ -835,7 +838,7 @@ buttonpress(XEvent *e)
 		selmon = m;
 		focus(NULL);
 	}
-	if (ev->window == selmon->barwin) {
+	if (ev->window == selmon->barwin && !selmon->isaltbar) {
 		i = x = 0;
 		unsigned int occ = 0;
 		for(c = m->clients; c; c=c->next)
@@ -968,6 +971,10 @@ cleanupmon(Monitor *mon)
 	if (mon->tabwin) {
 		XUnmapWindow(dpy, mon->tabwin);
 		XDestroyWindow(dpy, mon->tabwin);
+	}
+	if (!mon->isaltbar && mon->nativebarwin) {
+		XUnmapWindow(dpy, mon->nativebarwin);
+		XDestroyWindow(dpy, mon->nativebarwin);
 	}
 	/* External dock windows are managed by their own process. */
 	free(mon);
@@ -1352,31 +1359,20 @@ dirtomon(int dir)
 void
 drawbar(Monitor *m)
 {
-	/* The Quickshell panel handles drawing; the dwm bar is unused. */
-	return;
-
 	int x, w, tw = 0;
 	int boxs = drw->fonts->h / 9;
 	int boxw = drw->fonts->h / 6 + 2;
 	unsigned int i, occ = 0, urg = 0;
 	Client *c;
 
-	if (!m->showbar)
+	if (!m || !m->barwin || m->isaltbar || !m->showbar)
 		return;
 
 	/* draw status first so it can be overdrawn by tags later */
 	if (m == selmon) { /* status is only drawn on selected monitor */
 		drw_setscheme(drw, scheme[SchemeNorm]);
 		tw = TEXTW(stext) - lrpad + 2; /* 2px right padding */
-		drw_text(drw, m->ww - tw, 0, tw, bh, 0, stext, 0);
-	}
-
-	// Start x at 0, but only draw layout symbol if it's not an empty string
-	x = 0;
-	if (m->ltsymbol[0] != '\0' && strcmp(m->ltsymbol, "") != 0) {
-		w = TEXTW(m->ltsymbol);
-		drw_setscheme(drw, scheme[SchemeNorm]);
-		x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0);
+		drw_text(drw, m->ww - tw, 0, tw, m->bh, 0, stext, 0);
 	}
 
 	for (c = m->clients; c; c = c->next) {
@@ -1394,32 +1390,38 @@ drawbar(Monitor *m)
 		if (!(montags & (1 << i)))
 			continue;
 		/* Do not draw vacant tags */
-		if(!(occ & 1 << i || m->tagset[m->seltags] & 1 << i))
+		if (!(occ & 1 << i || m->tagset[m->seltags] & 1 << i))
 			continue;
 		w = TEXTW(tags[i]);
 		drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? SchemeSel : SchemeNorm]);
-		drw_text(drw, x, 0, w, bh, lrpad / 2, tags[i], urg & 1 << i);
+		drw_text(drw, x, 0, w, m->bh, lrpad / 2, tags[i], urg & 1 << i);
 		x += w;
 	}
 
-	if ((w = m->ww - tw - x) > bh) {
+	if (m->ltsymbol[0] != '\0' && strcmp(m->ltsymbol, "") != 0) {
+		w = TEXTW(m->ltsymbol);
+		drw_setscheme(drw, scheme[SchemeNorm]);
+		x = drw_text(drw, x, 0, w, m->bh, lrpad / 2, m->ltsymbol, 0);
+	}
+
+	if ((w = m->ww - tw - x) > m->bh) {
 		if (m->sel) {
-			drw_setscheme(drw, scheme[m == selmon ? SchemeSel : SchemeNorm]);
+			drw_setscheme(drw, scheme[m == selmon ? SchemeTitle : SchemeNorm]);
 			#if SHOWWINICON
-			drw_text(drw, x, 0, w, bh, lrpad / 2 + (m->sel->icon ? m->sel->icw + ICONSPACING : 0), m->sel->name, 0);
-			if (m->sel->icon) drw_pic(drw, x + lrpad / 2, (bh - m->sel->ich) / 2, m->sel->icw, m->sel->ich, m->sel->icon);
+			drw_text(drw, x, 0, w, m->bh, lrpad / 2 + (m->sel->icon ? m->sel->icw + ICONSPACING : 0), m->sel->name, 0);
+			if (m->sel->icon) drw_pic(drw, x + lrpad / 2, (m->bh - m->sel->ich) / 2, m->sel->icw, m->sel->ich, m->sel->icon);
 			#else
-			drw_text(drw, x, 0, w, bh, lrpad / 2, m->sel->name, 0);
+			drw_text(drw, x, 0, w, m->bh, lrpad / 2, m->sel->name, 0);
 			#endif
 			if (m->sel->isfloating)
 				drw_rect(drw, x + boxs, boxs, boxw, boxw, m->sel->isfixed, 0);
 		} else {
 			drw_setscheme(drw, scheme[SchemeNorm]);
-			drw_rect(drw, x, 0, w, bh, 1, 1);
+			drw_rect(drw, x, 0, w, m->bh, 1, 1);
 		}
 	}
 
-	drw_map(drw, m->barwin, 0, 0, m->ww, bh);
+	drw_map(drw, m->barwin, 0, 0, m->ww, m->bh);
 }
 
 void
@@ -3185,11 +3187,8 @@ scanaltbars(void)
 		return;
 	}
 
-	for (m = mons; m; m = m->next) {
-		m->barwin = 0;
-		m->bh = 0;
-		updatebarpos(m);
-	}
+	for (m = mons; m; m = m->next)
+		m->isaltbar = 0;
 
 	for (i = 0; i < num; i++) {
 		if (!XGetWindowAttributes(dpy, wins[i], &wa)
@@ -3207,6 +3206,21 @@ scanaltbars(void)
 		if (!m)
 			continue;
 		updatealtbar(m, wins[i], &wa);
+	}
+
+	for (m = mons; m; m = m->next) {
+		if (!m->isaltbar) {
+			m->bh = default_bh;
+			if (!m->nativebarwin)
+				updatebars();
+			else {
+				m->barwin = m->nativebarwin;
+				if (m->showbar)
+					XMapRaised(dpy, m->nativebarwin);
+			}
+			updatebarpos(m);
+			drawbar(m);
+		}
 	}
 	free(knownbars);
 	XFree(wins);
@@ -4359,7 +4373,8 @@ setup(void)
 	if (!drw_fontset_create(drw, fonts, LENGTH(fonts)))
 		die("no fonts could be loaded.");
 	lrpad = drw->fonts->h;
-	bh = 0; /* Quickshell provides the panel. */
+	default_bh = drw->fonts->h + 4;
+	bh = default_bh;
 	updategeom();
 	/* Reconcile monitor-specific tags after geometry is set up */
 	reconcilemonitortags();
@@ -5021,9 +5036,20 @@ togglebar(const Arg *arg)
 
 	selmon->showbar = selmon->pertag->showbars[selmon->pertag->curtag] = !selmon->showbar;
 	updatebarpos(selmon);
-	XMoveResizeWindow(dpy, selmon->barwin, selmon->wx, selmon->by, selmon->ww, selmon->bh);
-	XMoveResizeWindow(dpy, selmon->traywin, selmon->tx, selmon->by, selmon->tw, selmon->bh);
+	if (selmon->barwin) {
+		XMoveResizeWindow(dpy, selmon->barwin, selmon->wx, selmon->by, selmon->ww, selmon->bh);
+		if (!selmon->isaltbar) {
+			if (selmon->showbar)
+				XMapRaised(dpy, selmon->barwin);
+			else
+				XUnmapWindow(dpy, selmon->barwin);
+		}
+	}
+	if (selmon->traywin)
+		XMoveResizeWindow(dpy, selmon->traywin, selmon->tx, selmon->by, selmon->tw, selmon->bh);
 	arrange(selmon);
+	if (!selmon->isaltbar)
+		drawbar(selmon);
 }
 
 void
@@ -5204,12 +5230,28 @@ unmanagealtbar(Window w)
 	if (!m)
 		return;
 
-	m->barwin = 0;
-	m->by = 0;
-	m->bh = 0;
-	updatebarpos(m);
-	arrange(m);
-	updateclientlist();
+	if (m->isaltbar && m->barwin == w) {
+		m->isaltbar = 0;
+		m->bh = default_bh;
+		if (!m->nativebarwin)
+			updatebars();
+		else {
+			m->barwin = m->nativebarwin;
+			if (m->showbar)
+				XMapRaised(dpy, m->nativebarwin);
+		}
+		updatebarpos(m);
+		arrange(m);
+		updateclientlist();
+		drawbar(m);
+	} else if (m->barwin == w) {
+		m->barwin = 0;
+		m->by = 0;
+		m->bh = 0;
+		updatebarpos(m);
+		arrange(m);
+		updateclientlist();
+	}
 }
 
 void
@@ -5324,17 +5366,30 @@ updatebars(void)
 		.event_mask = ButtonPressMask|ExposureMask
 	};
 	XClassHint ch = {"dwm-tab", "dwm-tab"};
+	XClassHint bch = {"dwm", "dwm"};
 
 	for (m = mons; m; m = m->next) {
-		if (m->tabwin)
-			continue;
-		m->tabwin = XCreateWindow(dpy, root, m->wx + m->gappov, m->ty > 0 ? m->ty : 0,
-		                          m->ww > 2 * m->gappov ? m->ww - 2 * m->gappov : m->ww,
-		                          th > 0 ? th : 26, 0, DefaultDepth(dpy, screen),
-		                          CopyFromParent, DefaultVisual(dpy, screen),
-		                          CWOverrideRedirect|CWBackPixmap|CWEventMask, &wa);
-		XDefineCursor(dpy, m->tabwin, cursor[CurNormal]->cursor);
-		XSetClassHint(dpy, m->tabwin, &ch);
+		if (!m->tabwin) {
+			m->tabwin = XCreateWindow(dpy, root, m->wx + m->gappov, m->ty > 0 ? m->ty : 0,
+			                          m->ww > 2 * m->gappov ? m->ww - 2 * m->gappov : m->ww,
+			                          th > 0 ? th : 26, 0, DefaultDepth(dpy, screen),
+			                          CopyFromParent, DefaultVisual(dpy, screen),
+			                          CWOverrideRedirect|CWBackPixmap|CWEventMask, &wa);
+			XDefineCursor(dpy, m->tabwin, cursor[CurNormal]->cursor);
+			XSetClassHint(dpy, m->tabwin, &ch);
+		}
+		if (!m->nativebarwin) {
+			m->nativebarwin = XCreateWindow(dpy, root, m->wx, m->by, m->ww, m->bh > 0 ? m->bh : (default_bh ? default_bh : 26), 0, DefaultDepth(dpy, screen),
+			                                CopyFromParent, DefaultVisual(dpy, screen),
+			                                CWOverrideRedirect|CWBackPixmap|CWEventMask, &wa);
+			XDefineCursor(dpy, m->nativebarwin, cursor[CurNormal]->cursor);
+			XSetClassHint(dpy, m->nativebarwin, &bch);
+			if (!m->isaltbar) {
+				m->barwin = m->nativebarwin;
+				if (m->showbar)
+					XMapRaised(dpy, m->nativebarwin);
+			}
+		}
 	}
 }
 
@@ -5391,8 +5446,13 @@ updatealtbar(Monitor *m, Window win, XWindowAttributes *wa)
 		return 0;
 
 	newtopbar = wa->y < m->my + m->mh / 2;
-	newbh = wa->height > 0 ? wa->height : bh;
-	changed = m->barwin != win || m->topbar != newtopbar || m->bh != newbh;
+	newbh = wa->height > 0 ? wa->height : (default_bh ? default_bh : bh);
+	changed = m->barwin != win || m->topbar != newtopbar || m->bh != newbh || !m->isaltbar;
+
+	if (m->nativebarwin)
+		XUnmapWindow(dpy, m->nativebarwin);
+
+	m->isaltbar = 1;
 	m->barwin = win;
 	m->topbar = newtopbar;
 	m->bh = newbh;
