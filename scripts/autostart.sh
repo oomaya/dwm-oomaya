@@ -476,6 +476,11 @@ if [ -f "$QUICKSHELL_CONFIG" ]; then
 	fi
 fi
 
+# Notification daemon fallback: start dunst if Quickshell is absent or not running
+if [ "${quickshell_compatible:-0}" -ne 1 ] && ! pgrep -u "$(id -u)" -x quickshell >/dev/null 2>&1; then
+	start_once dunst dunst
+fi
+
 # Set Tokyo Night baseline solid root color so the display is never a raw black void
 if command -v xsetroot >/dev/null 2>&1; then
 	xsetroot -solid '#1a1b26' >/dev/null 2>&1 || true

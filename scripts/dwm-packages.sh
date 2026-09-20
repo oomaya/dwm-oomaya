@@ -26,7 +26,7 @@ dwm_packages() {
 		# fedora/updates repositories. It is required and belongs in the strict
 		# desktop transaction; the Fedora package-map check proves availability.
 		printf '%s\n' \
-			quickshell picom feh dex-autostart mate-polkit xsettingsd \
+			quickshell dunst picom feh dex-autostart mate-polkit xsettingsd \
 			alsa-utils brightnessctl dbus-tools inotify-tools jq pulseaudio-utils pipewire pavucontrol \
 			pipewire-pulseaudio wireplumber libnotify light-locker xorg-x11-drv-libinput \
 			bluez blueman playerctl upower power-profiles-daemon flatpak xdg-desktop-portal-gtk
@@ -131,7 +131,7 @@ dwm_packages() {
 		;;
 	arch:desktop)
 		printf '%s\n' \
-			picom feh dex inotify-tools jq \
+			dunst picom feh dex inotify-tools jq \
 			alsa-utils brightnessctl libnotify playerctl
 		;;
 	arch:desktop-optional)
@@ -212,7 +212,7 @@ dwm_packages() {
 		;;
 	debian:desktop)
 		printf '%s\n' \
-			picom feh dex inotify-tools jq \
+			dunst picom feh dex inotify-tools jq \
 			alsa-utils brightnessctl libnotify-bin pulseaudio-utils playerctl
 		;;
 	debian:desktop-optional)
