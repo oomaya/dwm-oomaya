@@ -9,7 +9,10 @@ step="${2:-5%}"
 
 get_volume() {
 	local vol=""
-	if command -v pactl >/dev/null 2>&1; then
+	if command -v oomaya-ctl >/dev/null 2>&1; then
+		vol=$(oomaya-ctl -j audio 2>/dev/null | awk -F':|}' '{print $2}')
+	fi
+	if [[ -z $vol ]] && command -v pactl >/dev/null 2>&1; then
 		vol=$(pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null |
 			awk 'match($0, /[0-9]+%/) { print substr($0, RSTART, RLENGTH - 1); exit }') || vol=""
 	fi
@@ -59,7 +62,13 @@ notify_volume() {
 
 case "$action" in
 	up)
-		if command -v pactl >/dev/null 2>&1; then
+		step_num=${step%%%}
+		if command -v oomaya-ctl >/dev/null 2>&1; then
+			vol=$(get_volume)
+			new_vol=$((vol + step_num))
+			(( new_vol > 100 )) && new_vol=100
+			oomaya-ctl volume "$new_vol" >/dev/null 2>&1 || true
+		elif command -v pactl >/dev/null 2>&1; then
 			pactl set-sink-volume @DEFAULT_SINK@ "+${step}"
 		elif command -v wpctl >/dev/null 2>&1; then
 			wpctl set-volume @DEFAULT_AUDIO_SINK@ "${step}+"
@@ -67,7 +76,13 @@ case "$action" in
 		notify_volume
 		;;
 	down)
-		if command -v pactl >/dev/null 2>&1; then
+		step_num=${step%%%}
+		if command -v oomaya-ctl >/dev/null 2>&1; then
+			vol=$(get_volume)
+			new_vol=$((vol - step_num))
+			(( new_vol < 0 )) && new_vol=0
+			oomaya-ctl volume "$new_vol" >/dev/null 2>&1 || true
+		elif command -v pactl >/dev/null 2>&1; then
 			pactl set-sink-volume @DEFAULT_SINK@ "-${step}"
 		elif command -v wpctl >/dev/null 2>&1; then
 			wpctl set-volume @DEFAULT_AUDIO_SINK@ "${step}-"

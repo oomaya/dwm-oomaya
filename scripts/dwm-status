@@ -247,7 +247,15 @@ publish() {
 }
 
 volume_text() {
-	local mute volume
+	local mute volume vol
+
+	if command -v oomaya-ctl >/dev/null 2>&1; then
+		vol=$(oomaya-ctl -j audio 2>/dev/null | awk -F':|}' '{print $2}')
+		if [[ -n $vol ]]; then
+			printf 'VOL %s%%\n' "$vol"
+			return
+		fi
+	fi
 
 	if command -v pactl >/dev/null 2>&1; then
 		mute=$(timeout --kill-after=0.2 "$publish_timeout" \

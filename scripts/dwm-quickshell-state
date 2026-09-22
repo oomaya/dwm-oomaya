@@ -1,6 +1,14 @@
 #!/bin/sh
 set -eu
 
+# High-performance fast path: delegate to compiled C binary if available
+# and not overridden by unit test harness
+if [ -z "${DWM_TEST_MONITOR_DESKTOPS:-}" ] && [ -z "${DWM_TEST_FULLSCREEN_MONITORS:-}" ] && [ -z "${DWM_TEST_SELECTED_MONITOR:-}" ]; then
+	if command -v dwm-quickshell-state-bin >/dev/null 2>&1; then
+		exec dwm-quickshell-state-bin "$@"
+	fi
+fi
+
 print_default_names() {
 	count=${1:-9}
 	i=1
@@ -18,7 +26,7 @@ clean_line() {
 
 root_property_value() {
 	prop=$1
-	xprop -root "$prop" 2>/dev/null | sed -n 's/^[^=]*= //p'
+	xprop -root "$prop" 2>/dev/null | sed -n 's/^[^=:]*[=:] //p; s/^window id # //p'
 }
 
 root_status() {
@@ -225,6 +233,9 @@ switch_workspace() {
 		return 2
 		;;
 	esac
+	if command -v oomaya-ctl >/dev/null 2>&1; then
+		oomaya-ctl view "$((target + 1))" >/dev/null 2>&1 && return 0
+	fi
 	command -v wmctrl >/dev/null 2>&1 || {
 		printf 'wmctrl is required for workspace switching\n' >&2
 		return 127
@@ -241,6 +252,9 @@ focus_window() {
 		return 2
 		;;
 	esac
+	if command -v oomaya-ctl >/dev/null 2>&1; then
+		oomaya-ctl focus "$target" >/dev/null 2>&1 && return 0
+	fi
 	wmctrl -ia "$target"
 }
 

@@ -532,6 +532,13 @@ start_detached_once picom picom --backend "$PICOM_BACKEND"
 # dwm root-window status publisher for Quickshell's event-driven panel.
 start_detached_display_command_once dwm-status
 
+# dwm-oomaya custom IPC bridge daemon (hybrid systemd user service with autostart fallback)
+if command -v systemctl >/dev/null 2>&1 && systemctl --user is-system-running >/dev/null 2>&1; then
+	systemctl --user start dwm-oomayad.service 2>/dev/null || start_detached_once dwm-oomayad dwm-oomayad
+else
+	start_detached_once dwm-oomayad dwm-oomayad
+fi
+
 # fcitx5 hangul input tool.
 start_detached_once fcitx5 -d
 

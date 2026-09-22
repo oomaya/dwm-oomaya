@@ -233,12 +233,12 @@ Scope {
     }
 
     function switchWorkspace(index) {
-        switchWorkspaceProcess.command = ["dwm-quickshell-state", "switch", index.toString()];
+        switchWorkspaceProcess.command = ["oomaya-ctl", "view", (index + 1).toString()];
         switchWorkspaceProcess.running = true;
     }
 
     function focusWindow(windowId) {
-        focusWindowProcess.command = ["dwm-quickshell-state", "focus", windowId];
+        focusWindowProcess.command = ["oomaya-ctl", "focus", windowId];
         focusWindowProcess.running = true;
     }
 
@@ -264,14 +264,14 @@ Scope {
     Process {
         id: switchWorkspaceProcess
 
-        command: ["dwm-quickshell-state", "switch", root.currentWorkspace.toString()]
+        command: ["oomaya-ctl", "view", (root.currentWorkspace + 1).toString()]
         running: false
     }
 
     Process {
         id: focusWindowProcess
 
-        command: ["dwm-quickshell-state", "focus", "0"]
+        command: ["oomaya-ctl", "focus", "0"]
         running: false
     }
 

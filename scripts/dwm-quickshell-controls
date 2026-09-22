@@ -157,6 +157,14 @@ volume_status_wpctl() {
 }
 
 volume_status() {
+	if command -v oomaya-ctl >/dev/null 2>&1; then
+		vol=$(oomaya-ctl -j audio 2>/dev/null | awk -F':|}' '{print $2}')
+		if [ -n "$vol" ]; then
+			printf 'VOL %s%%\n' "$vol"
+			return 0
+		fi
+	fi
+
 	if volume_status_pactl; then
 		return 0
 	fi
@@ -203,6 +211,11 @@ volume_down() {
 
 volume_set() {
 	percent=$(volume_percent "${1:-}")
+	num=${percent%%%}
+
+	if command -v oomaya-ctl >/dev/null 2>&1; then
+		oomaya-ctl volume "$num" >/dev/null 2>&1 && return 0
+	fi
 
 	if command -v pactl >/dev/null 2>&1; then
 		pactl set-sink-volume @DEFAULT_SINK@ "$percent"

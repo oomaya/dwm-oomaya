@@ -28,6 +28,7 @@ else
 	xdotool_keys=${3:-}
 fi
 
+# shellcheck disable=SC2016
 dispatch_spawn() {
 	act=$1
 	case "$act" in
@@ -56,6 +57,53 @@ dispatch_spawn() {
 	esac
 }
 
+dispatch_ipc() {
+	_func=$1
+	_act=$2
+
+	if ! command -v oomaya-ctl >/dev/null 2>&1; then
+		return 1
+	fi
+
+	case "$_func" in
+		view)
+			_tag="${_act#tag:}"
+			[ "$_tag" = "$_act" ] && _tag="${_act#i:}"
+			if [ -n "$_tag" ]; then
+				oomaya-ctl view "$_tag" >/dev/null 2>&1 && return 0
+			fi
+			;;
+		toggleview)
+			_tag="${_act#tag:}"
+			[ "$_tag" = "$_act" ] && _tag="${_act#i:}"
+			if [ -n "$_tag" ]; then
+				oomaya-ctl toggleview "$_tag" >/dev/null 2>&1 && return 0
+			fi
+			;;
+		killclient)
+			oomaya-ctl kill >/dev/null 2>&1 && return 0
+			;;
+		focus|focusclient|focuswin)
+			_win="${_act#win:}"
+			if [ -n "$_win" ]; then
+				oomaya-ctl focus "$_win" >/dev/null 2>&1 && return 0
+			fi
+			;;
+		setlayout)
+			_lay="${_act#layout:}"
+			[ "$_lay" = "$_act" ] && _lay="${_act#i:}"
+			if [ -n "$_lay" ]; then
+				oomaya-ctl setlayout "$_lay" >/dev/null 2>&1 && return 0
+			fi
+			;;
+		focusmon)
+			oomaya-ctl cycle-monitor >/dev/null 2>&1 && return 0
+			;;
+	esac
+
+	return 1
+}
+
 dispatch_xdotool() {
 	keys=$1
 	if [ -z "$keys" ]; then
@@ -71,6 +119,8 @@ dispatch_xdotool() {
 
 if [ "$func" = "spawn" ] && [ -n "$action" ]; then
 	dispatch_spawn "$action"
+elif dispatch_ipc "$func" "$action"; then
+	exit 0
 elif [ -n "$xdotool_keys" ]; then
 	dispatch_xdotool "$xdotool_keys"
 elif [ -n "$action" ]; then

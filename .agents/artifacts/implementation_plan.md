@@ -1,100 +1,119 @@
-# Implementation Plan: Lean Desktop Package Architecture & Cross-Distro Support
+# Phase 4: Upstream Tree Consolidation, Desktop Debloating & Lifecycle Hardening
 
-Execute the user-approved **Option A (Lean Desktop)** architecture across `dwm-oomaya` and `dmenu-oomaya`. Purge distro-installer bloat from default flows, fix Arch package names (`xorg-xprop`, purge AUR-only `xkbset`), introduce comprehensive Debian/Ubuntu/Pop!_OS package maps, install JetBrains Mono Nerd Font alongside Meslo, and secure display manager handling.
+## Overview
+Following the successful implementation, benchmarking, and initial Quickshell integration of `dwm-oomayad` (<4ms state queries, 0 subprocess forks, 0.0% idle CPU), this next phase consolidates the IPC subsystem into the official upstream repository (`/home/rand/.local/src/dwm-oomaya`), debloats remaining desktop scripts (`dwm-keybind-exec`, `dwm-volume`), hardens systemd daemon lifecycle management, and establishes drop-in `dwm-msg` compatibility.
 
 ---
 
 ## User Review Required
 
 > [!IMPORTANT]
-> **Default Profile Change:**
-> The default install profile (`DWM_INSTALL_PROFILE`) will change from `full` to `recommended`.
-> - **`recommended` (Default):** Builds `dwm-oomaya` and `dmenu-oomaya`, installs X11 development/runtime essentials, `picom`, `feh`, Meslo + JetBrains Mono Nerd Fonts, and user-level desktop tools. CUPS, PackageKit, LightDM, Steam, Gamescope, and extra GTK themes are completely bypassed.
-> - **`full` (Opt-in only):** Retained for users provisioning a completely bare-metal server from scratch (`./install.sh --profile=full`).
+> **Upstream Repository Integration**: All IPC daemon sources, headers, tests, and build tooling currently staged in `~/Documents/artifacts/dwm-oomaya` will be unified into `/home/rand/.local/src/dwm-oomaya`. The master `Makefile` will be updated so standard `make`, `make install`, and `make test` manage the IPC binaries alongside `dwm`.
 
 > [!NOTE]
-> **Existing Display Manager Preservation:**
-> `detect_display_manager` is expanded to recognize `greetd`, `ly`, `lxdm`, and active systemd units. Under `recommended`, `install.sh` will **never** attempt to install or enable `lightdm.service`, keeping CachyOS Niri, Wayland greeters, and existing desktop managers completely safe.
+> **Preserving Non-Breaking Fallbacks**: All modified scripts retain robust fallbacks to legacy tools (`xprop`, `pactl`, `wpctl`, `xdotool`) if `dwm-oomayad` or `oomaya-ctl` is ever unavailable.
 
 ---
 
 ## Open Questions
 
-None. The user has reviewed the audit artifact and selected **Option A** with explicit directives for:
-1. Full Debian / Ubuntu / Pop!_OS capability.
-2. JetBrains Mono Nerd Font integration as an imperative alongside Meslo.
-3. Verification across existing DEs and barebone server environments.
+1. **Systemd User Unit vs. autostart.sh**: Should `dwm-oomayad` be managed primarily as a systemd user service (`~/.config/systemd/user/dwm-oomayad.service`) or stay purely within `scripts/autostart.sh`? *(Recommended: Dual support—provide the systemd user unit, with `autostart.sh` falling back to detached execution).*
+2. **`dwm-msg` Compatibility Symlink**: Should `tools/dwm-msg-compat.sh` be installed directly as `~/.local/bin/dwm-msg` to capture legacy scripts? *(Recommended: Yes, ensuring zero breakage for external callers).*
 
 ---
 
 ## Proposed Changes
 
-### Packaging & Distribution Layer
+### 1. Upstream Source Consolidation
 
-#### [MODIFY] [scripts/dwm-packages.sh](file:///home/rand/dwm-oomaya/scripts/dwm-packages.sh)
-- **Arch Corrections:**
-  - In `arch:runtime-required`: Replace `xprop` with `xorg-xprop`.
-  - In `arch:x11`: Ensure standard official packages only (`xorg-xrandr`, `xorg-xset`, `xorg-xsetroot`, `xorg-xinput`, `xorg-setxkbmap`).
-  - In `arch:desktop`: Streamline to lean desktop (`picom`, `feh`, `dex`, `inotify-tools`, `jq`, `alsa-utils`, `brightnessctl`, `libnotify`, `playerctl`). Move `power-profiles-daemon`, `bluez`, `blueman`, `pipewire`, `wireplumber` to optional/full to prevent conflicting with existing desktop audio/power managers.
-- **Debian / Ubuntu / Pop!_OS Definitions:**
-  - Add `debian:build`: `build-essential pkg-config libx11-dev libxft-dev libxinerama-dev libxrender-dev libimlib2-dev libxcb1-dev libxcb-res0-dev libxcb-util-dev libfontconfig1-dev libfreetype-dev`.
-  - Add `debian:x11`: `xorg x11-xserver-utils x11-utils x11-xkb-utils xinput`.
-  - Add `debian:runtime-required`: `dbus-x11 curl git procps psmisc unzip util-linux xclip xdotool xdg-utils`.
-  - Add `debian:desktop`: `picom feh dex inotify-tools jq alsa-utils brightnessctl libnotify-bin pulseaudio-utils playerctl`.
-  - Add `debian:fonts`: `fonts-noto-core fonts-noto-color-emoji`.
-  - Add `debian:theme`, `debian:theme-gtk`, `debian:theme-optional`, `debian:terminal`, `debian:terminal-primary`, `debian:screenshot-optional`, `debian:lightdm`, `debian:system-management`, `debian:desktop-optional`.
-  - Add `debian:required`, `debian:recommended`, `debian:optional`, `debian:full`.
-- **Fedora Adjustments:**
-  - Move `system-management` (`cups`, `PackageKit`, `system-config-printer`) strictly out of `recommended` and into `full`.
+Consolidate the complete IPC engine from the working artifacts staging directory into the official Git tree.
+
+#### [NEW] [Headers](file:///home/rand/.local/src/dwm-oomaya/include)
+- `include/oomaya_ipc.h`
+- `include/oomaya_ring.h`
+- `include/oomaya_rate.h`
+- `include/oomaya_state.h`
+- `include/oomaya_worker.h`
+- `include/oomaya_reactor.h`
+- `include/oomaya_reactor_impl.h`
+- `include/oomaya_dispatch.h`
+- `include/oomaya_x11_bridge.h`
+
+#### [NEW] [Daemon & Library Sources](file:///home/rand/.local/src/dwm-oomaya/src)
+- `src/ipc/protocol.c`
+- `src/ipc/negotiate.c`
+- `src/daemon/ring.c`
+- `src/daemon/rate.c`
+- `src/daemon/state_cache.c`
+- `src/daemon/worker_pool.c`
+- `src/daemon/worker_dispatch.c`
+- `src/daemon/reactor.c`
+- `src/daemon/x11_bridge.c`
+- `src/daemon/main.c`
+
+#### [NEW] [Tools & Tests](file:///home/rand/.local/src/dwm-oomaya)
+- `tools/oomaya-ctl.c`
+- `tools/dwm-quickshell-state.c`
+- `tools/dwm-msg-compat.sh`
+- `tests/test_ipc_protocol.c`
+- `tests/test_phase2_core.c`
+- `tests/test_daemon_core.c`
+- `tests/test_integration_live.c`
+- `tests/bench_ipc_roundtrip.c`
+- `tests/profile_suite_b.c`
+- `Makefile.ipc`
+
+#### [MODIFY] [Makefile](file:///home/rand/.local/src/dwm-oomaya/Makefile)
+- Add targets `ipc`, `daemon`, `tools`, and `test-ipc` invoking `Makefile.ipc`.
+- Add `dwm-oomayad`, `oomaya-ctl`, and `dwm-quickshell-state-bin` to `make install` and `make uninstall`.
 
 ---
 
-### Installer & Font Subsystem
+### 2. Desktop Keybind & Audio Debloating
 
-#### [MODIFY] [install.sh](file:///home/rand/dwm-oomaya/install.sh)
-- **Default Profile:** Change default `INSTALL_PROFILE="${DWM_INSTALL_PROFILE:-recommended}"`.
-- **System Management Decoupling:** Move `dwm_install_package_profile system-management` from `install_recommended_profile` into `install_optional_profile`.
-- **Display Manager Guard:** Enhance `detect_display_manager` to check `greetd`, `ly`, `lxdm`, and active systemd units. Never install `lightdm` unless `--profile=full` is passed AND no display manager is active.
-- **JetBrains Mono Nerd Font Support:**
-  - Define `JETBRAINS_VERSION="3.4.0"`, `JETBRAINS_URL`, and SHA-256 `76f05ff3ace48a464a6ca57977998784ff7bdbb65a6d915d7e401cd3927c493c`.
-  - Add `install_jetbrains_mono_nerd_font()` with checksum verification and font caching.
-  - Call both `install_meslo_nerd_font` and `install_jetbrains_mono_nerd_font` during the font installation phase.
+#### [MODIFY] [scripts/dwm-keybind-exec](file:///home/rand/.local/src/dwm-oomaya/scripts/dwm-keybind-exec)
+- Replace synthetic `xdotool` key faking (`sleep 0.05 && xdotool key ...`) with instant `oomaya-ctl` commands for standard window management actions:
+  - `view <tag>` -> `oomaya-ctl view <tag>`
+  - `focusstack` / `focus` -> direct focus IPC
+  - `killclient` -> `oomaya-ctl kill`
+- Fallback to `xdotool` only for non-IPC actions.
+
+#### [MODIFY] [scripts/dwm-volume](file:///home/rand/.local/src/dwm-oomaya/scripts/dwm-volume)
+- Update `get_volume` and `status` to query `oomaya-ctl -j audio` first, eliminating `pactl`/`wpctl` subshell pipes on volume key presses.
+- Update volume set to invoke `oomaya-ctl volume <level>`.
 
 ---
 
-### Test Suite & Multi-Distro Validation
+### 3. Lifecycle Hardening
 
-#### [NEW] [tests/test-package-maps.sh](file:///home/rand/dwm-oomaya/tests/test-package-maps.sh)
-- Cross-distro package syntax and capability validator.
-- Tests that `dwm_packages` returns valid non-empty package sets for `fedora`, `arch`, and `debian` across `required`, `recommended`, `desktop`, and `build`.
-- Verifies that known trap packages (`xprop` without prefix, `xkbset`, missing dev headers) do not appear in Arch or Debian profiles.
+#### [NEW] [systemd/dwm-oomayad.service](file:///home/rand/.local/src/dwm-oomaya/systemd/dwm-oomayad.service)
+- Define standard systemd user unit for `dwm-oomayad` with socket cleanup and restart policy.
 
-#### [MODIFY] [tests/test-consolidated-install.sh](file:///home/rand/dwm-oomaya/tests/test-consolidated-install.sh)
-- Update mock test assertions to reflect `recommended` as the default profile and ensure `system-management` is skipped in default test passes.
+#### [MODIFY] [scripts/autostart.sh](file:///home/rand/.local/src/dwm-oomaya/scripts/autostart.sh)
+- Check `systemctl --user is-active dwm-oomayad` before falling back to manual `start_detached_once`.
 
 ---
 
 ## Verification Plan
 
 ### Automated Tests
-1. **Package Map Matrix Test:**
+1. **Unit & Concurrency Tests**:
    ```bash
-   bash tests/test-package-maps.sh
+   make -C /home/rand/.local/src/dwm-oomaya -f Makefile.ipc test_all
    ```
-2. **Consolidated Installer Test:**
+2. **IPC Roundtrip Latency Check**:
    ```bash
-   bash tests/test-consolidated-install.sh
+   /home/rand/.local/src/dwm-oomaya/tests/bench_ipc_roundtrip
    ```
-3. **Smart Git Transport & Lockstep Dmenu Build:**
+3. **Repository Regression Suite**:
    ```bash
-   bash tests/test-smart-git.sh
-   ```
-4. **ShellCheck Linting:**
-   ```bash
-   shellcheck scripts/dwm-packages.sh install.sh
+   cd /home/rand/.local/src/dwm-oomaya && ./scripts/run-tests
    ```
 
-### Manual & Target Verification
-1. Verify `install.sh --dry-run` output on local Fedora host: confirm profile resolves to `recommended`, system-management is skipped, and dmenu lockstep build is active.
-2. Verify simulated Arch package set with mock pacman: confirm `xorg-xprop` is resolved and `xkbset` is absent.
-3. Test font installation verification logic in a temporary clean environment.
+### Manual & Interactive Verification
+1. **Desktop Keybind Responsiveness**:
+   - Test keybind triggers via `dwm-keybind-exec`. Verify zero `xdotool` process spawning.
+2. **Audio Volume Control**:
+   - Execute `dwm-volume status` and `dwm-volume up 5%`. Confirm Dunst notification displays updated volume immediately.
+3. **Living Handoff Logging**:
+   - Run `antigravity-handoff create` to checkpoint state across federated workstations.

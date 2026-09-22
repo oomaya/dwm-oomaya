@@ -36,3 +36,16 @@ program.log
 
 # Local Serena project metadata/cache
 /.serena/
+
+# IPC binaries, libraries, and test outputs
+/dwm-oomayad
+/liboomaya_ipc.a
+/liboomaya_daemon_core.a
+/tools/oomaya-ctl
+/tools/dwm-quickshell-state-bin
+/tests/bench_ipc_roundtrip
+/tests/profile_suite_b
+/tests/test_daemon_core
+/tests/test_integration_live
+/tests/test_ipc_protocol
+/tests/test_phase2_core

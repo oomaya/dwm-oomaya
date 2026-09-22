@@ -149,6 +149,13 @@ if command -v dunst >/dev/null 2>&1; then
 	pkill -u "$user_id" -x dunst >/dev/null 2>&1 || true
 fi
 
+# Terminate dwm-oomayad daemon (prefer systemd user unit if active, else pkill)
+if command -v systemctl >/dev/null 2>&1 && systemctl --user is-active dwm-oomayad.service >/dev/null 2>&1; then
+	systemctl --user stop dwm-oomayad.service 2>/dev/null || true
+elif command -v dwm-oomayad >/dev/null 2>&1; then
+	pkill -u "$user_id" -x dwm-oomayad >/dev/null 2>&1 || true
+fi
+
 # A display manager can start a new X11 login before the per-user systemd
 # manager has stopped the previous graphical target. Stop it explicitly only
 # when no other graphical login shares the user manager.

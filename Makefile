@@ -93,7 +93,7 @@ RELEASE_NAME = dwm-oomaya-${VERSION}
 RELEASE_ARCHIVE = release/${RELEASE_NAME}.tar.gz
 SOURCE_DATE_EPOCH ?= $(shell git log -1 --format=%ct 2>/dev/null || printf '0')
 
-all: dwm
+all: dwm ipc tools
 
 .c.o:
 	${CC} ${CPPFLAGS} ${CFLAGS} -c $<
@@ -124,8 +124,19 @@ check-build-deps:
 		exit 1; \
 	fi
 
+ipc:
+	$(MAKE) -f Makefile.ipc daemon
+
+tools:
+	$(MAKE) -f Makefile.ipc tools
+	$(CC) -std=c99 -pedantic -Wall -Wextra -Werror -O2 -g -o tools/dwm-quickshell-state-bin tools/dwm-quickshell-state.c -lX11
+
+test-ipc:
+	$(MAKE) -f Makefile.ipc test_all
+
 clean:
-	rm -f dwm ${OBJ} *.orig *.rej
+	rm -f dwm ${OBJ} *.orig *.rej tools/dwm-quickshell-state-bin
+	$(MAKE) -f Makefile.ipc clean || true
 
 native:
 	$(MAKE) clean
@@ -184,6 +195,16 @@ install-system:
 	@echo "==> Installing system files..."
 	install -Dm755 dwm ${DESTDIR}${PREFIX}/bin/dwm
 	ln -sf dwm ${DESTDIR}${PREFIX}/bin/dwm-oomaya
+	@if [ -f dwm-oomayad ]; then install -Dm755 dwm-oomayad ${DESTDIR}${PREFIX}/bin/dwm-oomayad; fi
+	@if [ -f tools/oomaya-ctl ]; then install -Dm755 tools/oomaya-ctl ${DESTDIR}${PREFIX}/bin/oomaya-ctl; fi
+	@if [ -f tools/dwm-quickshell-state-bin ]; then install -Dm755 tools/dwm-quickshell-state-bin ${DESTDIR}${PREFIX}/bin/dwm-quickshell-state-bin; fi
+	@if [ -f tools/dwm-msg-compat.sh ]; then \
+		install -Dm755 tools/dwm-msg-compat.sh ${DESTDIR}${PREFIX}/bin/dwm-msg-compat; \
+		ln -sf dwm-msg-compat ${DESTDIR}${PREFIX}/bin/dwm-msg; \
+	fi
+	@if [ -f systemd/dwm-oomayad.service ]; then \
+		install -Dm644 systemd/dwm-oomayad.service ${DESTDIR}${SYSTEMDUSERDIR}/dwm-oomayad.service; \
+	fi
 	sed "s/VERSION/${VERSION}/g" dwm.1 | install -Dm644 /dev/stdin ${DESTDIR}${MANPREFIX}/man1/dwm.1
 	sed "s|@PREFIX@|${PREFIX}|g" dwm.desktop | \
 		install -Dm644 /dev/stdin ${DESTDIR}${XSESSIONSDIR}/dwm.desktop
@@ -233,6 +254,24 @@ install-user:
 	@if [ -f dwm ]; then \
 		echo "==> Installing dwm to ${USER_HOME}/.local/bin/dwm..."; \
 		install -Dm755 dwm "${USER_HOME}/.local/bin/dwm"; \
+	fi
+	@if [ -f dwm-oomayad ]; then \
+		echo "==> Installing dwm-oomayad to ${USER_HOME}/.local/bin/dwm-oomayad..."; \
+		install -Dm755 dwm-oomayad "${USER_HOME}/.local/bin/dwm-oomayad"; \
+	fi
+	@if [ -f tools/oomaya-ctl ]; then \
+		install -Dm755 tools/oomaya-ctl "${USER_HOME}/.local/bin/oomaya-ctl"; \
+	fi
+	@if [ -f tools/dwm-quickshell-state-bin ]; then \
+		install -Dm755 tools/dwm-quickshell-state-bin "${USER_HOME}/.local/bin/dwm-quickshell-state-bin"; \
+	fi
+	@if [ -f tools/dwm-msg-compat.sh ]; then \
+		install -Dm755 tools/dwm-msg-compat.sh "${USER_HOME}/.local/bin/dwm-msg-compat"; \
+		ln -sf dwm-msg-compat "${USER_HOME}/.local/bin/dwm-msg"; \
+	fi
+	@if [ -f systemd/dwm-oomayad.service ]; then \
+		mkdir -p "${USER_HOME}/.config/systemd/user"; \
+		install -Dm644 systemd/dwm-oomayad.service "${USER_HOME}/.config/systemd/user/dwm-oomayad.service"; \
 	fi
 	if [ ! -e "${USER_HOME}/.xinitrc" ]; then \
 		install -Dm644 scripts/.xinitrc "${USER_HOME}/.xinitrc"; \
@@ -326,6 +365,12 @@ install-user:
 uninstall:
 	rm -f ${DESTDIR}${PREFIX}/bin/dwm \
 		${DESTDIR}${PREFIX}/bin/dwm-oomaya \
+		${DESTDIR}${PREFIX}/bin/dwm-oomayad \
+		${DESTDIR}${PREFIX}/bin/oomaya-ctl \
+		${DESTDIR}${PREFIX}/bin/dwm-quickshell-state-bin \
+		${DESTDIR}${PREFIX}/bin/dwm-msg-compat \
+		${DESTDIR}${PREFIX}/bin/dwm-msg \
+		${DESTDIR}${SYSTEMDUSERDIR}/dwm-oomayad.service \
 		${DESTDIR}${MANPREFIX}/man1/dwm.1 \
 		${DESTDIR}${XSESSIONSDIR}/dwm.desktop
 	rm -rf \

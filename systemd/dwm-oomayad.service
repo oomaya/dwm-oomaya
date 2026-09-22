@@ -1,0 +1,17 @@
+[Unit]
+Description=dwm-oomaya Low-Latency IPC Bridge Daemon
+Documentation=https://github.com/oomaya/dwm-oomaya
+PartOf=graphical-session.target
+After=graphical-session-pre.target
+
+[Service]
+Type=exec
+ExecStart=%h/.local/bin/dwm-oomayad
+Restart=always
+RestartSec=1s
+Slice=app-graphical.slice
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=graphical-session.target

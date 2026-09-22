@@ -1,0 +1,169 @@
+# Makefile.ipc — Phase 1 IPC library and test harness
+#
+# Usage:
+#   make -f Makefile.ipc            # build library + test binary
+#   make -f Makefile.ipc test       # build and run unit tests
+#   make -f Makefile.ipc clean      # remove build artefacts
+#
+# Strict C99. -Wall -Wextra -Werror. Zero dynamic allocations.
+
+CC      ?= cc
+AR      ?= ar
+ARFLAGS  = rcs
+
+CFLAGS  := -std=c99 -pedantic -Wall -Wextra -Werror \
+            -Wno-unused-parameter \
+            -O2 -g \
+            -I./include
+
+# Source files
+IPC_SRCS := src/ipc/protocol.c \
+             src/ipc/negotiate.c
+
+IPC_OBJS := $(IPC_SRCS:.c=.o)
+
+LIB_IPC  := liboomaya_ipc.a
+
+TEST_SRC := tests/test_ipc_protocol.c
+TEST_BIN := tests/test_ipc_protocol
+
+.PHONY: all test clean
+
+all: $(LIB_IPC) $(TEST_BIN) tools/oomaya-ctl
+
+# Static library
+$(LIB_IPC): $(IPC_OBJS)
+	$(AR) $(ARFLAGS) $@ $^
+	@echo "  AR   $@"
+
+# Test binary
+$(TEST_BIN): $(TEST_SRC) $(LIB_IPC)
+	$(CC) $(CFLAGS) -o $@ $< -L. -loomaya_ipc
+	@echo "  LD   $@"
+
+# Pattern rule for objects
+%.o: %.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+	@echo "  CC   $@"
+
+# Run tests and report
+test: $(TEST_BIN)
+	@echo ""
+	@echo "Running Phase 1 IPC unit tests..."
+	@echo "──────────────────────────────────"
+	@$(TEST_BIN) && echo "ALL TESTS PASSED" || (echo "TESTS FAILED" && exit 1)
+
+clean:
+	rm -f $(IPC_OBJS) $(LIB_IPC) $(TEST_BIN)
+	@echo "  CLEAN done"
+
+# ── Phase 3 targets ──────────────────────────────────────────────────────────
+
+# C11 flags (ring + state + workers + reactor + x11_bridge)
+C11FLAGS := -std=c11 -pedantic -Wall -Wextra -Werror -Wno-unused-parameter \
+            -D_POSIX_C_SOURCE=200809L -O2 -g -D_GNU_SOURCE -I./include
+
+SRC_DAEMON := src/daemon/state_cache.c src/daemon/worker_pool.c \
+              src/daemon/rate.c src/daemon/ring.c
+
+# Check X11 availability at configure-time
+X11_CFLAGS := $(shell pkg-config --cflags x11 2>/dev/null)
+X11_LIBS   := $(shell pkg-config --libs   x11 2>/dev/null)
+ifneq ($(X11_LIBS),)
+    X11_DEFINES := -DOOMAYA_HAVE_X11
+    SRC_X11     := src/daemon/x11_bridge.c
+else
+    X11_DEFINES :=
+    SRC_X11     := src/daemon/x11_bridge.c   # compiles stub path
+endif
+
+DAEMON_OBJS := src/daemon/state_cache.o src/daemon/worker_pool.o \
+               src/daemon/reactor.o     src/daemon/rate.o \
+               src/daemon/ring.o        src/daemon/x11_bridge.o \
+               src/daemon/worker_dispatch.o \
+               src/ipc/protocol.o       src/ipc/negotiate.o
+
+phase3: $(DAEMON_OBJS)
+
+src/daemon/state_cache.o: src/daemon/state_cache.c
+	$(CC) $(C11FLAGS) -c $< -o $@
+
+src/daemon/worker_pool.o: src/daemon/worker_pool.c
+	$(CC) $(C11FLAGS) -c $< -o $@
+
+src/daemon/reactor.o: src/daemon/reactor.c
+	$(CC) $(C11FLAGS) -c $< -o $@
+
+src/daemon/x11_bridge.o: src/daemon/x11_bridge.c
+	$(CC) $(C11FLAGS) $(X11_CFLAGS) $(X11_DEFINES) -c $< -o $@
+
+src/daemon/rate.o: src/daemon/rate.c
+	$(CC) $(C11FLAGS) -c $< -o $@
+
+src/daemon/ring.o: src/daemon/ring.c
+	$(CC) $(C11FLAGS) -c $< -o $@
+
+src/daemon/worker_dispatch.o: src/daemon/worker_dispatch.c
+	$(CC) $(C11FLAGS) -c $< -o $@
+
+daemon: phase3 src/daemon/main.c
+	$(CC) $(C11FLAGS) $(X11_CFLAGS) $(X11_DEFINES) \
+	    -o dwm-oomayad \
+	    src/daemon/main.c $(DAEMON_OBJS) \
+	    -lpthread -lrt $(X11_LIBS)
+	@echo "Built: dwm-oomayad"
+
+test3: $(DAEMON_OBJS)
+	$(CC) $(C11FLAGS) \
+	    -o tests/test_daemon_core \
+	    tests/test_daemon_core.c \
+	    src/daemon/state_cache.o src/daemon/worker_pool.o \
+	    src/ipc/protocol.o src/ipc/negotiate.o \
+	    src/daemon/rate.o src/daemon/ring.o \
+	    -lpthread -lrt
+	@echo "Running Phase 3 tests..."
+	tests/test_daemon_core
+
+test_live: $(DAEMON_OBJS)
+	$(CC) $(C11FLAGS) $(X11_CFLAGS) $(X11_DEFINES) \
+	    -o tests/test_integration_live \
+	    tests/test_integration_live.c \
+	    src/daemon/reactor.o src/daemon/worker_pool.o src/daemon/state_cache.o \
+	    src/daemon/ring.o src/daemon/rate.o src/ipc/protocol.o src/ipc/negotiate.o \
+	    src/daemon/x11_bridge.o \
+	    -lpthread -lrt $(X11_LIBS)
+	@echo "Running Live Reactor Integration test..."
+	tests/test_integration_live
+
+test_all: test test3 test_live
+	@echo ""
+	@echo "=================================================="
+	@echo "  ALL UNIT & INTEGRATION TESTS PASSED CLEANLY!   "
+	@echo "=================================================="
+
+bench: $(DAEMON_OBJS)
+	$(CC) $(C11FLAGS) $(X11_CFLAGS) $(X11_DEFINES) -DOOMAYA_RATE_CAPACITY_MSGS=500000 -DOOMAYA_RATE_REFILL_PER_SEC=5000000 \
+	    -o tests/bench_ipc_roundtrip \
+	    tests/bench_ipc_roundtrip.c \
+	    src/daemon/reactor.c src/daemon/worker_pool.c src/daemon/state_cache.c \
+	    src/daemon/ring.c src/daemon/rate.c src/ipc/protocol.c src/ipc/negotiate.c \
+	    src/daemon/x11_bridge.c \
+	    -lpthread -lrt $(X11_LIBS) -lm
+	@echo "Running Benchmark Suite..."
+	tests/bench_ipc_roundtrip
+
+.PHONY: phase3 daemon test3 test_live test_all bench ctl
+
+# CLI Client
+tools/oomaya-ctl: tools/oomaya-ctl.c src/ipc/protocol.o
+	$(CC) $(CFLAGS) -o $@ $< src/ipc/protocol.o
+	@echo "Built: tools/oomaya-ctl"
+
+ctl: tools/oomaya-ctl
+
+# High-Performance Quickshell State Companion
+tools/dwm-quickshell-state-bin: tools/dwm-quickshell-state.c
+	$(CC) $(CFLAGS) $(X11_CFLAGS) -o $@ $< $(X11_LIBS)
+	@echo "Built: tools/dwm-quickshell-state-bin"
+
+qs-bin: tools/dwm-quickshell-state-bin
