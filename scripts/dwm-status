@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if [[ -z ${DISPLAY:-} ]]; then
+	DISPLAY=:0
+fi
+export DISPLAY
+
 fifo=
 fifo_dir=
 identity_file=
@@ -34,6 +39,18 @@ if ! [[ $power_poll_interval =~ ^[0-9]+([.][0-9]+)?$ ]] ||
 	! awk -v interval="$power_poll_interval" 'BEGIN { exit !(interval >= 0.05 && interval <= 86400) }'; then
 	power_poll_interval=15
 fi
+
+next_poll_interval() {
+	if [[ -n ${DWM_STATUS_POWER_POLL_INTERVAL:-} ]]; then
+		printf '%s' "$power_poll_interval"
+		return
+	fi
+	local sec
+	sec=$(date +%-S 2>/dev/null || echo 0)
+	local rem=$((60 - 10#$sec))
+	((rem <= 0)) && rem=60
+	printf '%d' "$rem"
+}
 
 child_starttime() {
 	local child_pid=$1
@@ -108,7 +125,7 @@ register_identity() {
 }
 
 # Invoked from the EXIT-trap cleanup path.
-# shellcheck disable=SC2329
+# shellcheck disable=SC2317,SC2329
 unregister_identity() {
 	local current
 
@@ -119,7 +136,7 @@ unregister_identity() {
 }
 
 # Invoked by name from the EXIT trap.
-# shellcheck disable=SC2329
+# shellcheck disable=SC2317,SC2329
 cleanup() {
 	local identity attempt live
 
@@ -372,7 +389,7 @@ status_runtime_dir="${XDG_RUNTIME_DIR:-/tmp}"
 if [[ ! -d $status_runtime_dir || ! -w $status_runtime_dir ]]; then
 	status_runtime_dir="${TMPDIR:-/tmp}"
 fi
-fifo_dir=$(mktemp -d "$status_runtime_dir/dwm-status.XXXXXX")
+fifo_dir=$(mktemp -d "$status_runtime_dir/dwm-status.XXXXXX" 2>/dev/null || mktemp -d "${TMPDIR:-/tmp}/dwm-status.$UID.XXXXXX")
 fifo=$fifo_dir/events
 mkfifo "$fifo"
 trap cleanup EXIT
@@ -380,7 +397,7 @@ trap 'signal_exit=130' INT
 trap 'signal_exit=143' TERM
 
 register_identity
-publish
+publish || true
 ((signal_exit == 0)) || exit "$signal_exit"
 if command -v pactl >/dev/null 2>&1; then
 	pactl_fifo=$fifo_dir/pactl
@@ -401,11 +418,12 @@ trap 'printf "refresh\n" >&3' USR1
 while :; do
 	((signal_exit == 0)) || break
 	_event=
-	IFS= read -r -t "$power_poll_interval" _event <&3 || true
+	current_interval=$(next_poll_interval)
+	IFS= read -r -t "$current_interval" _event <&3 || true
 	((signal_exit == 0)) || break
 	case $_event in
 	refresh)
-		publish
+		publish || true
 		;;
 	restart-pactl)
 		stop_child "$pactl_provider_pid" "$pactl_provider_starttime"
@@ -435,7 +453,7 @@ while :; do
 		((signal_exit == 0)) || break
 		start_udev_source || true
 		;;
-	*) publish ;;
+	*) publish || true ;;
 	esac
 done
 exit "$signal_exit"
