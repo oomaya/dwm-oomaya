@@ -69,7 +69,10 @@ stop_scoped_status() {
 	status_command_path=$(readlink -f -- "$status_command" 2>/dev/null) || return 0
 	status_display_key=$(printf '%s' "${DISPLAY:-}" | sha256sum | awk '{ print $1 }')
 	case $status_display_key in *[!0-9a-f]* | '') return 0 ;; esac
-	status_identity_file=$XDG_RUNTIME_DIR/dwm-titus/dwm-status.$status_display_key.identity
+	status_identity_file=$XDG_RUNTIME_DIR/dwm-oomaya/dwm-status.$status_display_key.identity
+	if [ ! -f "$status_identity_file" ] || [ -L "$status_identity_file" ]; then
+		status_identity_file=$XDG_RUNTIME_DIR/dwm-titus/dwm-status.$status_display_key.identity
+	fi
 	[ -f "$status_identity_file" ] && [ ! -L "$status_identity_file" ] || return 0
 	status_pid=
 	status_starttime=
@@ -149,12 +152,8 @@ if command -v dunst >/dev/null 2>&1; then
 	pkill -u "$user_id" -x dunst >/dev/null 2>&1 || true
 fi
 
-# Terminate dwm-oomayad daemon (prefer systemd user unit if active, else pkill)
-if command -v systemctl >/dev/null 2>&1 && systemctl --user is-active dwm-oomayad.service >/dev/null 2>&1; then
-	systemctl --user stop dwm-oomayad.service 2>/dev/null || true
-elif command -v dwm-oomayad >/dev/null 2>&1; then
-	pkill -u "$user_id" -x dwm-oomayad >/dev/null 2>&1 || true
-fi
+# Terminate dwm-oomayad daemon if running
+pkill -u "$user_id" -x dwm-oomayad >/dev/null 2>&1 || true
 
 # A display manager can start a new X11 login before the per-user systemd
 # manager has stopped the previous graphical target. Stop it explicitly only

@@ -339,7 +339,7 @@ configure_fedora_gamemode_access() {
 package_line() {
 	local profile=$1
 
-	dwm_packages "$DISTRO_FAMILY" "$profile" | paste -sd ' ' -
+	dwm_packages "$DISTRO_FAMILY" "$profile" 2>/dev/null | paste -sd ' ' - || true
 }
 
 print_summary_profile() {
@@ -531,7 +531,7 @@ install_supported_terminal() {
 
 configure_quickshell_picom_opacity() {
 	local config="/etc/xdg/picom.conf"
-	local backup="${config}.dwm-titus.bak"
+	local backup="${config}.dwm-oomaya.bak"
 	local tooltip_rule="^([[:space:]]*\"[0-9]+([.][0-9]+)?:window_type = 'tooltip')(\"[[:space:]]*,?[[:space:]]*)$"
 	local configured_rule="^[[:space:]]*\"[0-9]+([.][0-9]+)?:window_type = 'tooltip' && name != 'quickshell'\"[[:space:]]*,?[[:space:]]*$"
 	local tmp
@@ -660,8 +660,8 @@ install_lightdm_config() {
 		sudo restorecon \
 			"$lightdm_config" \
 			/etc/lightdm/slick-greeter.conf \
-			/usr/share/pixmaps/dwm-titus.jpg \
-			/usr/share/pixmaps/dwm-titus-logo.png
+			/usr/share/pixmaps/dwm-oomaya.jpg \
+			/usr/share/pixmaps/dwm-oomaya-logo.png
 	fi
 }
 
@@ -819,13 +819,15 @@ if install_recommended_profile && command -v xdg-user-dirs-update &>/dev/null; t
 	xdg-user-dirs-update
 fi
 
+mkdir -p "$HOME/Pictures"
+mkdir -p "$HOME/Pictures/Screenshots"
+mkdir -p "$BG_DIR"
+if [ -f "$REPO_DIR/assets/dwm-oomaya.jpg" ]; then
+	cp -n "$REPO_DIR/assets/dwm-oomaya.jpg" "$BG_DIR/" 2>/dev/null || true
+	ok "Default dwm-oomaya wallpaper seeded in $BG_DIR."
+fi
+
 if install_recommended_profile; then
-	mkdir -p "$HOME/Pictures"
-	mkdir -p "$BG_DIR"
-	if [ -f "$REPO_DIR/assets/dwm-oomaya.jpg" ]; then
-		cp -n "$REPO_DIR/assets/dwm-oomaya.jpg" "$BG_DIR/" 2>/dev/null || true
-		ok "Default dwm-oomaya wallpaper seeded."
-	fi
 	if [ ! -d "$BG_DIR/.git" ] && [ -z "$(ls -A "$BG_DIR" 2>/dev/null | grep -v 'dwm-oomaya.jpg' || true)" ]; then
 		info "Downloading Nord wallpapers pack..."
 		if dwm_git_safe_clone https://github.com/ChrisTitusTech/nord-background.git "$BG_DIR" 2>/dev/null; then
@@ -918,6 +920,12 @@ make install-user \
 install_dmenu_ecosystem
 configure_displays_after_install
 
+if [[ -x "$REPO_DIR/scripts/check-deps.sh" ]]; then
+	echo ""
+	info "Auditing desktop runtime dependencies..."
+	"$REPO_DIR/scripts/check-deps.sh" || warn "One or more desktop utilities are missing. Review the check above."
+fi
+
 # ── Done ─────────────────────────────────────────────────
 echo ""
 echo "╔═══════════════════════════════════════════╗"
@@ -933,11 +941,11 @@ if [[ $currentdm == "lightdm" ]]; then
 	echo "  • Start LightDM now (optional): sudo systemctl start lightdm.service"
 fi
 echo ""
-echo "  SUPER+/   keybind viewer     SUPER+X  terminal"
+echo "  SUPER+/   keybind viewer     SUPER+Shift+Enter terminal"
 echo "  SUPER+F1  control center     SUPER+R  quickshell launcher"
 echo "  SUPER+D   dmenu desktop      ALT+P    dmenu run prompt"
 echo "  ALT+X     dmenu power menu   ALT+Tab  dmenu window switcher"
-echo "  SUPER+Q   close window"
+echo "  SUPER+E   file manager       SUPER+Q  close window"
 echo ""
-echo "  Full reference: https://dwm.christitus.com/keybinds.html or SUPER+/ in dwm"
+echo "  Full reference: Press SUPER+/ in dwm for interactive keybindings palette"
 echo ""

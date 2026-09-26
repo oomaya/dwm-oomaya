@@ -11,11 +11,15 @@ config_home=${XDG_CONFIG_HOME:-}
 state_home=${XDG_STATE_HOME:-}
 [[ $config_home == /* ]] || config_home=${home_dir:+$home_dir/.config}
 [[ $state_home == /* ]] || state_home=${home_dir:+$home_dir/.local/state}
-config_dir=$config_home/dwm-titus
+dwm_cfg_name="dwm-oomaya"
+[[ -d $config_home/dwm-oomaya || ! -d $config_home/dwm-titus ]] || dwm_cfg_name="dwm-titus"
+dwm_state_name="dwm-oomaya"
+[[ -d $state_home/dwm-oomaya || ! -d $state_home/dwm-titus ]] || dwm_state_name="dwm-titus"
+config_dir=$config_home/$dwm_cfg_name
 config_file=$config_dir/font.conf
-state_base=$state_home/dwm-titus
+state_base=$state_home/$dwm_state_name
 appearance_state_dir=$state_base/appearance
-state_dir=$state_home/dwm-titus/appearance/font
+state_dir=$state_home/$dwm_state_name/appearance/font
 lock_file=$state_dir/mutation.lock
 preview_file=$state_dir/preview.current
 preview_meta=$state_dir/preview.meta

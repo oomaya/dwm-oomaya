@@ -4,21 +4,36 @@ set -eu
 config=${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/shell.qml
 
 if [ ! -f "$config" ]; then
+	config=${XDG_DATA_HOME:-$HOME/.local/share}/dwm-oomaya/config/quickshell/shell.qml
+fi
+if [ ! -f "$config" ]; then
 	config=${XDG_DATA_HOME:-$HOME/.local/share}/dwm-titus/config/quickshell/shell.qml
 fi
 
-if [ ! -f "$config" ]; then
-	printf 'dwm-settings: managed Quickshell configuration not found\n' >&2
-	exit 1
-fi
+action=${1:-}
 
-action=${1:-toggle}
 case "$action" in
-open | close | toggle | refresh | status) ;;
+open | close | toggle | refresh | status)
+	if [ ! -f "$config" ]; then
+		printf 'dwm-settings: managed Quickshell configuration not found\n' >&2
+		exit 1
+	fi
+	exec quickshell ipc --path "$config" call settings "$action"
+	;;
+"")
+	if command -v quickshell >/dev/null 2>&1 && [ -f "$config" ] && pgrep -u "$(id -u)" -x quickshell >/dev/null 2>&1; then
+		exec quickshell ipc --path "$config" call settings "toggle"
+	fi
+	helper=dwm-settings-hub
+	if [ -n "${HOME:-}" ] && [ -x "$HOME/.local/bin/dwm-settings-hub" ]; then
+		helper="$HOME/.local/bin/dwm-settings-hub"
+	elif case $0 in */*) [ -x "${0%/*}/dwm-settings-hub" ] ;; *) false ;; esac; then
+		helper="${0%/*}/dwm-settings-hub"
+	fi
+	exec "$helper"
+	;;
 *)
 	printf 'usage: %s [open|close|toggle|refresh|status]\n' "$0" >&2
 	exit 2
 	;;
 esac
-
-exec quickshell ipc --path "$config" call settings "$action"

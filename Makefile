@@ -56,6 +56,7 @@ INSTALL_COMMANDS = \
 	scripts/dwm-scratchpad \
 	scripts/dwm-screenshot \
 	scripts/dwm-settings \
+	scripts/dwm-settings-hub \
 	scripts/dwm-settings-display \
 	scripts/dwm-settings-display-profiles \
 	scripts/dwm-settings-input \
@@ -123,6 +124,12 @@ check-build-deps:
 		echo "Run ./install.sh or install the matching development packages." >&2; \
 		exit 1; \
 	fi
+
+check-deps:
+	scripts/check-deps.sh
+
+deps install-deps:
+	./install.sh --profile=recommended
 
 ipc:
 	$(MAKE) -f Makefile.ipc daemon
@@ -269,6 +276,10 @@ install-user:
 		install -Dm755 tools/dwm-msg-compat.sh "${USER_HOME}/.local/bin/dwm-msg-compat"; \
 		ln -sf dwm-msg-compat "${USER_HOME}/.local/bin/dwm-msg"; \
 	fi
+	@echo "==> Installing scripts to user PATH..."
+	@for f in ${INSTALL_COMMANDS}; do \
+		install -Dm755 "$$f" "${USER_HOME}/.local/bin/$$(basename "$$f")"; \
+	done
 	@if [ -f systemd/dwm-oomayad.service ]; then \
 		mkdir -p "${USER_HOME}/.config/systemd/user"; \
 		install -Dm644 systemd/dwm-oomayad.service "${USER_HOME}/.config/systemd/user/dwm-oomayad.service"; \
@@ -755,5 +766,5 @@ check:
 	check-display-profile check-display-setup check-fedora-iso-builder check-fedora-packages check-fedora-platform check-format check-install \
 	check-gearlever-install check-herdr-install check-install-manifest check-install-preservation check-kickstart check-lock \
 	check-session-guards check-session-migration check-screenshot check-release-helper check-shell check-webapp-launch check-diagnostics check-status check-system-health check-system-management check-quickshell-system-management check-settings \
-	check-quickshell-launcher check-quickshell-controls check-quickshell-audio check-quickshell-controlcenter check-quickshell-power check-quickshell-power-backend check-quickshell-power-model check-quickshell-session-actions check-quickshell-defaults-model check-quickshell-appearance-model check-quickshell-design-system check-quickshell-large-surfaces check-quickshell-large-surfaces-xvfb check-quickshell-panel-menus check-quickshell-panel-settings check-quickshell-command-menu check-quickshell-notifications check-quickshell-tray check-quickshell-health-xvfb check-quickshell-settings-xvfb check-quickshell-settings-responsiveness-xvfb check-quickshell-network check-quickshell-connectivity check-quickshell-qml check-lightdm-config check-terminal check-hotkeys check-xvfb-runtime install install-system install-user \
+	check-quickshell-launcher check-quickshell-controls check-quickshell-audio check-quickshell-controlcenter check-quickshell-power check-quickshell-power-backend check-quickshell-power-model check-quickshell-session-actions check-quickshell-defaults-model check-quickshell-appearance-model check-quickshell-design-system check-quickshell-large-surfaces check-quickshell-large-surfaces-xvfb check-quickshell-panel-menus check-quickshell-panel-settings check-quickshell-command-menu check-quickshell-notifications check-quickshell-tray check-quickshell-health-xvfb check-quickshell-settings-xvfb check-quickshell-settings-responsiveness-xvfb check-quickshell-network check-quickshell-connectivity check-quickshell-qml check-lightdm-config check-terminal check-hotkeys check-xvfb-runtime check-deps deps install-deps install install-system install-user \
 	install-cursors native release release-check uninstall

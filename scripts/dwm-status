@@ -246,15 +246,32 @@ time_text() {
 	date "+$fmt"
 }
 
+bluetooth_text() {
+	[[ -d /sys/class/bluetooth ]] || return 0
+	compgen -G '/sys/class/bluetooth/hci*' >/dev/null 2>&1 || return 0
+	command -v bluetoothctl >/dev/null 2>&1 || return 0
+
+	local count
+	count=$(timeout 0.15 bluetoothctl devices Connected 2>/dev/null | grep -c '^Device' || true)
+	if ((count > 0)); then
+		printf 'BT %d' "$count"
+	fi
+}
+
 publish() {
-	local power volume weather clock status_name
+	local power volume weather clock status_name bt
 
 	power=$(power_text)
 	volume=$(volume_text)
 	weather=$(weather_text)
 	clock=$(time_text)
+	bt=$(bluetooth_text)
 
-	status_name=$(printf '\x01%s \x02%s \x03%s | %s' "$weather" "$clock" "$volume" "$power")
+	if [[ -n $bt ]]; then
+		status_name=$(printf '\x01%s \x02%s \x03%s | %s | %s' "$weather" "$clock" "$volume" "$bt" "$power")
+	else
+		status_name=$(printf '\x01%s \x02%s \x03%s | %s' "$weather" "$clock" "$volume" "$power")
+	fi
 
 	if ! timeout --kill-after=0.2 "$publish_timeout" \
 		xsetroot -name "$status_name" 2>/dev/null; then

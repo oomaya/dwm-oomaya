@@ -27,9 +27,11 @@ install:
 	trap 'rm -f "$$tmp"' EXIT; \
 	$(MAKE) --no-print-directory print-config >"$$tmp"; \
 	if [ -f $(LIGHTDM_CONF) ] && ! cmp -s "$$tmp" $(LIGHTDM_CONF); then \
-		cp -a $(LIGHTDM_CONF) $(LIGHTDM_CONF).dwm-titus.$$(date +%Y%m%d%H%M%S).bak; \
+		cp -a $(LIGHTDM_CONF) $(LIGHTDM_CONF).dwm-oomaya.$$(date +%Y%m%d%H%M%S).bak; \
 	fi; \
 	install -Dm644 "$$tmp"                           $(LIGHTDM_CONF)
 	install -Dm644 slick-greeter.conf                $(LIGHTDM_DIR)/slick-greeter.conf
-	install -Dm644 wallpaper.jpg                     $(PIXMAPS_DIR)/dwm-titus.jpg
-	install -Dm644 ../dwm-titus.png                  $(PIXMAPS_DIR)/dwm-titus-logo.png
+	install -Dm644 wallpaper.jpg                     $(PIXMAPS_DIR)/dwm-oomaya.jpg
+	install -Dm644 ../dwm-oomaya.png                 $(PIXMAPS_DIR)/dwm-oomaya-logo.png
+	ln -sf dwm-oomaya.jpg                            $(PIXMAPS_DIR)/dwm-titus.jpg
+	ln -sf dwm-oomaya-logo.png                       $(PIXMAPS_DIR)/dwm-titus-logo.png

@@ -152,7 +152,7 @@ bench: $(DAEMON_OBJS)
 	@echo "Running Benchmark Suite..."
 	tests/bench_ipc_roundtrip
 
-.PHONY: phase3 daemon test3 test_live test_all bench ctl
+.PHONY: phase3 daemon test3 test_live test_all bench ctl tools
 
 # CLI Client
 tools/oomaya-ctl: tools/oomaya-ctl.c src/ipc/protocol.o
@@ -160,6 +160,7 @@ tools/oomaya-ctl: tools/oomaya-ctl.c src/ipc/protocol.o
 	@echo "Built: tools/oomaya-ctl"
 
 ctl: tools/oomaya-ctl
+tools: tools/oomaya-ctl tools/dwm-quickshell-state-bin
 
 # High-Performance Quickshell State Companion
 tools/dwm-quickshell-state-bin: tools/dwm-quickshell-state.c

@@ -69,9 +69,10 @@ refresh_theme_environment() {
 	/*) ;;
 	*) config_home=${HOME:?HOME is required}/.config ;;
 	esac
-	theme_env=$config_home/dwm-titus/theme-env.sh
+	theme_env=$config_home/dwm-oomaya/theme-env.sh
+	[ -f "$theme_env" ] || theme_env=$config_home/dwm-titus/theme-env.sh
 	session_uid=$(id -u) || return 1
-	runtime_base=${XDG_RUNTIME_DIR:-/tmp/dwm-titus-$session_uid}
+	runtime_base=${XDG_RUNTIME_DIR:-/tmp/dwm-oomaya-$session_uid}
 	case $runtime_base in
 	/*) ;;
 	*) return 1 ;;

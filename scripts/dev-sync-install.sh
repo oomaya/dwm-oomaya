@@ -8,7 +8,7 @@ usage() {
 	cat <<'EOF'
 Usage: scripts/dev-sync-install.sh [--check]
 
-Build and synchronize the current checkout with the live dwm-titus install.
+Build and synchronize the current checkout with the live dwm-oomaya install.
 The default mode:
 
   1. Builds dwm from a clean object state.
@@ -88,12 +88,18 @@ data_root=${DATADIR:-/usr/share}
 config_home=${XDG_CONFIG_HOME:-$user_home/.config}
 xdg_data_home=${XDG_DATA_HOME:-$user_home/.local/share}
 state_home=${XDG_STATE_HOME:-$user_home/.local/state}
-data_dir=$xdg_data_home/dwm-titus
+data_dir=$xdg_data_home/dwm-oomaya
+if [ ! -d "$data_dir" ] && [ -d "$xdg_data_home/dwm-titus" ]; then
+	data_dir=$xdg_data_home/dwm-titus
+fi
 quickshell_dir=$config_home/quickshell
 binary_target=$prefix/bin/dwm
 man_target=$manprefix/man1/dwm.1
 xsession_target=$xsessions_dir/dwm.desktop
-display_root_helper_target=$prefix/libexec/dwm-titus/dwm-settings-display-root
+display_root_helper_target=$prefix/libexec/dwm-oomaya/dwm-settings-display-root
+if [ ! -e "$display_root_helper_target" ] && [ -e "$prefix/libexec/dwm-titus/dwm-settings-display-root" ]; then
+	display_root_helper_target=$prefix/libexec/dwm-titus/dwm-settings-display-root
+fi
 make_command=${MAKE:-make}
 os_release_file=/etc/os-release
 if [ "${DWM_DEV_SYNC_TEST_MODE:-0}" = 1 ] &&
@@ -297,8 +303,12 @@ verify_install() {
 		verify_tree "$cursor_source" "$data_root/icons/$cursor_name" \
 			"cursor theme $cursor_name"
 	done
+	cursor_license="$data_root/licenses/dwm-oomaya/capitaine-cursors/COPYING"
+	if [ ! -f "$cursor_license" ] && [ -f "$data_root/licenses/dwm-titus/capitaine-cursors/COPYING" ]; then
+		cursor_license="$data_root/licenses/dwm-titus/capitaine-cursors/COPYING"
+	fi
 	verify_file "$repo_dir/assets/cursors/COPYING" \
-		"$data_root/licenses/dwm-titus/capitaine-cursors/COPYING" \
+		"$cursor_license" \
 		"cursor license"
 
 	if [ "$verification_failed" -eq 0 ]; then
@@ -321,7 +331,7 @@ backup_live_install() {
 			die "required backup command not found: $backup_command"
 	done
 
-	backup_parent=$state_home/dwm-titus/live-update-backups
+	backup_parent=$state_home/dwm-oomaya/live-update-backups
 	backup_stamp=$(date -u +%Y%m%dT%H%M%SZ)
 	mkdir -p "$backup_parent"
 	backup_dir=$backup_parent/$backup_stamp-$$
@@ -333,7 +343,7 @@ backup_live_install() {
 	fi
 	if [ -e "$data_dir" ]; then
 		tar -C "$(dirname "$data_dir")" -cpf \
-			"$backup_dir/dwm-titus-data.tar" "$(basename "$data_dir")"
+			"$backup_dir/dwm-oomaya-data.tar" "$(basename "$data_dir")"
 	fi
 
 	system_manifest=$work/system-files
@@ -350,7 +360,7 @@ backup_live_install() {
 		[ -d "$cursor_source" ] || continue
 		add_system_backup_path "$data_root/icons/${cursor_source##*/}"
 	done
-	add_system_backup_path "$data_root/licenses/dwm-titus/capitaine-cursors/COPYING"
+	add_system_backup_path "$cursor_license"
 	if [ -s "$system_manifest" ]; then
 		tar -C / -cpf "$backup_dir/system-files.tar" -T "$system_manifest"
 	fi

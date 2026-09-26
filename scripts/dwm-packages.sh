@@ -19,7 +19,7 @@ dwm_packages() {
 		printf '%s\n' xorg-x11-server-Xorg xorg-x11-xinit xrandr xset xsetroot xinput setxkbmap xkbset
 		;;
 	fedora:runtime-required)
-		printf '%s\n' dbus-x11 curl git procps-ng psmisc unzip util-linux xclip xdotool xprop xdg-utils
+		printf '%s\n' dbus-x11 curl git procps-ng psmisc unzip util-linux xclip xdotool xprop xdg-utils wmctrl
 		;;
 	fedora:desktop)
 		# Fedora 44 publishes the compatible Quickshell snapshot in its official
@@ -29,7 +29,8 @@ dwm_packages() {
 			quickshell dunst picom feh dex-autostart mate-polkit xsettingsd \
 			alsa-utils brightnessctl dbus-tools inotify-tools jq pulseaudio-utils pipewire pavucontrol \
 			pipewire-pulseaudio wireplumber libnotify light-locker xorg-x11-drv-libinput \
-			bluez blueman playerctl upower power-profiles-daemon flatpak xdg-desktop-portal-gtk
+			bluez blueman playerctl upower power-profiles-daemon flatpak xdg-desktop-portal-gtk \
+			Thunar gvfs
 		;;
 	fedora:system-management)
 		printf '%s\n' \
@@ -89,7 +90,7 @@ dwm_packages() {
 		printf '%s\n' alacritty
 		;;
 	fedora:screenshot-optional)
-		printf '%s\n' maim
+		printf '%s\n' maim slop
 		;;
 	fedora:required)
 		dwm_packages "$family" build
@@ -127,12 +128,13 @@ dwm_packages() {
 		;;
 	arch:runtime-required)
 		printf '%s\n' \
-			dbus curl git procps-ng psmisc unzip util-linux xclip xdotool xorg-xprop xdg-utils
+			dbus curl git procps-ng psmisc unzip util-linux xclip xdotool xorg-xprop xdg-utils wmctrl
 		;;
 	arch:desktop)
 		printf '%s\n' \
 			dunst picom feh dex inotify-tools jq \
-			alsa-utils brightnessctl libnotify playerctl
+			alsa-utils brightnessctl libnotify playerctl \
+			thunar gvfs
 		;;
 	arch:desktop-optional)
 		printf '%s\n' \
@@ -150,7 +152,7 @@ dwm_packages() {
 		printf '%s\n' alacritty
 		;;
 	arch:screenshot-optional)
-		printf '%s\n' maim
+		printf '%s\n' maim slop
 		;;
 	arch:fonts)
 		printf '%s\n' noto-fonts noto-fonts-emoji noto-fonts-cjk
@@ -204,21 +206,22 @@ dwm_packages() {
 		;;
 	debian:x11)
 		printf '%s\n' \
-			xorg x11-xserver-utils x11-utils x11-xkb-utils xinput
+			xorg x11-xserver-utils x11-utils x11-xkb-utils xinput xkbset
 		;;
 	debian:runtime-required)
 		printf '%s\n' \
-			dbus-x11 curl git procps psmisc unzip util-linux xclip xdotool xdg-utils
+			dbus-x11 curl git procps psmisc unzip util-linux xclip xdotool xdg-utils wmctrl
 		;;
 	debian:desktop)
 		printf '%s\n' \
 			dunst picom feh dex inotify-tools jq \
-			alsa-utils brightnessctl libnotify-bin pulseaudio-utils playerctl
+			alsa-utils brightnessctl libnotify-bin pulseaudio-utils playerctl xsettingsd \
+			bluez blueman light-locker xdg-desktop-portal-gtk \
+			thunar gvfs
 		;;
 	debian:desktop-optional)
 		printf '%s\n' \
-			thunar gvfs file-roller bluez blueman upower \
-			flatpak xdg-desktop-portal-gtk
+			thunar gvfs file-roller upower flatpak
 		;;
 	debian:system-management)
 		printf '%s\n' packagekit python3-gi accountsservice cups system-config-printer
@@ -230,7 +233,7 @@ dwm_packages() {
 		printf '%s\n' alacritty
 		;;
 	debian:screenshot-optional)
-		printf '%s\n' maim
+		printf '%s\n' maim slop
 		;;
 	debian:fonts)
 		printf '%s\n' fonts-noto-core fonts-noto-color-emoji
@@ -296,6 +299,16 @@ dwm_install_package_profile() {
 				'Retaining installed Power Profiles provider (ppd-service); skipping power-profiles-daemon.' >&2
 			continue
 		fi
+		if [[ $package == xorg ]] && dwm_is_x11_server_installed; then
+			if dwm_is_xlibre_installed; then
+				printf '%s\n' \
+					'Retaining sovereign X11 server (Xlibre); skipping xorg to prevent package conflict.' >&2
+			else
+				printf '%s\n' \
+					'Retaining installed X11 server (Xorg); skipping redundant xorg metapackage.' >&2
+			fi
+			continue
+		fi
 		packages+=("$package")
 	done < <(dwm_packages "$DISTRO_FAMILY" "$profile")
 
@@ -304,6 +317,22 @@ dwm_install_package_profile() {
 	fi
 
 	install_packages "${packages[@]}"
+}
+
+dwm_is_xlibre_installed() {
+	command -v Xlibre >/dev/null 2>&1 ||
+		[ -x /usr/bin/Xlibre ] ||
+		(command -v dpkg-query >/dev/null 2>&1 && dpkg-query -W -f='${Status}\n' xlibre xserver-xlibre xserver-xlibre-core 2>/dev/null | grep -q 'install ok installed') ||
+		(command -v dpkg-query >/dev/null 2>&1 && dpkg-query -S /usr/bin/Xorg 2>/dev/null | grep -q 'xlibre')
+}
+
+dwm_is_x11_server_installed() {
+	dwm_is_xlibre_installed ||
+		command -v Xorg >/dev/null 2>&1 ||
+		[ -x /usr/bin/Xorg ] ||
+		(command -v dpkg-query >/dev/null 2>&1 && dpkg-query -W -f='${Status}\n' xserver-xorg xserver-xorg-core xorg 2>/dev/null | grep -q 'install ok installed') ||
+		(command -v rpm >/dev/null 2>&1 && (rpm -q xorg-x11-server-Xorg >/dev/null 2>&1 || rpm -q --whatprovides xserver 2>/dev/null)) ||
+		(command -v pacman >/dev/null 2>&1 && pacman -Q xorg-server >/dev/null 2>&1)
 }
 
 dwm_power_profiles_provider_installed() {

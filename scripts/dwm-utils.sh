@@ -26,7 +26,7 @@ if [[ $DISTRO_ID =~ ^(arch|cachyos|manjaro|endeavouros)$ || ${ID_LIKE:-} =~ arch
 	DISTRO_FAMILY="arch"
 elif [[ $DISTRO_ID =~ ^fedora$ || ${ID_LIKE:-} =~ fedora ]]; then
 	DISTRO_FAMILY="fedora"
-elif [[ $DISTRO_ID =~ ^(debian|ubuntu|pop|linuxmint)$ || ${ID_LIKE:-} =~ (debian|ubuntu) ]]; then
+elif [[ $DISTRO_ID =~ ^(debian|ubuntu|pop|linuxmint|peppermint)$ || ${ID_LIKE:-} =~ (debian|ubuntu) || -f /etc/debian_version ]]; then
 	DISTRO_FAMILY="debian"
 fi
 

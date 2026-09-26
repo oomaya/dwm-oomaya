@@ -1,5 +1,5 @@
 #!/bin/sh
-# dwm-titus autostart — single unified autostart script
+# dwm-oomaya autostart — single unified autostart script
 # Phase 1: Blocking setup (must complete before windows appear)
 # Phase 2: Background services (compositor, notifications, shell, tray apps)
 
@@ -156,10 +156,15 @@ quickshell_tray_ready() {
 quickshell_instance_pids() {
 	config=$1
 
-	command -v jq >/dev/null 2>&1 || return 1
 	instances=$(timeout 1 quickshell list --path "$config" --json 2>/dev/null) || return 1
-	printf '%s\n' "$instances" |
-		jq -r '.[]? | .pid | select(type == "number" and . >= 2 and floor == .)'
+	if command -v jq >/dev/null 2>&1; then
+		printf '%s\n' "$instances" |
+			jq -r '.[]? | .pid | select(type == "number" and . >= 2 and floor == .)'
+	else
+		printf '%s\n' "$instances" |
+			grep -oE '"pid"[[:space:]]*:[[:space:]]*[0-9]+' |
+			grep -oE '[0-9]+'
+	fi
 }
 
 quickshell_pid_is_owned() {

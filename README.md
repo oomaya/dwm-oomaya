@@ -132,6 +132,7 @@ DWM-Oomaya pairs with [`dmenu-oomaya`](https://github.com/oomaya/dmenu-oomaya), 
 | Action | Keybinding | Command |
 | :--- | :--- | :--- |
 | **Primary Terminal** | <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>Enter</kbd> | `ghostty` \|\| `kitty` |
+| **File Manager** | <kbd>Super</kbd> + <kbd>E</kbd> | `xdg-open ~` \|\| `thunar` \|\| `pcmanfm` |
 | **Antigravity IDE** | <kbd>Super</kbd> + <kbd>A</kbd> | `antigravity` (GUI IDE) |
 | **Sovereign Flow Cockpit** | <kbd>Super</kbd> + <kbd>C</kbd> / <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>C</kbd> | `dwm-flow` (`agy` master + `nvim` stack) |
 | **Application Launcher** | <kbd>Super</kbd> + <kbd>D</kbd> | `dmenu-desktop` |
@@ -153,7 +154,8 @@ DWM-Oomaya pairs with [`dmenu-oomaya`](https://github.com/oomaya/dmenu-oomaya), 
 | **Close Focused Window** | <kbd>Super</kbd> + <kbd>Q</kbd> |
 | **Toggle Floating** | <kbd>Super</kbd> + <kbd>Space</kbd> |
 | **Actual Fullscreen** | <kbd>Super</kbd> + <kbd>F</kbd> |
-| **Hide / Restore Window** | <kbd>Super</kbd> + <kbd>E</kbd> / <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>E</kbd> |
+| **Hide Focused Window** | <kbd>Super</kbd> + <kbd>Ctrl</kbd> + <kbd>E</kbd> |
+| **Restore Hidden Window** | <kbd>Super</kbd> + <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>E</kbd> |
 
 ### Layout & Gap Controls
 | Action | Keybinding |
@@ -170,13 +172,31 @@ DWM-Oomaya pairs with [`dmenu-oomaya`](https://github.com/oomaya/dmenu-oomaya), 
 | :--- | :--- |
 | **In-Place DWM Self-Restart** | <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd> |
 | **Restart Quickshell Shell** | <kbd>Super</kbd> + <kbd>Ctrl</kbd> + <kbd>R</kbd> |
-| **Screenshot Area** | <kbd>Super</kbd> + <kbd>U</kbd> (`maim --select`) |
-| **Screenshot Fullscreen** | <kbd>Super</kbd> + <kbd>Ctrl</kbd> + <kbd>U</kbd> (`maim`) |
-| **Screenshot Menu** | <kbd>Super</kbd> + <kbd>Print</kbd> (`dmenu-scrot`) |
+| **Screenshot Menu** | <kbd>Print</kbd> (`dmenu-scrot`) |
+| **Screenshot Area to Clipboard** | <kbd>Shift</kbd> + <kbd>Print</kbd> *(or <kbd>Super</kbd> + <kbd>U</kbd>)* |
+| **Screenshot Full to Clipboard** | <kbd>Ctrl</kbd> + <kbd>Print</kbd> *(or <kbd>Super</kbd> + <kbd>Ctrl</kbd> + <kbd>U</kbd>)* |
+| **Screenshot Active Screen (File)** | <kbd>Super</kbd> + <kbd>P</kbd> (`dwm-screenshot screen`) |
+| **Screenshot Area (File)** | <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd> (`dwm-screenshot gui`) |
 
 ---
 
 ## Installation & Quickstart
+
+### 0. Minimal & Bare-Server Architecture (Zero Manual Prerequisites)
+
+DWM-Oomaya is engineered to install cleanly on **bare-metal minimal servers** or minimal base installs (e.g. Debian netinst, Arch base, Fedora Minimal) with zero pre-existing desktop environment. All dependency resolution, package installation, and asset seeding are folded directly into deployment:
+
+- **Automated Base Bootstrap**: `bootstrap.sh` detects `apt`, `dnf`, or `pacman` and automatically provisions core toolchain packages (`git`, `curl`, `make`, `gcc` / `build-essential`, and X11 development headers) before repository initialization.
+- **Integrated Desktop Package Suite**: `./install.sh` (or `make install-deps`) maps and installs distribution packages across Debian, Fedora, and Arch:
+  - **File Management**: `thunar` + `gvfs` (instant <kbd>Super</kbd> + <kbd>E</kbd> integration).
+  - **Screenshot Stack**: `maim` + `slop` + `xclip` (with automated fallback cascade to `xfce4-screenshooter` or `scrot`).
+  - **Desktop Services**: `dunst` (notifications), `feh` (wallpaper manager), `blueman` (Bluetooth manager), and `xsettingsd`.
+  - **Terminals**: `ghostty` or `kitty`.
+- **Automatic Asset & Directory Seeding**:
+  - Unconditionally provisions `$HOME/Pictures/Screenshots` and `$HOME/Pictures/backgrounds`.
+  - Seeds default Tokyo Night wallpaper (`dwm-oomaya.jpg`).
+  - Automatically downloads and installs verified Nerd Fonts (`MesloLGS Nerd Font Mono`, `JetBrains Mono`) into `~/.local/share/fonts/`.
+- **Dependency Audit**: Run `./scripts/check-deps.sh` or `make check-deps` at any time to verify installed tools and available fallbacks.
 
 ### 1. The Frictionless Remote One-Liner (Recommended)
 

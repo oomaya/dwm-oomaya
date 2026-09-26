@@ -115,11 +115,16 @@ done
 
 # ── Runtime dependencies ────────────────────────────────
 echo "Runtime Dependencies (desktop experience):"
-check_cmd "quickshell"
+if command -v quickshell &>/dev/null; then
+	printf "  ${GREEN}✓${NC} quickshell\n"
+else
+	check_cmd "dunst"
+fi
 check_cmd "picom"
 check_cmd "feh"
 check_cmd "xsettingsd"
-check_optional_cmd "maim"
+check_cmd "maim"
+check_cmd "slop"
 check_cmd "xclip"
 check_cmd "xdotool"
 if command -v dex &>/dev/null || command -v dex-autostart &>/dev/null; then
@@ -132,6 +137,13 @@ check_cmd "amixer"
 check_cmd "jq"
 check_cmd "bluetoothctl"
 check_cmd "blueman-applet"
+check_cmd "blueman-manager"
+if command -v thunar &>/dev/null || command -v pcmanfm &>/dev/null || command -v nautilus &>/dev/null; then
+	printf "  ${GREEN}✓${NC} Graphical file manager\n"
+else
+	printf "  ${RED}✗${NC} Graphical file manager (thunar or pcmanfm) ${YELLOW}(missing)${NC}\n"
+	MISSING=$((MISSING + 1))
+fi
 echo ""
 
 # ── Terminal emulators ──────────────────────────────────
