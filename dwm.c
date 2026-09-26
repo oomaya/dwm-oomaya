@@ -4061,16 +4061,24 @@ load_themes_toml(const char *user_path, const char *default_path)
 	TRY_COLOR("selbordercolor",  c_selborder);
 	TRY_COLOR("selbgcolor",      c_selbg);
 	TRY_COLOR("selfgcolor",      c_selfg);
+
+	static char c_titlefg[8], c_titlebg[8], c_titleborder[8];
+	strncpy(c_titlefg,     c_selfg, 7);      c_titlefg[7]     = '\0';
+	strncpy(c_titlebg,     c_normbg, 7);     c_titlebg[7]     = '\0';
+	strncpy(c_titleborder, c_normborder, 7); c_titleborder[7] = '\0';
+	TRY_COLOR("titlefgcolor", c_titlefg);
+	TRY_COLOR("titlebgcolor", c_titlebg);
 #undef TRY_COLOR
 
-	/* Rebuild color schemes */
+	/* Rebuild color schemes: SchemeNorm, SchemeSel, SchemeTitle */
 	if (scheme && drw) {
-		const char *new_clrs[2][3] = {
-			{ c_normfg, c_normbg, c_normborder },
-			{ c_selfg,  c_selbg,  c_selborder  }
+		const char *new_clrs[3][3] = {
+			[SchemeNorm]  = { c_normfg,   c_normbg,   c_normborder },
+			[SchemeSel]   = { c_selfg,    c_selbg,    c_selborder  },
+			[SchemeTitle] = { c_titlefg,  c_titlebg,  c_titleborder }
 		};
 		int i;
-		for (i = 0; i < 2; i++) {
+		for (i = 0; i < 3; i++) {
 			Clr *newscm = drw_scm_create(drw, new_clrs[i], 3);
 			if (newscm) {
 				drw_scm_free(drw, scheme[i], 3);

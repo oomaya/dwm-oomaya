@@ -94,6 +94,9 @@ keys = [
   { mod="SUPER CTRL",       key="r",       desc="Restart Quickshell",      func="spawn",       cmd="dwm-quickshell-controlcenter action restart-quickshell" },
   { mod="SUPER",            key="w",       desc="Looking Glass (VM)",      func="spawn",       cmd="looking-glass-client -F" },
   { mod="SUPER SHIFT",      key="w",       desc="Set border default",      func="setborderpx", i=2 },
+  { mod="",                 key="Print",   desc="Screenshot Menu",         func="spawn",       cmd="dmenu-scrot" },
+  { mod="SHIFT",            key="Print",   desc="Screenshot Region Clipboard", func="spawn",   cmd="maim --select | xclip -selection clipboard -t image/png || xfce4-screenshooter -r -c" },
+  { mod="CTRL",             key="Print",   desc="Screenshot Screen Clipboard", func="spawn",   cmd="maim | xclip -selection clipboard -t image/png || xfce4-screenshooter -f -c" },
   { mod="SUPER",            key="Print",   desc="Screenshot Tool",         func="spawn",       cmd="dmenu-scrot" },
 
   # ── Web apps ─────────────────────────────────────────────────────────────────
@@ -102,10 +105,13 @@ keys = [
   { mod="SUPER",            key="b",       desc="Toggle Bar",              func="togglebar" },
 
   # ── Screenshots ───────────────────────────────────────────────────────────────
-  { mod="SUPER",            key="u",       desc="Screenshot Crop",         func="spawn",       cmd="maim --select | xclip -selection clipboard -t image/png" },
-  { mod="SUPER CTRL",       key="u",       desc="Screenshot Fullscreen",   func="spawn",       cmd="maim | xclip -selection clipboard -t image/png" },
+  { mod="SUPER",            key="u",       desc="Screenshot Crop",         func="spawn",       cmd="dwm-screenshot clip" },
+  { mod="SUPER CTRL",       key="u",       desc="Screenshot Fullscreen",   func="spawn",       cmd="maim | xclip -selection clipboard -t image/png || xfce4-screenshooter -f -c" },
   { mod="SUPER SHIFT",      key="p",       desc="Screenshot Area GUI",     func="spawn",       cmd="dwm-screenshot gui" },
   { mod="SUPER",            key="p",       desc="Screenshot Active Screen",func="spawn",       cmd="dwm-screenshot screen" },
+  { mod="",                 key="Print",   desc="Screenshot Menu",         func="spawn",       cmd="dmenu-scrot" },
+  { mod="SHIFT",            key="Print",   desc="Screenshot Area to Clip", func="spawn",       cmd="dwm-screenshot clip" },
+  { mod="CTRL",             key="Print",   desc="Screenshot Full to Clip", func="spawn",       cmd="maim | xclip -selection clipboard -t image/png || xfce4-screenshooter -f -c" },
 
   # ── Volume & Brightness ───────────────────────────────────────────────────────
   { mod="",                 key="XF86AudioRaiseVolume",   desc="Volume up",     func="spawn",  cmd="dwm-volume up" },
@@ -123,8 +129,9 @@ keys = [
   { mod="SUPER",            key="Tab",     desc="Cycle layouts forward",   func="cyclelayout", i=1 },
   { mod="SUPER SHIFT",      key="Tab",     desc="Cycle layouts reverse",   func="cyclelayout", i=-1 },
   { mod="SUPER",            key="q",       desc="Close window",            func="killclient" },
-  { mod="SUPER",            key="e",       desc="Hide/stash window",       func="hidewin" },
-  { mod="SUPER SHIFT",      key="e",       desc="Restore hidden window",   func="restorewin" },
+  { mod="SUPER",            key="e",       desc="File Manager",            func="spawn",       cmd="xdg-open ~ || thunar || pcmanfm" },
+  { mod="SUPER CTRL",       key="e",       desc="Hide/stash window",       func="hidewin" },
+  { mod="SUPER CTRL SHIFT", key="e",       desc="Restore hidden window",   func="restorewin" },
   { mod="SUPER",            key="Left",    desc="Prev tag (shiftview)",    func="shiftview",   i=-1 },
   { mod="SUPER",            key="Right",   desc="Next tag (shiftview)",    func="shiftview",   i=1 },
 

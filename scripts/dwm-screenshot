@@ -92,13 +92,30 @@ save_capture() {
 	esac
 
 	capture_file=$(next_capture_path)
-	if maim "${maim_args[@]}" "$capture_file"; then
-		if [[ ! -s $capture_file ]]; then
-			printf 'dwm-screenshot: maim produced an empty capture\n' >&2
-			capture_status=1
+	if command -v maim >/dev/null 2>&1; then
+		if maim "${maim_args[@]}" "$capture_file"; then
+			if [[ ! -s $capture_file ]]; then
+				printf 'dwm-screenshot: maim produced an empty capture\n' >&2
+				capture_status=1
+			fi
+		else
+			capture_status=$?
 		fi
+	elif command -v xfce4-screenshooter >/dev/null 2>&1; then
+		case "$mode" in
+		screen|full) xfce4-screenshooter -f -s "$capture_file" ;;
+		gui) xfce4-screenshooter -r -s "$capture_file" ;;
+		esac
+		[[ -s $capture_file ]] || capture_status=1
+	elif command -v scrot >/dev/null 2>&1; then
+		case "$mode" in
+		screen|full) scrot "$capture_file" ;;
+		gui) scrot -s "$capture_file" ;;
+		esac
+		[[ -s $capture_file ]] || capture_status=1
 	else
-		capture_status=$?
+		printf 'dwm-screenshot: no screenshot utility available (install maim or xfce4-screenshooter)\n' >&2
+		capture_status=1
 	fi
 
 	if ((capture_status != 0)); then
@@ -107,7 +124,7 @@ save_capture() {
 	fi
 
 	if command -v notify-send >/dev/null 2>&1; then
-		notify-send -a dwm-titus 'Screenshot saved' "$capture_file" \
+		notify-send -a dwm-oomaya 'Screenshot saved' "$capture_file" \
 			>/dev/null 2>&1 || true
 	fi
 	printf '%s\n' "$capture_file"
@@ -121,7 +138,7 @@ copy_capture_to_clipboard() {
 		return 127
 	fi
 
-	runtime_dir="${XDG_RUNTIME_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}}/dwm-titus"
+	runtime_dir="${XDG_RUNTIME_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}}/dwm-oomaya"
 	mkdir -p "$runtime_dir"
 	chmod 700 "$runtime_dir"
 	trap cleanup_clip_capture EXIT
@@ -131,13 +148,24 @@ copy_capture_to_clipboard() {
 	CLIP_CAPTURE_FILE=$(mktemp "$runtime_dir/clipboard.XXXXXX.png")
 	capture_file=$CLIP_CAPTURE_FILE
 
-	if maim --hidecursor --select "$capture_file"; then
-		if [[ ! -s $capture_file ]]; then
-			printf 'dwm-screenshot: maim produced an empty capture\n' >&2
-			capture_status=1
+	if command -v maim >/dev/null 2>&1; then
+		if maim --hidecursor --select "$capture_file"; then
+			if [[ ! -s $capture_file ]]; then
+				printf 'dwm-screenshot: maim produced an empty capture\n' >&2
+				capture_status=1
+			fi
+		else
+			capture_status=$?
 		fi
+	elif command -v xfce4-screenshooter >/dev/null 2>&1; then
+		xfce4-screenshooter -r -s "$capture_file"
+		[[ -s $capture_file ]] || capture_status=1
+	elif command -v scrot >/dev/null 2>&1; then
+		scrot -s "$capture_file"
+		[[ -s $capture_file ]] || capture_status=1
 	else
-		capture_status=$?
+		printf 'dwm-screenshot: no screenshot utility available\n' >&2
+		capture_status=1
 	fi
 	if ((capture_status == 0)); then
 		# Silent mode reads stdin, forks, and returns while the child owns the

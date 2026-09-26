@@ -114,7 +114,7 @@ static const Layout layouts[] = {
     { MODKEY|ControlMask|ShiftMask, KEY,      toggletag,      {.ui = 1 << TAG} },
 
 /* helper for spawning shell commands in the pre dwm-5.0 fashion */
-#define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
+#define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", "PATH=\"$HOME/.local/bin:$PATH\"; " cmd, NULL } }
 
 /* commands (Zero Hardcoded Literals compliant via PATH lookup) */
 static const char *upvol[]      = { "pactl", "set-sink-volume", "@DEFAULT_SINK@", "+5%",    NULL };
@@ -133,9 +133,12 @@ static const Key keys[] = {
     { 0,                                XF86XK_MonBrightnessUp,   spawn, {.v = light_up} },
     { 0,                                XF86XK_MonBrightnessDown, spawn, {.v = light_down} },
 
-    // screenshot fullscreen and cropped
-    { MODKEY|ControlMask,               XK_u,       spawn,          SHCMD("maim | xclip -selection clipboard -t image/png") },
-    { MODKEY,                           XK_u,       spawn,          SHCMD("maim --select | xclip -selection clipboard -t image/png") },
+    // screenshot fullscreen and cropped (with xfce4-screenshooter fallback)
+    { 0,                                XK_Print,   spawn,          SHCMD("dmenu-scrot") },
+    { ShiftMask,                        XK_Print,   spawn,          SHCMD("dwm-screenshot clip") },
+    { ControlMask,                      XK_Print,   spawn,          SHCMD("maim | xclip -selection clipboard -t image/png || xfce4-screenshooter -f -c") },
+    { MODKEY|ControlMask,               XK_u,       spawn,          SHCMD("maim | xclip -selection clipboard -t image/png || xfce4-screenshooter -f -c") },
+    { MODKEY,                           XK_u,       spawn,          SHCMD("dwm-screenshot clip") },
 
     // application launchers & terminals (Ghostty/Kitty support)
     { MODKEY,                           XK_c,       spawn,          SHCMD("dwm-flow") },
@@ -240,9 +243,12 @@ static const Key keys[] = {
     { MODKEY,                           XK_q,       killclient,     {0} },
     { MODKEY|ShiftMask,                 XK_r,       restart,        {0} },
 
+    // file manager (Super + E)
+    { MODKEY,                           XK_e,       spawn,          SHCMD("xdg-open ~ || thunar || pcmanfm") },
+
     // hide & restore windows
-    { MODKEY,                           XK_e,       hidewin,        {0} },
-    { MODKEY|ShiftMask,                 XK_e,       restorewin,     {0} },
+    { MODKEY|ControlMask,               XK_e,       hidewin,        {0} },
+    { MODKEY|ControlMask|ShiftMask,     XK_e,       restorewin,     {0} },
 
     TAGKEYS(                            XK_1,                       0)
     TAGKEYS(                            XK_2,                       1)

@@ -75,7 +75,7 @@ run_capture clip
 grep -Eq '^maim:--hidecursor --select .*/clipboard\.[^/]+\.png$' "$log"
 grep -Fqx 'xclip:-selection clipboard -target image/png -loops 0 -silent -in' "$log"
 test "$(cat "$work/clipboard.png")" = 'mock-png-capture'
-if find "$work/runtime/dwm-titus" -type f -name 'clipboard.*.png' | grep -q .; then
+if find "$work/runtime/dwm-oomaya" -type f -name 'clipboard.*.png' | grep -q .; then
 	printf '%s\n' 'Clipboard temporary file was not removed' >&2
 	exit 1
 fi
@@ -85,7 +85,7 @@ screen_path=$(run_capture screen)
 test -s "$screen_path"
 case $screen_path in *.jpg) ;; *) exit 1 ;; esac
 grep -Fqx "maim:--hidecursor --geometry 2560x1440+1920+0 $screen_path" "$log"
-grep -Fqx "notify:-a dwm-titus Screenshot saved $screen_path" "$log"
+grep -Fqx "notify:-a dwm-oomaya Screenshot saved $screen_path" "$log"
 
 : >"$log"
 full_path=$(run_capture full)

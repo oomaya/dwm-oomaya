@@ -1,0 +1,240 @@
+#!/usr/bin/env bash
+# dwm-settings-hub — Unified native Suckless settings hub for dwm-oomaya
+# Reuses dwm-titus backend engines with pure dmenu / POSIX execution.
+set -euo pipefail
+
+PROMPT="⚙ Settings >"
+
+get_menu_options() {
+	printf "%s\n" \
+		"󰏘  Wallpaper & Background" \
+		"🎨  Theme & Palette" \
+		"  Font & Typography" \
+		"󰖲  Default Applications" \
+		"󰐥  Display & Monitors" \
+		"  Autostart Services" \
+		"󰌌  Input Devices" \
+		"󰂯  Bluetooth Manager" \
+		"󰍛  System Diagnostics"
+}
+
+if [[ "${1:-}" == "--list" || "${1:-}" == "--dry-run" ]]; then
+	get_menu_options
+	exit 0
+fi
+
+choice=$(get_menu_options | dmenu -p "$PROMPT" -l 9 "$@")
+[ -n "$choice" ] || exit 0
+
+case "$choice" in
+	*"Wallpaper"*)
+		sub=$(printf "%s\n" \
+			"🎲  Randomize Wallpaper" \
+			"📁  Select from ~/Pictures/backgrounds" \
+			"📂  Open Backgrounds Folder in File Manager" \
+			"↺   Reset to Default" | dmenu -p "󰏘 Wallpaper >" -l 4)
+		case "$sub" in
+			*"Randomize"*)
+				if ! command -v feh >/dev/null 2>&1; then
+					command -v notify-send >/dev/null 2>&1 && notify-send -a "Wallpaper" "feh is not installed" "Install with: sudo apt install feh"
+				fi
+				dwm-settings-wallpaper randomize 2>/dev/null || true
+				;;
+			*"Select"*)
+				bg_dir="$HOME/Pictures/backgrounds"
+				mkdir -p "$bg_dir"
+				# Auto-seed default wallpaper if directory is empty
+				if [ -z "$(ls -A "$bg_dir" 2>/dev/null)" ]; then
+					if [ -f "/home/rand/.local/src/dwm-oomaya/assets/dwm-oomaya.jpg" ]; then
+						cp "/home/rand/.local/src/dwm-oomaya/assets/dwm-oomaya.jpg" "$bg_dir/" 2>/dev/null || true
+					elif [ -f "/usr/share/backgrounds/foxy.jpg" ]; then
+						cp "/usr/share/backgrounds/foxy.jpg" "$bg_dir/" 2>/dev/null || true
+					fi
+				fi
+				# Search ~/Pictures/backgrounds and fallback locations
+				img=$(find "$bg_dir" "$HOME/Pictures" /usr/share/backgrounds -maxdepth 2 -type f \( -name "*.jpg" -o -name "*.png" -o -name "*.webp" \) 2>/dev/null | sort -u | dmenu -p "Select image >" -l 10)
+				if [ -n "$img" ]; then
+					dwm-settings-wallpaper apply "$img" fill 2>/dev/null || true
+				fi
+				;;
+			*"Open Backgrounds Folder"*)
+				bg_dir="$HOME/Pictures/backgrounds"
+				mkdir -p "$bg_dir"
+				xdg-open "$bg_dir" || thunar "$bg_dir" || pcmanfm "$bg_dir" || true
+				;;
+			*"Reset"*) dwm-settings-wallpaper reset 2>/dev/null || true ;;
+		esac
+		;;
+	*"Theme"*)
+		sub=$(printf "%s\n" \
+			"Tokyo Night" \
+			"Catppuccin Mocha" \
+			"Nord" \
+			"Gruvbox Dark" \
+			"Reset Theme" | dmenu -p "🎨 Theme >" -l 5)
+		case "$sub" in
+			"Tokyo Night") dwm-settings-theme apply tokyonight ;;
+			"Catppuccin Mocha") dwm-settings-theme apply catppuccin ;;
+			"Nord") dwm-settings-theme apply nord ;;
+			"Gruvbox Dark") dwm-settings-theme apply gruvbox ;;
+			"Reset Theme") dwm-settings-theme reset ;;
+		esac
+		;;
+	*"Font"*)
+		sub=$(printf "%s\n" \
+			"JetBrainsMono Nerd Font (100% scale)" \
+			"JetBrainsMono Nerd Font (125% scale)" \
+			"MesloLGS Nerd Font (100% scale)" \
+			"Reset Font Defaults" | dmenu -p " Font >" -l 4)
+		case "$sub" in
+			*"JetBrainsMono"*"100%"*) dwm-settings-font apply "JetBrainsMono Nerd Font" 1.0 ;;
+			*"JetBrainsMono"*"125%"*) dwm-settings-font apply "JetBrainsMono Nerd Font" 1.25 ;;
+			*"MesloLGS"*) dwm-settings-font apply "MesloLGS Nerd Font Mono" 1.0 ;;
+			*"Reset"*) dwm-settings-font reset ;;
+		esac
+		;;
+	*"Default Applications"*)
+		sub=$(printf "%s\n" \
+			"🌐  Change Default Browser" \
+			"📁  Change Default File Manager" \
+			"📋  View Defaults Status" | dmenu -p "󰖲 Defaults >" -l 3)
+		case "$sub" in
+			*"Browser"*)
+				b=$(dwm-default-apps browsers 2>/dev/null | dmenu -p "Browser >" -l 5)
+				[ -n "$b" ] && dwm-default-apps set-browser "$b"
+				;;
+			*"File Manager"*)
+				fm=$(printf "%s\n" "thunar.desktop" "nautilus.desktop" "pcmanfm.desktop" | dmenu -p "File Manager >" -l 3)
+				[ -n "$fm" ] && dwm-default-apps set-role file-manager "$fm"
+				;;
+			*"Status"*)
+				dwm-default-apps status 2>/dev/null | sed -e 's/^inode\/directory=/Default File Manager (inode\/directory)=/' | dmenu -p "Defaults Status" -l 10 || true
+				;;
+		esac
+		;;
+	*"Display"*)
+		sub=$(printf "%s\n" \
+			"󰍹  Interactive Setup Wizard (Terminal)" \
+			"📊  Current Display Status" \
+			"↺   Auto-Detect Displays (xrandr --auto)" \
+			"󰍺  Select Display Profile" | dmenu -p "󰐥 Display >" -l 4)
+		case "$sub" in
+			*"Wizard"*)
+				dwm-terminal dwm-display-setup wizard &
+				;;
+			*"Status"*)
+				dwm-display-setup status 2>&1 | dmenu -p "Display Status" -l 15 || true
+				;;
+			*"Auto-Detect"*)
+				xrandr --auto && command -v notify-send >/dev/null 2>&1 && notify-send "Display" "Executed xrandr --auto"
+				;;
+			*"Profile"*)
+				dwm-terminal dwm-settings-display-profiles &
+				;;
+		esac
+		;;
+	*"Autostart"*)
+		entries=$(dwm-xdg-autostart snapshot 2>/dev/null | awk -F'\t' '
+		$1 == "entry" && $6 == "visible" {
+			status = ($5 == "enabled") ? "✓ Enabled " : "✗ Disabled"
+			printf "[%s] %-28s (%s)\n", status, $3, $2
+		}')
+		if [ -z "$entries" ]; then
+			command -v notify-send >/dev/null 2>&1 && notify-send "Autostart" "No configurable XDG autostart entries found."
+			exit 0
+		fi
+		selected=$(printf "%s\n" "$entries" | dmenu -p " Autostart Services >" -l 12)
+		[ -n "$selected" ] || exit 0
+
+		desktop_id=$(printf '%s\n' "$selected" | sed -n 's/.*(\(.*\))$/\1/p')
+		[ -n "$desktop_id" ] || exit 0
+
+		is_enabled=$(printf '%s\n' "$selected" | grep -q "✓ Enabled" && echo 1 || echo 0)
+		action=$(printf "%s\n" \
+			"$([ "$is_enabled" -eq 1 ] && echo "Disable at next login" || echo "Enable at next login")" \
+			"Reset to Vendor Default" \
+			"Cancel" | dmenu -p "Action for $desktop_id >" -l 3)
+
+		# Extract expected revision hash
+		rev=$(dwm-xdg-autostart snapshot 2>/dev/null | awk -F'\t' -v id="$desktop_id" '$1 == "entry" && $2 == id {print $11}')
+		case "$action" in
+			*"Disable"*)
+				dwm-xdg-autostart set "$desktop_id" disabled "$rev" 1 2>/dev/null || true
+				command -v notify-send >/dev/null 2>&1 && notify-send "Autostart" "$desktop_id disabled for next login"
+				;;
+			*"Enable"*)
+				dwm-xdg-autostart set "$desktop_id" enabled "$rev" 1 2>/dev/null || true
+				command -v notify-send >/dev/null 2>&1 && notify-send "Autostart" "$desktop_id enabled for next login"
+				;;
+			*"Reset"*)
+				dwm-xdg-autostart reset "$desktop_id" "$rev" 1 2>/dev/null || true
+				command -v notify-send >/dev/null 2>&1 && notify-send "Autostart" "$desktop_id reset to default"
+				;;
+		esac
+		;;
+	*"Input"*)
+		sub=$(printf "%s\n" \
+			"🖱  Mouse Acceleration & Sensitivity" \
+			"⌨  Keyboard Layout (setxkbmap)" \
+			"📋  List Connected Input Devices" \
+			"↺   Reset Input Defaults" | dmenu -p "󰌌 Input Devices >" -l 4)
+		case "$sub" in
+			*"Mouse"*)
+				speed=$(printf "%s\n" "Slow (1/2 4)" "Normal (1 2)" "Fast (2 2)" "Very Fast (3 1)" | dmenu -p "Mouse Speed >" -l 4)
+				case "$speed" in
+					*"Slow"*) xset m 1/2 4 ;;
+					*"Normal"*) xset m 1 2 ;;
+					*"Fast"*) xset m 2 2 ;;
+					*"Very Fast"*) xset m 3 1 ;;
+				esac
+				;;
+			*"Keyboard"*)
+				layout=$(printf "%s\n" "US English (us)" "Korean (kr)" "Japanese (jp)" "Custom / Other" | dmenu -p "Keyboard Layout >" -l 4)
+				case "$layout" in
+					*"US"*) setxkbmap us ;;
+					*"Korean"*) setxkbmap kr ;;
+					*"Japanese"*) setxkbmap jp ;;
+					*"Custom"*)
+						custom=$(dmenu -p "Enter layout (e.g. de, fr, es):" </dev/null)
+						[ -n "$custom" ] && setxkbmap "$custom"
+						;;
+				esac
+				;;
+			*"List"*)
+				if command -v xinput >/dev/null 2>&1; then
+					xinput list 2>/dev/null | dmenu -p "Connected Devices" -l 15 || true
+				else
+					grep -E "Name=" /proc/bus/input/devices | sed 's/N: Name=//g' | tr -d '"' | dmenu -p "Connected Devices" -l 15 || true
+				fi
+				;;
+			*"Reset"*)
+				setxkbmap us 2>/dev/null || true
+				xset m default 2>/dev/null || true
+				command -v notify-send >/dev/null 2>&1 && notify-send "Input" "Reset mouse and keyboard to defaults"
+				;;
+		esac
+		;;
+	*"Bluetooth"*)
+		if command -v blueman-manager >/dev/null 2>&1; then
+			blueman-manager &
+		elif command -v bluetoothctl >/dev/null 2>&1; then
+			command -v notify-send >/dev/null 2>&1 && notify-send -a "Bluetooth" "GUI Manager Missing" "blueman-manager not found. Run: sudo apt install blueman"
+			dwm-terminal bluetoothctl &
+		else
+			command -v notify-send >/dev/null 2>&1 && notify-send -a "Bluetooth" "Not Installed" "Bluetooth stack not found. Run: sudo apt install bluez blueman"
+		fi
+		;;
+	*"Diagnostics"*)
+		sub=$(printf "%s\n" \
+			"📋  Quick Diagnostics Summary" \
+			"🖥  Run Full Diagnostics in Terminal" | dmenu -p "󰍛 Diagnostics >" -l 2)
+		case "$sub" in
+			*"Summary"*)
+				dwm-diagnostics 2>&1 | dmenu -p "Diagnostics Summary" -l 15 || true
+				;;
+			*"Terminal"*)
+				dwm-terminal dwm-diagnostics &
+				;;
+		esac
+		;;
+esac
