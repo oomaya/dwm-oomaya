@@ -257,6 +257,33 @@ oomaya_x11_process_events(void)
                 data = NULL;
             }
         }
+
+        /* _DWM_MONITOR_DESKTOPS → update state_cache.monitor_tags[].
+         * dwm publishes 5 longs per monitor: x, y, w, h, first-visible
+         * tag INDEX. The state cache stores a tag MASK, so convert. */
+        else if (pe->atom == g_bridge.a_monitor_desktops) {
+            if (XGetWindowProperty(g_bridge.dpy, g_bridge.root,
+                                   g_bridge.a_monitor_desktops,
+                                   0L, 5L * OOMAYA_STATE_MAX_MONITORS,
+                                   False, AnyPropertyType,
+                                   &type, &fmt, &nitems, &after, &data) == Success
+                && data != NULL && fmt == 32) {
+                unsigned long nmons = nitems / 5;
+                unsigned long mi;
+                long *tuples = (long *)data;
+                if (nmons > OOMAYA_STATE_MAX_MONITORS)
+                    nmons = OOMAYA_STATE_MAX_MONITORS;
+                for (mi = 0; mi < nmons; mi++) {
+                    long tagidx = tuples[mi * 5 + 4];
+                    uint32_t mask = (tagidx >= 0 && tagidx < 32)
+                        ? (1u << tagidx) : 0u;
+                    oomaya_state_set_monitor_tag(g_bridge.state,
+                        (uint32_t)mi, mask);
+                }
+                XFree(data);
+                data = NULL;
+            }
+        }
     }
 }
 
@@ -359,10 +386,16 @@ oomaya_x11_sync_state(void)
     layout = (unsigned long)oomaya_state_get_layout(g_bridge.state);
     tags   = (unsigned long)oomaya_state_get_tag_mask(g_bridge.state);
 
-    (void)layout;
     XChangeProperty(g_bridge.dpy, g_bridge.root,
                     g_bridge.a_tag_update, XA_CARDINAL, 32,
                     PropModeReplace, (unsigned char *)&tags, 1);
+
+    /* Publish the numeric layout index for X11-native consumers.
+     * dwm itself publishes the symbol string on _DWM_CURRENT_LAYOUT;
+     * this is the index counterpart. */
+    XChangeProperty(g_bridge.dpy, g_bridge.root,
+                    g_bridge.a_oomaya_layout, XA_CARDINAL, 32,
+                    PropModeReplace, (unsigned char *)&layout, 1);
 
     XFlush(g_bridge.dpy);
 }
