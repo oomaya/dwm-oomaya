@@ -338,8 +338,8 @@ parsed_desktop_matches_role() {
 		desktop_token_present "$desktop_parsed_categories" TerminalEmulator
 		;;
 	editor)
-		desktop_token_present \"$desktop_parsed_categories\" TextEditor ||
-			desktop_token_present \"$desktop_parsed_mime_types\" text/plain
+		desktop_token_present "$desktop_parsed_categories" TextEditor ||
+			desktop_token_present "$desktop_parsed_mime_types" text/plain
 		;;
 	*) return 1 ;;
 	esac
