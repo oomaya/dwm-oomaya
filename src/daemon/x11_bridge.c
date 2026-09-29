@@ -76,6 +76,29 @@ x11_io_err_handler(Display *dpy)
     return 0;
 }
 
+/* ── Layout symbol table ────────────────────────────────────────────────── */
+/* Must stay in sync with the layouts[] order in config.def.h / dwm.c.
+ * dwm publishes the exact ltsymbol string on _DWM_CURRENT_LAYOUT, so exact
+ * strcmp matching is correct here (and safer than substring matching). */
+static const char *const layout_symbols[] = {
+    "[]=", "><>", "[M]", "[@]", "[\\]",
+    "H[]", "TTT", "===", "HHH", "###",
+    "---", ":::", "|M|", ">M>",
+};
+
+static uint32_t
+layout_symbol_to_idx(const char *sym)
+{
+    uint32_t i;
+    if (sym == NULL)
+        return 0;
+    for (i = 0; i < sizeof(layout_symbols) / sizeof(layout_symbols[0]); i++) {
+        if (strcmp(sym, layout_symbols[i]) == 0)
+            return i;
+    }
+    return 0; /* unknown symbol → tile */
+}
+
 /* ── Public API ─────────────────────────────────────────────────────────── */
 
 int
@@ -137,12 +160,8 @@ oomaya_x11_bridge_init(oomaya_wm_state_t *state, int *x11_fd_out)
     if (XGetWindowProperty(dpy, g_bridge.root, g_bridge.a_current_layout,
                            0L, 16L, False, AnyPropertyType,
                            &type, &fmt, &nitems, &after, &data) == Success && data != NULL) {
-        const char *sym = (const char *)data;
-        uint32_t idx = 0;
-        if (strstr(sym, "[]=")) idx = 0;
-        else if (strstr(sym, "><>")) idx = 1;
-        else if (strstr(sym, "[M]")) idx = 2;
-        oomaya_state_set_layout(state, idx);
+        oomaya_state_set_layout(state,
+            layout_symbol_to_idx((const char *)data));
         XFree(data);
         data = NULL;
     }
@@ -218,12 +237,8 @@ oomaya_x11_process_events(void)
                                    0L, 16L, False, AnyPropertyType,
                                    &type, &fmt, &nitems, &after, &data) == Success
                 && data != NULL) {
-                const char *sym = (const char *)data;
-                uint32_t idx = 0;
-                if (strstr(sym, "[]=")) idx = 0;
-                else if (strstr(sym, "><>")) idx = 1;
-                else if (strstr(sym, "[M]")) idx = 2;
-                oomaya_state_set_layout(g_bridge.state, idx);
+                oomaya_state_set_layout(g_bridge.state,
+                    layout_symbol_to_idx((const char *)data));
                 XFree(data);
                 data = NULL;
             }
