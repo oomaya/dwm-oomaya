@@ -97,7 +97,9 @@ case "$choice" in
 		sub=$(printf "%s\n" \
 			"🌐  Change Default Browser" \
 			"📁  Change Default File Manager" \
-			"📋  View Defaults Status" | dmenu -p "󰖲 Defaults >" -l 3)
+			"📝  Change Default Editor" \
+			"💻  Change Default Terminal" \
+			"📋  View Defaults Status" | dmenu -p "󰖲 Defaults >" -l 5)
 		case "$sub" in
 			*"Browser"*)
 				b=$(dwm-default-apps browsers 2>/dev/null | dmenu -p "Browser >" -l 5)
@@ -107,8 +109,21 @@ case "$choice" in
 				fm=$(printf "%s\n" "thunar.desktop" "nautilus.desktop" "pcmanfm.desktop" | dmenu -p "File Manager >" -l 3)
 				[ -n "$fm" ] && dwm-default-apps set-role file-manager "$fm"
 				;;
+
+			*"Editor"*)
+				ed_list=$(dwm-default-apps snapshot 2>/dev/null | awk -F '\t' '$1=="candidate" && $2=="editor" && $5=="available" {print $3}')
+				[ -z "$ed_list" ] && ed_list=$(printf "%s\n" "nvim.desktop" "vim.desktop" "nano.desktop" "code.desktop" "org.gnome.gedit.desktop" "gedit.desktop" "org.kde.kate.desktop" "kate.desktop" "mousepad.desktop")
+				ed=$(printf "%s\n" "$ed_list" | dmenu -p "Editor >" -l 8)
+				[ -n "$ed" ] && dwm-default-apps set-role editor "$ed"
+				;;
+			*"Terminal"*)
+				tm_list=$(dwm-default-apps snapshot 2>/dev/null | awk -F '\t' '$1=="candidate" && $2=="terminal" && $5=="available" {print $3}')
+				[ -z "$tm_list" ] && tm_list=$(printf "%s\n" "kitty.desktop" "Alacritty.desktop" "st.desktop" "xterm.desktop" "dwmterm.desktop")
+				tm=$(printf "%s\n" "$tm_list" | dmenu -p "Terminal >" -l 5)
+				[ -n "$tm" ] && dwm-default-apps set-role terminal "$tm"
+				;;
 			*"Status"*)
-				dwm-default-apps status 2>/dev/null | sed -e 's/^inode\/directory=/Default File Manager (inode\/directory)=/' | dmenu -p "Defaults Status" -l 10 || true
+				dwm-default-apps status 2>/dev/null | sed -e 's/^inode\/directory=/Default File Manager (inode\/directory)=/' -e 's/^text\/plain=/Default Editor (text\/plain)=/' | dmenu -p "Defaults Status" -l 12 || true
 				;;
 		esac
 		;;
