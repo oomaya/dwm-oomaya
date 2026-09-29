@@ -212,8 +212,10 @@ Scope {
             return;
         }
 
-        root.statusSegments = text.split(/\s+\|\s+| {2,}/).filter(function(segment) {
-            const trimmed = segment.trim();
+        // Split on " | ", 2+ spaces, or dwmblocks control-char delimiters (\x01\x02\x03).
+        // Control chars are stripped from segments so they never render as garbage.
+        root.statusSegments = text.split(/\s+\|\s+| {2,}|[\x00-\x1F\x7F-\x9F]+/).filter(function(segment) {
+            const trimmed = segment.replace(/[\x00-\x1F\x7F-\x9F]/g, "").trim();
 
             if (trimmed.indexOf("BAT ") === 0) {
                 const battery = trimmed.match(/^BAT\s+([0-9]+)%\s*(.*)$/);
