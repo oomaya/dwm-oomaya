@@ -186,7 +186,7 @@ DWM-Oomaya pairs with [`dmenu-oomaya`](https://github.com/oomaya/dmenu-oomaya), 
 
 DWM-Oomaya is engineered to install cleanly on **bare-metal minimal servers** or minimal base installs (e.g. Debian netinst, Arch base, Fedora Minimal) with zero pre-existing desktop environment. All dependency resolution, package installation, and asset seeding are folded directly into deployment:
 
-- **Automated Base Bootstrap**: `bootstrap.sh` detects `apt`, `dnf`, or `pacman` and automatically provisions core toolchain packages (`git`, `curl`, `make`, `gcc` / `build-essential`, and X11 development headers) before repository initialization.
+- **Automated Base Bootstrap**: `bootstrap.sh` detects `apt`, `dnf`, or `pacman` and automatically provisions the core toolchain (`git`, `curl`, `make`, `gcc` / `build-essential`) before repository initialization. Distribution-specific development headers (including X11) are mapped and installed by `./install.sh`.
 - **Integrated Desktop Package Suite**: `./install.sh` (or `make install-deps`) maps and installs distribution packages across Debian, Fedora, and Arch:
   - **File Management**: `thunar` + `gvfs` (instant <kbd>Super</kbd> + <kbd>E</kbd> integration).
   - **Screenshot Stack**: `maim` + `slop` + `xclip` (with automated fallback cascade to `xfce4-screenshooter` or `scrot`).
