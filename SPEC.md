@@ -1,66 +1,85 @@
-# dwm-titus Project Specification
+# dwm-oomaya Project Specification
+
+> Rewritten 2026-09-29. This document replaces the verbatim dwm-titus
+> specification that previously occupied this file (it named "dwm-titus",
+> declared Fedora-only support, and never mentioned oomaya). Everything below
+> describes dwm-oomaya as it actually exists: a multi-distribution X11 desktop
+> built from suckless dwm, ChadDWM, and dwm-titus lineage.
 
 ## 1. Product Definition
 
-dwm-titus is a Fedora-only desktop environment for X11. It combines a small,
-maintained fork of suckless dwm with runtime-configurable hotkeys, themes, and
-window rules, a managed Quickshell shell and Settings layer, and supporting
-desktop services and helpers.
+dwm-oomaya is a multi-distribution X11 desktop environment: a small,
+maintained fork of suckless dwm with runtime-configurable hotkeys, themes,
+and window rules, a managed Quickshell shell layer, and a companion
+centered dmenu build (dmenu-oomaya).
 
-The product is a cohesive Fedora desktop installed from the official Fedora
-Server Network Install ISO or onto an existing Fedora installation. Other
-distributions are outside the supported product and validation contract.
+Lineage, in order:
+
+1. **suckless dwm** — the C core, event loop, and configuration model.
+2. **ChadDWM** — the vanitygaps layout engine (14 layouts), cfacts,
+   and ergonomic tiling behavior.
+3. **dwm-titus** — TOML runtime configuration with live reload, the
+   Quickshell panel/launcher, and installer engineering.
+4. **Omarchy** — the design grammar (Tokyo Night palette, brutalist
+   restraint, sharp 2px borders, no rounded corners).
+
+dwm-oomaya synthesizes these into one product that installs cleanly on
+bare-metal minimal servers and minimal base installs across three
+distribution families. It is MIT licensed.
 
 ## 2. Goals
 
-- Install a complete, daily-usable Fedora desktop from a minimal network
-  installer base.
-- Provide one cohesive Settings experience for common display, input,
-  connectivity, audio, power, appearance, default-application, update, and
-  system-information workflows.
-- Build and run the complete dwm-titus desktop on supported Fedora releases.
-- Provide safe, idempotent dependency installation and system integration.
-- Preserve the speed, simplicity, and direct configuration model of dwm.
-- Provide consistent defaults and complete Settings behavior on Fedora.
-- Support display-manager login and `startx`.
-- Support Fedora x86_64. Fedora aarch64 remains future scope until its installer
-  and desktop runtime complete the release validation contract.
-- Keep user configuration under standard XDG paths and preserve it on upgrade.
+- Install a complete, daily-usable X11 desktop from a minimal base on
+  Fedora, Arch-family, and Debian-family systems.
+- Provide a one-command bootstrap that works the same on all three
+  families: `curl -fsSL <bootstrap-url> | bash`.
+- Ship a 14-layout vanitygaps tiling engine with per-tag layout state.
+- Load hotkeys, themes, and window rules from TOML at runtime and reload
+  them live, without recompiling.
+- Restart the window manager in place (`Super+Shift+R`) without closing a
+  single client window.
+- Expose window-manager state to external tools through X11 atoms using
+  pure event-driven IPC: zero polling daemons.
+- Preserve suckless virtues: a ~150KB binary, a sub-180MB idle system
+  (Xorg + dwm + panel + services), and sub-2ms event-to-screen latency.
+- Keep user configuration under standard XDG paths and preserve it across
+  upgrades.
+- Ship dmenu-oomaya as the companion launcher: centered, Tokyo Night,
+  fuzzy, sub-15ms.
 
 ## 3. Non-Goals
 
 - A Wayland compositor or Wayland-native session.
+- Support contracts for distributions outside the three families. Other
+  distributions may work; they are not covered by the validation contract.
+- Automatic installation of proprietary GPU drivers outside an explicitly
+  opted-in flow.
+- Turning the shell layer into a general-purpose root shell, service
+  editor, firewall editor, or partition manager.
 - Pixel-identical behavior across every theme, driver, display manager, or
   third-party desktop utility.
-- Automatic installation of proprietary GPU drivers outside the explicitly
-  selected Fedora NVIDIA image.
-- Automatic bootloader, Plymouth, firewall, or kernel changes outside a
-  dedicated image flow that documents and validates them.
-- Turning the Settings frontend into a general-purpose root shell, service
-  editor, firewall editor, or partition manager.
-- Bundling every optional desktop application.
-- Supporting Fedora releases after they reach end of life.
+- Supporting distribution releases after they reach end of life.
 
-## 4. Fedora Support Contract
+## 4. Distribution Support Contract
 
-The primary release target is the Fedora desktop image:
+The supported families and their toolchains:
 
-| Target | Current contract |
-| --- | --- |
-| Base media | Fedora 44 Server Network Install ISO |
-| Session | Xorg with dwm and the managed Quickshell shell |
-| Variants | Standard and explicitly selected NVIDIA image |
-| Initial release architecture | x86_64 |
+| Family | Examples | Package tool | Build toolchain packages |
+| --- | --- | --- | --- |
+| Fedora | Fedora 40+ | `dnf` | `gcc`, `make`, `pkgconf-pkg-config` |
+| Arch | Arch, CachyOS, Omarchy | `pacman` | `base-devel` |
+| Debian | Debian, Ubuntu, Mint | `apt` | `build-essential` |
 
-Fedora aarch64 is not currently a supported release target. Architecture-aware
-package filtering may remain in shared helpers, but it does not constitute an
-aarch64 support claim without native installer and desktop runtime evidence.
+The contract is defined by three artifacts that must agree:
 
-The existing-system installer supports Fedora and uses `dnf`/RPM. It must
-report the detected distribution and accept only `ID=fedora` before package
-installation or system changes. Every other operating-system identity must be
-rejected. Fedora is the sole supported distribution; derivative distributions
-are not included by implication.
+1. `bootstrap.sh` detects the family and installs the toolchain.
+2. `scripts/dwm-packages.sh` maps every capability to per-family package
+   names (`fedora:`, `arch:`, `debian:` entries).
+3. `install.sh` reads `/etc/os-release`, accepts the three families, and
+   rejects anything else **before** making changes, with a clear message.
+
+Derivatives (CachyOS, Mint, Omarchy) ride their family's mapping. The
+primary architecture is x86_64.
 
 ## 5. Functional Requirements
 
@@ -68,492 +87,235 @@ are not included by implication.
 
 The installed session must provide:
 
-- Standard dwm tiling, floating, monocle, tagging, focus, and monitor behavior.
-- Per-tag layout state and sizing.
-- EWMH desktop and active-window integration for external bars and tools.
+- The 14 vanitygaps layouts, with per-tag layout state and sizing:
+
+| # | Symbol | Arrange function | Behavior |
+| --- | --- | --- | --- |
+| 1 | `[]=` | `tile` | Master left, vertical stack right |
+| 2 | `"><>"` | `NULL` | Free-floating (no arrange function) |
+| 3 | `[M]` | `monocle` | Full-screen single client |
+| 4 | `[@]` | `spiral` | Fibonacci spiral |
+| 5 | `[\]` | `dwindle` | Fibonacci dwindle |
+| 6 | `H[]` | `deck` | Master left, stacked cards right |
+| 7 | `TTT` | `bstack` | Bottom stack |
+| 8 | `===` | `bstackhoriz` | Bottom stack, horizontal |
+| 9 | `HHH` | `grid` | Symmetrical grid |
+| 10 | `###` | `nrowgrid` | N-row adaptive grid |
+| 11 | `---` | `horizgrid` | Horizontal partition grid |
+| 12 | `:::` | `gaplessgrid` | Edge-to-edge, no gaps |
+| 13 | `\|M\|` | `centeredmaster` | Focused master, flanked stacks |
+| 14 | `>M>` | `centeredfloatingmaster` | Centered floating master |
+
+- Dynamic inner/outer gap geometry per monitor (`gappih`, `gappiv`,
+  `gappoh`, `gappov`), subtracted before every `XMoveResizeWindow`.
+- EWMH integration: `_NET_ACTIVE_WINDOW` focus requests must be honored
+  (the `focusonnetactive` patch) — a request for a window on another tag
+  switches to that tag, unhides the client if needed, focuses it, and
+  warps the cursor to its center. `_NET_CURRENT_DESKTOP` must stay
+  accurate for external bars and inspection tools.
 - Xinerama multi-monitor support.
-- Window swallowing.
-- Per-client size factors and stack reordering.
-- Real and fake fullscreen behavior.
-- Window icons from `_NET_WM_ICON`.
-- Configured border suppression and cursor-warp behavior.
+- Window swallowing, per-client size factors (cfacts), stack reordering,
+  and real plus fake fullscreen behavior.
+- Sharp 2px borders with no rounding; border colors follow the active
+  theme (Tokyo Night `#7aa2f7` accent by default).
 - Stable handling of applications that omit optional X properties.
 
-### 5.2 Runtime Configuration
+### 5.2 Runtime State IPC: `_DWM_CURRENT_LAYOUT`
 
-The product must load user configuration from:
+The window manager must publish its layout symbol on the
+`_DWM_CURRENT_LAYOUT` root-window atom (`UTF8_STRING`) on every layout
+switch, tag view change, and monitor focus change.
+
+Consumers (the Quickshell panel, `tools/dwm-quickshell-state.c`,
+`src/daemon/x11_bridge.c`) must observe it with `xprop -spy` or an
+equivalent X11 event subscription. Polling the atom on a timer is not
+acceptable: state propagation is event-driven and must cost 0.0% CPU
+while idle.
+
+### 5.3 Atomic In-Place Restart
+
+`Super+Shift+R` must trigger `restart()`: `cleanup()` (detach clients,
+restore borders, free resources — without killing any client window),
+`XCloseDisplay()`, then `execvp("dwm", argv)` to replace the process
+image under the same PID. The new process re-manages existing top-level
+windows and resumes in under 10ms. Recompiling configuration must never
+require terminating the X session.
+
+### 5.4 Runtime Configuration
+
+User configuration loads from:
 
 ```text
-${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus/
+${XDG_CONFIG_HOME:-$HOME/.config}/dwm-oomaya/
 ```
 
-The supported runtime files are:
+The supported runtime files are `hotkeys.toml`, `themes.toml`, and
+`window-rules.toml` (seeded from the tracked `config/` directory).
 
-- `hotkeys.toml`
-- `themes.toml`
-- `window-rules.toml`
+- Changes must reload via the inotify hot-reload path without restarting
+  dwm. Invalid TOML must produce an actionable error and retain the last
+  valid state.
+- Legacy dwm-titus config paths remain supported as a fallback for
+  migrating users, but new installations use the dwm-oomaya paths.
+- Compile-time defaults remain in `config.def.h`. An existing `config.h`
+  is user-owned and must never be overwritten by install or upgrade.
 
-Changes to these files must reload without restarting dwm when the existing
-inotify-based hot reload path is available. Invalid configuration must produce
-an actionable error and retain safe defaults or the last valid state.
-
-Compile-time defaults remain in `config.def.h`. An existing `config.h` is user
-owned and must not be overwritten during installation or upgrade.
-
-Quickshell configuration is a managed shell-layer artifact owned by dwm-titus.
-During installation, `${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/` must be
-replaced from the tracked `config/quickshell/` directory so the running shell
-does not fall behind repository behavior. User-owned dwm TOML files remain
-preserved, but users should not place unrelated personal configuration under
-the dwm-titus-managed Quickshell directory. Quickshell integrations must use
-event-driven updates whenever a state source provides a signal, subscription,
-watch mode, IPC stream, or service API. Polling timers are acceptable only for
-inherently sampled values, such as a clock or CPU load, or as documented
-fallbacks when no event source exists. The managed Quickshell shell must remain
-low overhead while idle: hidden launcher UI must not continuously filter or
-render application models, timer-triggered helper processes must not overlap,
-and only one shell provider should run in the dwm-titus session. On X11, the
-managed shell must create one `PanelWindow` for every active screen so each
-monitor has a bar. The per-screen Quickshell `Variants` design must share its
-state providers and be explicitly profiled to show that it remains near idle.
-
-The managed shell requires Quickshell 0.3.0 or Fedora 44's compatible
-`0.2.1^git20260209.dacfa9d` snapshot. That Fedora snapshot contains the
-`PopupWindow.grabFocus` API used by the shell; an unpatched upstream 0.2.1 is
-not sufficient. Anchored control popups
-must close on Escape and on a click outside their visible card under X11.
-Visible shell surfaces must be opaque and follow the active theme selected in
-the user `themes.toml` file.
-
-### 5.3 Session Startup
+### 5.5 Session Startup
 
 The project must support:
 
 - A display-manager session installed as `dwm.desktop`.
 - A `startx` flow whose `.xinitrc` launches dwm in a D-Bus session.
-- Startup without Picom, a wallpaper, or a polkit agent.
-- Detection of common polkit agent locations across `/usr/lib`,
-  `/usr/lib64`, and `/usr/libexec` layouts.
-- Startup helpers that do not create duplicate long-running processes when the
-  session is restarted.
+- Startup without Picom, a wallpaper, or a polkit agent. Missing
+  optional components must be logged or skipped without terminating dwm.
+- Startup helpers that do not create duplicate long-running processes
+  when the session is restarted.
 
-Missing optional components must be logged or skipped without terminating dwm.
+### 5.6 Companion: dmenu-oomaya
 
-The default screenshot-to-clipboard binding must capture through the managed
-`dwm-screenshot` helper. On X11, the helper must use `maim` to capture without
-the mouse cursor and transfer region captures as raw PNG data to an
-`xclip`-owned clipboard selection. It must not depend on a resident screenshot
-daemon or a GUI-toolkit clipboard owner. Saved captures use JPEG, and a full
-monitor capture targets the monitor under the pointer. The recommended desktop
-profile must install `maim` when it is available and keep the core install
-usable when it is not. `xclip` remains a required runtime package because
-other shell features also use the X11 clipboard.
+dmenu-oomaya is a separate repository (`github.com/oomaya/dmenu-oomaya`,
+MIT) and the project's designated launcher engine. It is a maintained
+fork of Tony Banters' dmenu. It must provide:
 
-### 5.4 Quickshell Launcher
+- Centering on the active monitor via Xinerama geometry.
+- A 2px Tokyo Night border (`#7aa2f7`).
+- Configurable line height for large typography and Nerd Font glyphs.
+- Fuzzy subsequence matching with exact matches ranked first.
+- Tokyo Night color roles configured in `config.def.h`/`config.h`.
 
-The Quickshell shell layer must provide the normal X11-compatible application
-launching workflow.
+The POSIX `dmenu-*` script suite (installed to `~/.local/bin`) must
+provide:
 
-The launcher must:
+- `dmenu-desktop`: an AWK parser over freedesktop `.desktop` files that
+  correctly ignores `[Desktop Action]` blocks (a naive parser lets a
+  trailing action block's `Exec=` overwrite the main entry), wraps
+  `Terminal=true` entries with the detected terminal emulator, prepends
+  Nerd Font glyph categories, and completes in under 15ms.
+- `dmenu-windows`: a cross-tag window switcher built on `wmctrl -l`
+  feeding window IDs back through `wmctrl -ia`, which the
+  `focusonnetactive` patch turns into tag-switching focus jumps.
+- `dmenu-power` (lock/suspend/restart/reboot/poweroff via
+  `loginctl`/`systemctl`), `dmenu-scrot` (`maim` + `xclip` capture),
+  `dmenu-clip` (clipboard history), and `dmenu-hub` (master menu).
 
-1. Open, close, and toggle through Quickshell IPC so dwm keybindings can
-   control it without depending on Wayland global shortcuts.
-2. Index desktop applications from the XDG `.desktop` application directories.
-3. Ignore hidden, `NoDisplay=true`, and non-application desktop entries.
-4. Provide a search-first UI with keyboard focus on open.
-5. Filter by application name, generic name, and comment.
-6. Support keyboard navigation, mouse activation, Escape-to-close, and
-   close-on-launch behavior.
-7. Launch applications through a helper that prefers standard desktop-entry
-   launchers when available and preserves a terminal fallback for
-   `Terminal=true` entries.
-8. Avoid Wayland-only shell, compositor, layer-shell, or global-shortcut APIs.
-9. Release application-list resources while closed so the launcher does no
-   repeated filtering or rendering work when hidden.
+All scripts are pure POSIX `sh` with `set -eu`, depend on no daemons,
+and resolve every path dynamically from XDG variables — never a
+hardcoded `/home/username` (the zero-hardcoded-literals law).
 
-The launcher may follow a modular QML structure with small helper scripts,
-IPC-facing open/close/toggle functions, and reusable list/delegate patterns,
-but X11/EWMH behavior remains the compatibility boundary for this project.
+### 5.7 Installer
 
-### 5.5 Installer
+A two-stage flow:
 
-The supported installation flow must:
+**Stage 1 — `bootstrap.sh`** (the documented `curl | bash` entrypoint):
 
-1. Read `/etc/os-release`, require Fedora, and reject unsupported systems
-   before making changes.
-2. Resolve Fedora package names from one maintained dependency map.
-3. Show required and optional packages before installing them.
-4. Install only missing required packages unless the user requests a broader
-   desktop setup.
-5. Create a missing `config.h` from guided compile-time questions, or detected
-   and documented defaults for an unattended installation. Preserve an
-   existing `config.h`.
-6. Build dwm with the system compiler and detected X11 flags.
-7. Install the binary, man page, X session file, scripts, and default
-   configuration.
-8. Seed missing user configuration while preserving existing files.
-9. Set ownership to the invoking user for files in that user's home.
-10. Support repeated execution without destructive side effects.
-11. Print a summary, skipped optional features, and actionable next steps.
-12. Offer interactive Xorg display setup when installation runs inside an
-    active X11 session. The setup must support resolution, refresh rate,
-    position, rotation, primary-output selection, and compatible TearFree
-    drivers; preview changes with rollback; and preserve existing system Xorg
-    configuration through an isolated managed fragment and backups. When no
-    X11 session is available, print the deferred setup command instead.
+1. Detect `dnf`, `pacman`, or `apt-get`; refuse anything else before
+   making changes.
+2. Install only the core toolchain: `git`, `curl`, `make`, `gcc` (or
+   `build-essential`). It must not claim to install X11 development
+   headers — that is `install.sh`'s job.
+3. Clone the repository to `~/.local/src/dwm-oomaya` (or reuse an
+   existing checkout) and hand off to `install.sh`.
 
-The existing-system installer may enable RPM Fusion nonfree and the
-`christitustech/copr-fedora` COPR only for the explicitly requested gaming
-profile. Interactive runs require a direct confirmation; non-interactive runs
-require the explicit `--enable-fedora-gaming-repos` approval flag. Recommended
-and full profiles may also add the official Flathub remote for the target user
-and install Gear Lever (`it.mijorus.gearlever`) as the default AppImage manager.
-It must not enable any other third-party repository.
+**Stage 2 — `install.sh`:**
 
-The Fedora Kickstart image profiles separately predeclare the four image
-repository groups required by that product: RPM Fusion, Brave Browser, MWT
-Packages, and `christitustech/copr-fedora`. Their inclusion is validated as
-part of the reviewed ISO profile rather than inferred from existing-system
-installer approval.
+1. Accept `--profile core|recommended|full` (default `recommended`).
+2. Resolve every capability through `scripts/dwm-packages.sh`
+   (`fedora:`/`arch:`/`debian:` entries), show required and optional
+   packages before installing, and install only missing required
+   packages unless a broader profile was requested.
+3. Create a missing `config.h` from guided questions or documented
+   unattended defaults. Never overwrite an existing one.
+4. Build dwm with the system compiler and `pkg-config`-discovered X11
+   flags.
+5. Install the binary, man page, X session file, scripts, and default
+   configuration; seed missing user configuration while preserving
+   existing files; set ownership to the invoking user.
+6. Be idempotent: repeated runs cause no destructive side effects.
+7. Print a summary, skipped optional features, and actionable next
+   steps — readable in both interactive terminals and logs.
 
-A source-checkout update of an existing live installation must use the complete
-supported install path. Updating only the `dwm` executable is not a supported
-upgrade because it can leave installed helpers, session scripts, the managed
-Quickshell tree, and the user data copy at a different repository revision.
-When development is performed on a machine running dwm-titus, the
-repository-owned `scripts/dev-sync-install.sh` command must synchronize the
-checkout to that machine's local live installation before the work is handed
-off or considered complete. The command is idempotent and must enforce this
-contract for every developer deployment. Every live update must:
+**Live-update rule.** A source-checkout update of a live installation
+must use the complete supported install path: build the checked-out
+revision, then refresh the binary, helpers, session scripts, managed
+Quickshell tree, and user data copy from that same revision. Updating
+only the `dwm` executable is not a supported upgrade.
 
-1. Build the checked-out revision successfully before replacing installed
-   files.
-2. Install the system files and refresh
-   `${XDG_DATA_HOME:-$HOME/.local/share}/dwm-titus/` and the managed
-   `${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/` tree from that same
-   revision while preserving the user-owned dwm TOML files.
-3. Verify the installed binary and the managed Quickshell, data, and script
-   trees against the checkout instead of inferring freshness from a clean Git
-   worktree.
-4. Restart Quickshell through the managed control path and verify its process,
-   IPC endpoints, and tray host when no full session restart is pending. If the
-   running dwm executable was replaced, defer Quickshell activation to the
-   required session restart so the tray host starts before tray clients, and
-   distinguish installed state from active runtime state.
-5. After a required session restart, verify that the new dwm executable is
-   active and that the graphical-session and XDG autostart lifecycle starts
-   tray clients for the new X11 session.
+**`ETXTBSY` rule.** Never `cp` over a running executable (`Text file
+busy`). Always `install -Dm755 <binary> <destination>`: `unlink()`
+before write, so the running process keeps its old inode until it
+exits.
 
-### 5.6 Build System
+### 5.8 Build System
 
 The build must:
 
 - Use a C99-capable compiler and `make`.
-- Honor standard environment overrides including `CC`, `CFLAGS`, `CPPFLAGS`,
-  `LDFLAGS`, `PREFIX`, and `DESTDIR`.
-- Discover compiler and linker flags with `pkg-config` where available.
-- Avoid mandatory `/usr/X11R6`, `/usr/lib`, or `/usr/lib64` assumptions.
+- Honor `CC`, `CFLAGS`, `CPPFLAGS`, `LDFLAGS`, `PREFIX`, and `DESTDIR`.
+- Discover compiler and linker flags with `pkg-config` (no mandatory
+  `/usr/X11R6`, `/usr/lib`, or `/usr/lib64` assumptions).
 - Produce a working `dwm` binary from a clean checkout.
-- Support staged, unprivileged installation through `DESTDIR`.
+- Support staged, unprivileged installation through `DESTDIR` without
+  writing to the invoking user's home.
 
-Required native interfaces and libraries currently include:
+Required native modules (per `config.mk`, via `pkg-config`):
 
-- Xlib
-- Xft and Fontconfig
-- Xinerama
-- Xrender
-- Imlib2
-- Xlib-XCB
-- XCB and XCB RES
-- freetype headers
-- standard Linux/POSIX process and filesystem interfaces
-
-### 5.7 Quickshell QML Development Tooling
-
-Quickshell QML files are part of the maintained source tree. Systems used to
-edit this project should provide both the stock Qt QML tools and a
-Quickshell-aware language server:
-
-- `qmllint` is the baseline syntax/static check for individual QML files.
-- `qmlls` is the stock Qt QML language server and remains useful for generic
-  Qt/QML projects.
-- `qml-language-server` from `cushycush/qml-language-server` is the preferred
-  editor language server for this repository because it understands Quickshell
-  imports, singletons, types, snippets, and workspace QML components.
-
-Fedora provides the Qt tools through `qt6-qtdeclarative-devel`. Helper binaries
-may live outside the default `PATH`, such as `/usr/lib64/qt6/bin` or
-`/usr/lib/qt6/bin`, and `qmllint` may be named `qmllint-qt6`.
-
-`qmllint` must be run with explicit Qt and Quickshell QML import roots. Without
-those roots it can report false import failures for modules such as
-`Quickshell`, even when the shell runs correctly. Typical roots are:
-
-| Fedora QML import roots |
-| --- |
-| `/usr/lib64/qt6/qml`, `/usr/lib/qt6/qml` |
-
-Language-server environments should expose the same roots:
-
-```sh
-export QMLLS_BUILD_DIRS="/usr/lib64/qt6/qml:/usr/lib/qt6/qml"
-export QML_IMPORT_PATH="$PWD/config/quickshell"
+```text
+x11 xft xinerama xrender imlib2 x11-xcb xcb xcb-res fontconfig freetype2
 ```
 
-The repository wrapper resolves `qmllint-qt6`, `qmllint`, and the Fedora Qt
-binary paths, discovers the explicit Qt import roots, and creates the temporary
-`qmldir` module map needed for local `qs.*` imports:
+### 5.9 Quickshell Shell Layer
 
-```sh
-scripts/quickshell-qmllint --root config/quickshell
-```
+Inherited from the dwm-titus lineage and kept as a first-class
+component:
 
-For Fedora x86_64, install the pinned `qml-language-server` v1.7.0 Linux AMD64
-asset only after verifying the repository-pinned SHA-256 checksum:
+- The managed shell lives in the tracked `config/quickshell/` tree and
+  is deployed to the user's Quickshell config location on install.
+- One `PanelWindow` per active screen; per-screen state providers are
+  shared, not duplicated.
+- All state updates are event-driven (atoms, IPC, subscriptions).
+  Polling timers are acceptable only for inherently sampled values
+  (clock, CPU load) or as documented fallbacks.
+- The shell must sit near idle with the launcher closed: no continuous
+  filtering or rendering of hidden UI, no overlapping timer-triggered
+  helpers, exactly one shell provider per session.
+- The launcher opens/closes/toggles through Quickshell IPC so dwm
+  keybindings control it without Wayland-only APIs.
+- The minimum Quickshell version is enforced by
+  `scripts/dwm-quickshell-version-check`; install proceeds only when
+  the check passes.
+- QML development tooling (`qmllint` with explicit Qt/Quickshell import
+  roots, and the Quickshell-aware language server) follows the
+  repository's documented editor setup.
 
-```sh
-set -eu
-asset=qml-language-server-v1.7.0-linux-amd64.zip
-curl -fL --output "$asset" \
-  "https://github.com/cushycush/qml-language-server/releases/download/v1.7.0/$asset"
-printf '%s  %s\n' \
-  ad6e88b0fffbe5ee03fc9f6502c0103aa047c02c4942c547715283443bf4e946 \
-  "$asset" | sha256sum --check --strict
-tmp=$(mktemp -d)
-trap 'rm -rf "$tmp"' EXIT
-unzip -q "$asset" -d "$tmp"
-printf '%s  %s\n' \
-  928bd00ddb14f00a66f18473c0a492ae7109ee45c02db8bf3f55966229bb863a \
-  "$tmp/qml-language-server-v1.7.0-linux-amd64" | sha256sum --check --strict
-install -Dm0755 "$tmp/qml-language-server-v1.7.0-linux-amd64" \
-  "${HOME}/.local/bin/qml-language-server"
-```
+### 5.10 Dependency Mapping
 
-Do not substitute a newer release or a different platform asset without
-updating and independently verifying the checksum committed here.
+The maintained tri-distro capability map (source of truth:
+`scripts/dwm-packages.sh`):
 
-Editor configuration must prefer `qml-language-server` for this repository's
-QML files. Zed users should install the QML extension for language registration,
-copy `.zed/settings.example.json` to `.zed/settings.json`, and configure its
-`qml` language server binary to the absolute local path of
-`qml-language-server`; Zed requires an absolute `lsp.qml.binary.path`. The
-active `.zed/settings.json` file is intentionally local-only because that path
-differs by machine. Other LSP-capable editors should run `qml-language-server`
-for `*.qml` files and use the repository root, `shell.qml`, or `.git` as the
-workspace root marker.
+| Capability | Fedora (`dnf`) | Arch (`pacman`) | Debian (`apt`) |
+| --- | --- | --- | --- |
+| Compiler and make | `gcc`, `make`, `pkgconf-pkg-config` | `base-devel` | `build-essential` |
+| Xlib development | `libX11-devel` | `libx11` | `libx11-dev` |
+| Xft and fonts | `libXft-devel`, `fontconfig-devel`, `freetype-devel` | `libxft`, `fontconfig` | `libxft-dev`, `libfontconfig1-dev` |
+| Xinerama | `libXinerama-devel` | `libxinerama` | `libxinerama-dev` |
+| Xrender | `libXrender-devel` | `libxrender` | `libxrender-dev` |
+| Imlib2 | `imlib2-devel` | `imlib2` | `libimlib2-dev` |
+| XCB | `libxcb-devel`, `xcb-util-devel` | `libxcb`, `xcb-util` | `libxcb1-dev`, `libxcb-util-dev` |
+| Window tools | `wmctrl`, `maim`, `xclip` | `wmctrl`, `maim`, `xclip` | `wmctrl`, `maim`, `xclip` |
 
-Plain `qmllint` is not considered a complete Quickshell validation pass because
-it does not understand every Quickshell-specific module shape. Runtime
-validation still requires loading the managed shell with `quickshell --path`
-and exercising the relevant IPC targets.
+These are capability mappings, not immutable lists: availability must
+be validated against the targeted release of each family.
 
-### 5.8 Dependency Mapping
-
-The maintained Fedora dependency map covers these capabilities:
-
-| Capability | Fedora package examples |
-| --- | --- |
-| Compiler and make | `gcc`, `make`, `pkgconf-pkg-config` |
-| Xlib development | `libX11-devel` |
-| Xft and fonts | `libXft-devel`, `fontconfig-devel`, `freetype-devel` |
-| Xinerama | `libXinerama-devel` |
-| Xrender | `libXrender-devel` |
-| Imlib2 | `imlib2-devel` |
-| XCB | `libxcb-devel`, `xcb-util-devel` |
-
-These are capability mappings, not immutable package lists. Availability must
-be validated against the supported Fedora release.
-
-Runtime dependencies are classified as:
-
-- Core: an X11 server/session, D-Bus session support, one usable terminal
-  emulator, and the tools required by configured core keybindings. Alacritty
-  is the preferred emulator, with the existing supported-terminal fallback
-  chain retained when Alacritty is unavailable.
-- Recommended desktop: Alacritty, Quickshell, Picom, Feh, Dex, a polkit agent,
-  notification tools, audio controls, screenshot tooling, Nerd/emoji fonts,
-  Flatpak with its GTK portal, the Phase 6 system-management runtime
-  (`PackageKit`, `PackageKit-glib`, `python3-gobject`, `python3-rpm`,
-  `accountsservice`, `cups`, and `system-config-printer`), and Gear Lever from a
-  user-scoped Flathub remote. Existing installations add that runtime by
-  rerunning the installer with the `recommended` or `full` profile; source-sync
-  does not infer an install profile from independently installed programs.
-- Optional: the Herdr terminal workspace, file manager, network tray, theme
-  utilities, display-manager greeter customization, wallpapers, and
-  hardware-specific helpers.
-
-### 5.9 System Health Dashboard
-
-The Control Center must open System Health as a separate full-screen
-Quickshell window on the selected X11 monitor. The dashboard must remain
-on-demand: opening or explicitly refreshing it starts a bounded snapshot, and
-closing it stops active diagnostics. It must not add idle polling.
-
-The snapshot must provide an overall state and categorized details for:
-
-- Current-boot journal and kernel errors, with `journalctl` preferred and
-  privileged `dmesg` used as a fallback.
-- Failed system and user services, time synchronization, networking, audio,
-  and the dwm-titus desktop session.
-- Memory, pressure, load, swap, local filesystem capacity, inode use,
-  read-only mounts, and available battery, thermal, and drive-health data.
-- Required and optional dwm-titus commands, libraries, configuration, and the
-  distribution package database.
-
-The dashboard must begin user-readable checks immediately and request a
-privileged read-only scan. It must first use non-interactive `sudo` when the
-session already has cached or `NOPASSWD` authorization; otherwise it must use
-the running polkit agent and trusted installed helper for graphical
-authorization. Denied, cancelled, or unavailable authorization must produce a
-clearly incomplete report rather than prevent the dashboard from opening.
-Journal evidence must be bounded while retaining the total matching count.
-
-Boot-journal and kernel-error rows with matching entries must provide Copy and
-Export actions. Copy uses the X11 clipboard through `xclip`. Export writes the
-displayed bounded evidence to a private, non-overwriting timestamped file in
-the invoking user's home directory, using `boot$DATE.txt` or
-`kernel-errors$DATE.txt` naming.
-
-Repairs require an explicit confirmation. User repairs are limited to known
-desktop and audio components plus launching the interactive dependency flow.
-Failed user and system services are displayed as individual rows with Start,
-Stop, Restart, Disable, and Enable actions. A service action is allowed only
-while that exact `.service` unit is in the corresponding failed-unit set;
-system actions require polkit authorization. Other privileged repairs are
-limited to NetworkManager, Bluetooth, and the detected systemd
-time-synchronization provider. Filesystem repair, cleanup, reboot, and
-unattended package changes are not allowed.
-Only a root-owned, non-writable system installation of the health helper may
-itself be executed through `sudo` or `pkexec`; repository and XDG copies must
-never be elevated. Without an installed helper, the unprivileged copy may use
-non-interactive `sudo` to execute only validated root-owned system commands
-needed for a bounded scan or confirmed repair.
-
-### 5.10 Desktop Settings Platform
-
-The managed Quickshell layer must grow into one discoverable Settings
-application. The application must use a hybrid integration model:
-
-- Common desktop state and controls are presented through consistent
-  Quickshell sections.
-- Small project helpers may expose stable, machine-readable state and narrowly
-  scoped user-session changes.
-- Privileged or high-risk administration is performed only through allowlisted,
-  installed helpers or delegated to trusted Fedora tools.
-- Providers and delegated administration tools target Fedora. Missing Fedora
-  capabilities must expose a clean unavailable or unsupported state rather
-  than failing the entire application.
-
-The Settings platform must distinguish:
-
-1. Read-only state available without authorization.
-2. User-session changes that affect only the invoking user.
-3. Privileged system changes requiring explicit confirmation and narrow
-   authorization.
-4. Delegated operations opened in a trusted platform tool.
-5. Unsupported capabilities with an actionable explanation.
-
-QML must not construct arbitrary privileged commands. Elevated helpers must be
-root-owned, non-writable by unprivileged users, validate every argument, expose
-only documented operations, and remain safe when authorization is denied or
-cancelled. Repository and XDG copies must never be elevated.
-
-Settings providers must prefer event-driven updates and stop unnecessary
-watches and processes when their section closes. A failure in one provider
-must not prevent other sections from opening. Risky changes must provide
-preview, confirmation, rollback, or recovery behavior appropriate to their
-impact.
-
-Phase 6 permits a narrow cancellation exception for the fixed system timezone,
-NTP enablement, and system locale actions. Users can cancel their confirmation
-without issuing a service call. The confirmation must clearly state that a
-change cannot be canceled after dispatch to timedate1 or locale1; local request
-cancellation does not undo a system change. These actions still require fixed
-allowlisted arguments, explicit confirmation, platform authorization, audit
-evidence, and bounded verification. An ambiguous post-dispatch timeout is
-`interrupted`, never success or cancellation, and must trigger a fresh bounded
-read without automatically retrying or rolling back the mutation. Any later
-corrective change requires new confirmation. This exception does not change
-the cancellation requirements of other privileged actions.
-
-The planned Settings surface covers:
-
-- Displays and monitor profiles.
-- Display placement uses numbered monitor cards and a proportional preview,
-  with Left of, Right of, Above, and Below actions relative to another enabled
-  monitor. Placement accounts for resolution and rotation, aligns the top or
-  left edges, and retains the timed preview/rollback and coordinate-based
-  profile formats. Choosing a placement edits the pending layout only.
-- Automatic display layouts expose separate Docked and Undocked profiles,
-  their saved geometry and modes, detected hardware, current applied matches,
-  and default fallback. Optional autorandr integration remains unprivileged;
-  edits do not apply live, saves require confirmation and backups, and the
-  Undocked layout enables only the built-in screen. Profiles must not pin
-  session-specific CRTC assignments. Existing system-wide Xorg persistence
-  remains a separate advanced operation.
-- Keyboard, pointer, touchpad, and other supported input devices.
-- NetworkManager connections, VPN entry points, and Bluetooth devices.
-- PipeWire/WirePlumber-compatible audio devices and application streams.
-- Power profiles, battery, idle, DPMS, suspend, lid, and lock behavior.
-- Default applications, MIME handlers, and user-visible autostart entries.
-- Themes, wallpaper, fonts, cursors, toolkit integration, notifications, and
-  practical X11 accessibility controls.
-- Updates, software-source entry points, regional and time settings, user and
-  printer entry points, system information, storage overview, diagnostics, and
-  recovery guidance.
-
-Phase 5 accessibility discovery uses `settings-protocol 1` to publish separate
-capability records for text scaling, high contrast, reduced motion,
-notification policy, and keyboard or pointer access. Text scaling derives from
-one complete versioned personalization response; high contrast and reduced
-motion are user-session mutations owned by the versioned managed accessibility
-helper; notification readiness requires the active session D-Bus owner's
-process ID and command identity to match the managed Quickshell configuration;
-and input readiness derives from bounded managed XInput discovery plus a
-responsive `xkbset` query. Missing
-or malformed providers degrade only their own record. Notification policy owns
-Do Not Disturb and one bounded ordinary-popup duration in user configuration;
-history remains active while suppressed, and critical urgency bypasses Do Not
-Disturb with its fixed duration.
-
-`input-protocol 1` also publishes one session-scoped `accessx` device group.
-Its fixed boolean settings cover accessibility shortcuts, sticky keys, slow
-keys, bounce keys, and mouse keys. Mutations use the existing timed input
-preview, keep, revert, reset, and session-start replay workflow. Missing or
-unresponsive XKB tooling degrades only that group and its accessibility
-capability record.
-
-Advanced partitioning, unrestricted service control, firewall policy editing,
-and similarly high-risk administration remain delegated unless a later
-specification defines a narrow safe interface.
-
-### 5.11 Fedora Image Contract
-
-Released Fedora images must be based on the Fedora Server Network Install ISO,
-not a Live ISO. The image builder embeds this repository and the selected
-Kickstart while preserving the upstream Anaconda installation environment.
-
-The standard image must not include NVIDIA-only packages or kernel arguments.
-The NVIDIA image is an explicit opt-in variant and may install the documented
-RPM Fusion NVIDIA packages, blacklist Nouveau, and configure NVIDIA DRM
-modesetting. Both variants may enable the documented third-party repositories
-needed by the selected desktop package set; choosing the dedicated image is
-the user's consent to that image policy.
-
-The Fedora image currently sets SELinux to disabled. This is an explicit image
-policy and a known reduction from Fedora's default security posture. The
-existing-system installer must not change host SELinux state. Changing the
-image policy requires updated requirements, migration guidance, and real image
-validation.
-
-Kickstart syntax and static ISO construction checks are necessary but not
-sufficient. A released image must record its Fedora source image and checksum,
-architecture, firmware mode, variant, package-resolution result, completed
-Anaconda install, first boot, and hardware limitations.
+Runtime dependencies are classified as core (X11 session, D-Bus, one
+usable terminal, tools required by configured core keybindings),
+recommended desktop (Quickshell, compositor, wallpaper, notifications,
+polkit agent, audio controls, screenshot tooling, Nerd/emoji fonts),
+and optional (file manager, network tray, theme utilities, greeter
+customization, wallpapers, hardware-specific helpers).
 
 ## 6. Filesystem and Installation Contract
 
-Default system installation locations:
+Default system locations:
 
 ```text
 ${PREFIX}/bin/dwm
@@ -564,194 +326,143 @@ ${PREFIX}/share/man/man1/dwm.1
 Default user locations:
 
 ```text
-${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus/
-${XDG_DATA_HOME:-$HOME/.local/share}/dwm-titus/
+~/.local/src/dwm-oomaya/        # window-manager source (this repository)
+~/.local/src/dmenu-oomaya/      # launcher source (companion repository)
+~/.local/bin/                   # dwm, dmenu binaries and dmenu-* scripts ($PATH)
+~/.config/dwm-oomaya/           # runtime TOML (hotkeys, themes, window rules)
+~/.local/share/dwm-oomaya/      # user data copy
 ```
 
-System paths must be overridable for packaging and staged installs. User data
-must not be written during a package build using `DESTDIR`.
-
-User-scoped installation runs as the target user. Any default XDG parent
-directory created by the Fedora image or installer must be owned by that user
-and their primary group. Existing XDG parent permissions must be preserved,
-and installation must not recursively change ownership outside project-managed
-directories.
-
-Uninstall must remove only files owned by this project. It must preserve user
-configuration and unrelated application configuration by default.
+System paths must be overridable for packaging and staged installs.
+User data must not be written during a package build using `DESTDIR`.
+User-scoped installation runs as the target user; project-managed
+directories must be owned by that user, and installation must not
+recursively change ownership outside them. Uninstall must remove only
+files owned by this project and must preserve user configuration by
+default.
 
 ## 7. User Experience Requirements
 
-- The default session must remain usable when optional visual components fail.
-- Common desktop settings must be discoverable from one Settings application;
-  unsupported sections must not make the rest of Settings unusable.
-- System changes must show pending state, success, failure, and recovery
-  guidance rather than relying on silent background commands.
+- The default session must remain usable when optional visual
+  components fail.
+- Visual identity: sharp 2px borders, no rounded corners; Tokyo Night
+  palette; a 16pt typography floor so glyphs and Nerd Font icons never
+  clip.
+- Keybindings must be discoverable from the TOML config and the README's
+  keybinding table. `Super+Shift+R` (in-place restart) is a headline
+  binding, not a hidden trick.
 - Error messages must identify the missing command, library, package
-  capability, or file and provide the next action.
-- The default terminal binding must launch Alacritty directly.
-- A plain `dwm-terminal` launch must open the selected emulator directly unless
-  the user explicitly enables the optional Herdr layer with `DWM_HERDR=1`.
-  Explicit terminal arguments such as `dwm-terminal -e command` must bypass
-  Herdr so delegated commands retain their existing execution contract.
-- The `dwm-terminal` helper must prefer Alacritty, select another installed
-  supported emulator when needed, and provide a clear configuration path.
-- Font aliases must accommodate common Meslo Nerd Font naming differences.
-- Multi-monitor setup must expose EWMH tags correctly to Quickshell and EWMH
-  inspection tools.
-- Each Quickshell panel must show only the tags owned by its monitor, using the
-  `_DWM_MONITOR_DESKTOPS` root property to match screen geometry with dwm's
-  logical monitor order and current tag.
-- Defaults should work at 1080p and remain usable at lower and higher
+  capability, or file, and state the next action.
+- Defaults must work at 1080p and remain usable at lower and higher
   resolutions.
-- Installation output must be readable in both interactive terminals and logs.
+- Multi-monitor setup must expose EWMH tags correctly to the Quickshell
+  panel and to EWMH inspection tools.
 
 ## 8. Security and Safety Requirements
 
-- Do not execute remote scripts through a shell as part of the required
-  installation path.
-- Do not download or execute unverified binaries.
-- Third-party executable installers must run as the target user in an isolated
-  staging directory. Both the reviewed installer and resulting binary must
-  match repository-pinned checksums before the binary is installed.
+- The only remote code executed during installation is the project's own
+  documented bootstrap entrypoint. No third-party remote scripts, no
+  unverified binaries; pinned external assets must match
+  repository-pinned checksums before installation.
 - Do not run user configuration or desktop helpers as root.
 - Quote paths and arguments that may contain whitespace.
-- Prevent command injection through distribution metadata, configuration
-  values, filenames, and environment variables.
-- Avoid broad recursive ownership or permission changes outside project-owned
-  directories.
-- Preserve existing user files or create explicit backups before replacement.
-- Keep the Quickshell Settings frontend unprivileged.
-- Require explicit confirmation for privileged or destructive settings.
-- Use polkit or an equivalently narrow authorization mechanism rather than
-  broad passwordless sudo access for desktop settings.
-- Continue showing readable state when authorization is denied, cancelled, or
-  unavailable.
+- Prevent command injection through distribution metadata,
+  configuration values, filenames, and environment variables.
+- Avoid broad recursive ownership or permission changes outside
+  project-owned directories.
+- Preserve existing user files, or create explicit backups before
+  replacement.
+- Keep the shell/Settings frontend unprivileged; require explicit
+  confirmation for privileged or destructive actions; prefer polkit or
+  an equivalently narrow mechanism over broad passwordless sudo.
+- Continue showing readable state when authorization is denied,
+  cancelled, or unavailable.
 
 ## 9. Validation and Acceptance Criteria
 
-A release is Fedora-ready only when all of the following pass. A Fedora desktop
-image additionally requires the image checks below.
-
-Automated validation must run through `scripts/run-tests`, which creates a
-unique workspace under `${DWM_TEST_TMP_ROOT:-$HOME/tmp}` and removes that exact
-workspace on success, failure, or interruption.
+A release is ready only when all of the following pass.
 
 ### 9.1 Static Validation
 
 - Clean C build with warnings enabled.
-- Shell syntax checks for every changed shell script.
-- ShellCheck and shfmt checks, with documented justified exceptions.
-- No generated build artifacts unintentionally included in the change.
+- `shellcheck` and `shfmt` clean on every changed shell script, with
+  documented justified exceptions.
+- No generated build artifacts committed.
+- `make test-ipc` and the `tests/` shell suite pass; the C unit tests
+  (rate limiter, ring buffer) pass — currently 57/57.
 
-### 9.2 Fedora Validation
+### 9.2 Per-Distribution Validation
 
-On the supported Fedora release:
+On each supported family:
 
-- Distribution detection accepts Fedora and rejects non-Fedora systems before
-  mutation.
-- Required package mapping resolves to installable packages.
+- `/etc/os-release` detection accepts the family and rejects
+  unsupported systems before any mutation.
+- The `dwm-packages.sh` capability map resolves to installable
+  packages.
 - A clean checkout builds successfully.
-- `make install DESTDIR=<staging-dir>` installs the expected system files
-  without writing to the test user's home.
+- `make install DESTDIR=<staging-dir>` installs the expected system
+  files without writing to the test user's home.
 - The real installer preserves pre-existing user configuration.
-- Dependency checks report both missing and satisfied capabilities correctly.
+- `config.mk`'s `check-build-deps` target reports missing `pkg-config`
+  modules accurately (it is the diagnostic of record when a minimal
+  environment lacks freetype headers or similar).
 
 ### 9.3 Runtime Validation
 
 In a real or nested X11 session:
 
 - dwm starts and can launch a terminal.
-- The default terminal binding opens Alacritty directly even when Herdr is
-  installed. With `DWM_HERDR=1`, a plain `dwm-terminal` command opens Herdr
-  inside Alacritty; explicit `dwm-terminal -e` commands still bypass Herdr.
-- Tiling, floating, tags, focus, and close-window actions work.
-- Runtime TOML configuration loads and reloads.
-- A display-manager session and `startx` path both launch.
+- Tiling, floating, tags, focus, and close-window actions work across
+  all 14 layouts.
+- Runtime TOML configuration loads and hot-reloads.
+- `Super+Shift+R` restarts dwm in place: same PID family behavior, all
+  client windows survive.
+- `_DWM_CURRENT_LAYOUT` is observable changing via `xprop -spy` on
+  layout/tag/monitor switches, with no polling process running.
+- A `_NET_ACTIVE_WINDOW` request for a window on another tag switches
+  to that tag and focuses the window.
+- A display-manager session and a `startx` path both launch.
 - Missing optional desktop processes do not terminate the session.
-- EWMH integration works with Quickshell or an equivalent inspection tool.
-- Each active monitor has one managed Quickshell panel.
-- With the launcher closed, the managed Quickshell process remains near idle
-  in a short CPU sample, and no second Quickshell-based shell provider is
-  running in the same session.
-- A source-checkout update of a live installation leaves the installed binary,
-  commands, managed Quickshell tree, and user data copy at the same revision.
-  After any required dwm session restart, the new executable is active and XDG
-  autostart tray clients register with the managed Quickshell tray host.
-- Multi-monitor behavior is tested where suitable hardware or nested displays
-  are available.
-- The default screenshot-to-clipboard binding invokes the managed helper, and
-  its completed capture is advertised as `image/png` by an `xclip` clipboard
-  owner. Active-monitor and saved-region captures produce non-empty JPEG files
-  through `maim`.
-- Recommended and full installs expose Gear Lever in the application launcher,
-  and it opens a visible window in the supported X11 session.
+- Each active monitor has one managed Quickshell panel; with the
+  launcher closed the shell process stays near idle in a short CPU
+  sample.
 
-### 9.4 Fedora Image Validation
+## 10. Current Gaps
 
-- Both Kickstarts pass `ksvalidator` and repository-owned invariant tests.
-- The ISO builder embeds the checkout and selected Kickstart without dropping
-  the upstream boot behavior.
-- The documented Fedora Server Network Install source checksum is verified.
-- At least the standard image completes Anaconda installation in a VM, reboots,
-  reaches LightDM and a usable dwm session, and starts the managed Quickshell
-  shell.
-- NVIDIA image behavior is not described as hardware-verified unless tested on
-  representative NVIDIA hardware.
-- The validation record states firmware mode, architecture, image variant,
-  Fedora release, and any untested paths.
+Honest inventory as of the 2026-09-29 rewrite:
 
-## 10. Current Gap
-
-The existing desktop provides dwm, a managed Quickshell panel and launcher,
-notifications, quick controls, power actions, network and Bluetooth surfaces,
-display helpers, a system-health dashboard, and the unified Settings platform.
-Settings includes the completed Phase 2 display and input mutation surface,
-Phase 3 NetworkManager, BlueZ, PipeWire, and media workflows, and Phase 4 power,
-session-action, default-application, MIME, and XDG autostart workflows.
-Completed Phase 5 includes theme transactions, wallpaper persistence,
-managed-shell typography, desktop font, cursor, icon, GTK, and Qt controls,
-panel-widget persistence, plus persistent managed-shell contrast and motion
-policy with dedicated Settings controls, practical XKB input accessibility,
-and persistent notification Do Not Disturb and popup-duration controls.
-Cross-capability optional-component isolation and the accessibility capability
-contract are also qualified. The optional UI-5 inventory adopts no runtime
-experience: clipboard history and reminders are deferred, while emoji/symbol
-and generic image pickers are rejected. Reopening a UI-5 candidate requires an
-explicit product requirement and a separately qualified X11-native boundary.
-Combined Fedora 44, nested-X11, live-session, install-parity, restoration, and
-idle-resource qualification is recorded in `docs/P5-EVIDENCE.md` with explicit
-limitations. Completed Phase 6 adds safe Fedora updates, regional and delegated
-administration entry points, and bounded system information, diagnostics, and
-recovery workflows. Its combined evidence and explicit hardware/service limits
-are recorded in `docs/P6-QUALIFICATION.md`. Phase 7 Fedora image
-and source release qualification is complete with explicit limits recorded in
-`docs/P7-QUALIFICATION.md`. QEMU S3 resume failed; physical NVIDIA, display,
-audio and suspend paths remain unqualified. No release has been published by
-this qualification work.
-
-The installer contains a Fedora-only package map and rejects other systems.
-The build uses `pkg-config`, supports staged installation with `DESTDIR`, and
-avoids writing user configuration during package builds. Fedora 44 Server
-Network Install is the current documented image base, while real image and
-hardware validation must continue to be recorded per release.
-
-Fedora is the only supported and tested distribution.
+- `docs/` still carries dwm-titus-era artifacts: the Astro documentation
+  site and the P3–P7 evidence/qualification documents. They describe
+  titus qualification on Fedora, not oomaya — treat them as historical
+  until re-qualified against this specification.
+- Titus naming residue remains in the tree: `scripts/dwm-titus-release`,
+  the `dwm-titus-tests.*` test workspace, the ISO builder's "dwm-titus
+  Kickstart" branding, and `dwm-fedora.ks` / `dwm-fedora-nvidia.ks`
+  kickstarts that have not been re-validated under oomaya. The
+  Quickshell version check still references a Fedora 44 snapshot
+  string.
+- The Quickshell Settings platform phases from the old specification
+  (system health dashboard, desktop settings) exist in the tree as
+  inherited code but have not been re-specified against the
+  multi-distribution contract in section 4.
+- No oomaya release image has been built or validated; the Fedora image
+  contract from the old specification does not transfer automatically.
+- The dwm binary cannot compile in a minimal container/VM that lacks
+  freetype headers — an environment limitation, correctly diagnosed by
+  `check-build-deps`, not a source defect.
 
 ## 11. Definition of Done
 
-A roadmap feature is complete when:
+A feature or roadmap item is complete when:
 
-- Its behavior meets the active roadmap phase and task acceptance criteria.
-- Fedora behavior is implemented and runtime validated, or the change is
+- Its behavior meets the section 5 requirement, or the change is
   explicitly scoped as preparatory work.
-- Installation attempts without `ID=fedora` fail clearly before making
-  changes.
+- It is implemented and runtime-validated on at least one contracted
+  distribution family, or the limitation is stated precisely.
+- Installation attempts on unsupported distributions fail clearly
+  before making changes.
 - Relevant automated and manual validation is recorded.
-- On a development machine running dwm-titus, the checkout has been
-  synchronized to the local live installation with
-  `scripts/dev-sync-install.sh`, including the post-relogin check when one is
-  required.
-- User-facing installation and troubleshooting documentation is updated.
+- User-facing installation and troubleshooting documentation is
+  updated.
 - No existing user configuration is overwritten.
 - Known limitations and untested platforms are stated precisely.
