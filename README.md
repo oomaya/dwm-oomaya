@@ -358,4 +358,4 @@ DWM-Oomaya stands on the shoulders of the suckless and open-source Unix communit
 
 ## License
 
-DWM-Oomaya is free software released under the **GNU General Public License v3** (GPLv3) to preserve user freedoms, with core suckless components under the MIT / X Consortium license. See [LICENSE](./LICENSE) for details.
+DWM-Oomaya is released under the **MIT / X Consortium License**. See [LICENSE](./LICENSE) for details.
