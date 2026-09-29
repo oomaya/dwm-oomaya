@@ -213,16 +213,18 @@ static void print_state(x11_ctx_t *ctx) {
     if (XGetWindowProperty(ctx->dpy, ctx->root, ctx->a_net_client_list, 0, 512, False,
                            AnyPropertyType, &type, &format, &nitems, &bytes_after, &prop) == Success && prop) {
         Window *wins = (Window *)prop;
+        unsigned long nwin = nitems; /* snapshot: inner property reads must not clobber the loop bound */
         char *app_p = apps_str;
         size_t app_rem = sizeof(apps_str);
 
-        for (unsigned long i = 0; i < nitems; i++) {
+        for (unsigned long i = 0; i < nwin; i++) {
             Window w = wins[i];
             unsigned char *wprop = NULL;
+            unsigned long w_nitems = 0;
 
             /* Check desktop */
             if (XGetWindowProperty(ctx->dpy, w, ctx->a_net_wm_desktop, 0, 1, False,
-                                   AnyPropertyType, &type, &format, &nitems, &bytes_after, &wprop) == Success && wprop) {
+                                   AnyPropertyType, &type, &format, &w_nitems, &bytes_after, &wprop) == Success && wprop) {
                 long d = *(long *)wprop;
                 if (d >= 0 && d < 32 && (unsigned long)d != 4294967295UL) {
                     occ_mask |= (1 << d);
@@ -233,7 +235,7 @@ static void print_state(x11_ctx_t *ctx) {
             /* Check PID */
             long pid = 0;
             if (XGetWindowProperty(ctx->dpy, w, ctx->a_net_wm_pid, 0, 1, False,
-                                   AnyPropertyType, &type, &format, &nitems, &bytes_after, &wprop) == Success && wprop) {
+                                   AnyPropertyType, &type, &format, &w_nitems, &bytes_after, &wprop) == Success && wprop) {
                 pid = *(long *)wprop;
                 XFree(wprop); wprop = NULL;
             }
