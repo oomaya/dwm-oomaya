@@ -1,0 +1,63 @@
+#!/bin/sh
+# dmenu-find — Everything-like instant file search for dwm-oomaya.
+#
+# The trick: feed dmenu a pre-built file list and let dmenu's own
+# incremental filtering do the "instant search" magic as you type.
+# The index rebuilds in the background when stale, so results are
+# always immediate — It Just Works.
+#
+# Usage: bind to a key (e.g. Super+F) or launch from dmenu-run.
+#   - Pick a file      -> opens with your default application (xdg-open)
+#   - Pick a directory -> opens with your default file manager
+#   - Esc              -> cancel
+#
+# The index lives at ${XDG_CACHE_HOME:-~/.cache}/dmenu-find.db and is
+# rebuilt with `fd` (or `find` as fallback), excluding the usual noise
+# (.cache, .git, node_modules, Trash).
+
+set -u
+
+DB="${XDG_CACHE_HOME:-$HOME/.cache}/dmenu-find.db"
+STALE_SECS=3600
+
+have() { command -v "$1" >/dev/null 2>&1; }
+
+build_index() {
+	tmp="$DB.tmp.$$"
+	if have fd; then
+		fd --hidden --type f --type d \
+			--exclude .cache --exclude .git --exclude node_modules \
+			--exclude .local/share/Trash \
+			. "$HOME" 2>/dev/null >"$tmp"
+	else
+		find "$HOME" \
+			-path "$HOME/.cache" -prune -o \
+			-path "$HOME/.git" -prune -o \
+			-path "*/node_modules" -prune -o \
+			-print 2>/dev/null >"$tmp"
+	fi
+	mv "$tmp" "$DB"
+}
+
+mkdir -p "$(dirname "$DB")"
+if [ ! -s "$DB" ]; then
+	# First run: build synchronously so the user gets results now.
+	build_index
+elif have stat; then
+	# Refresh in the background when stale — never blocks the UI.
+	db_age=$(($(date +%s) - $(stat -c %Y "$DB" 2>/dev/null || echo 0)))
+	if [ "$db_age" -gt "$STALE_SECS" ]; then
+		(build_index) &
+	fi
+fi
+
+[ -s "$DB" ] || exit 0
+
+# Everything-like: dmenu filters the list as you type.
+sel=$(dmenu -i -p "Find:" -l 20 <"$DB")
+[ -n "$sel" ] || exit 0
+
+# xdg-open dispatches to the default app (see dwm-default-apps / mimeapps.list).
+if have xdg-open; then
+	xdg-open "$sel" >/dev/null 2>&1 &
+fi
