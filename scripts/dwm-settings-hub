@@ -102,7 +102,7 @@ case "$choice" in
 			"📋  View Defaults Status" | dmenu -p "󰖲 Defaults >" -l 5)
 		case "$sub" in
 			*"Browser"*)
-				b=$(dwm-default-apps browsers 2>/dev/null | dmenu -p "Browser >" -l 5)
+				b=$(dwm-default-apps browsers 2>/dev/null | dmenu -p "Browser >" -l 5 | cut -f1)
 				[ -n "$b" ] && dwm-default-apps set-browser "$b"
 				;;
 			*"File Manager"*)
