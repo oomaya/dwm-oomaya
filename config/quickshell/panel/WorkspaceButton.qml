@@ -30,6 +30,19 @@ Rectangle {
         verticalAlignment: Text.AlignVCenter
     }
 
+    // Occupancy pill: marks workspaces that have windows.
+    // Data already flows in via DwmState (dwm-quickshell-state -> occupied=).
+    Rectangle {
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 3
+        width: 12
+        height: 3
+        radius: 1.5
+        color: Theme.accent
+        visible: root.occupied && !root.selected
+    }
+
     MouseArea {
         id: workspaceMouse
         anchors.fill: parent
