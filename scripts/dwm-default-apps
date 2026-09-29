@@ -43,6 +43,10 @@ browser_mimes=(
 	application/xhtml+xml
 )
 
+editor_mimes=(
+	text/plain
+)
+
 supported_mimes=(
 	x-scheme-handler/http
 	x-scheme-handler/https
@@ -62,9 +66,9 @@ usage() {
 Usage:
   dwm-default-apps snapshot
   dwm-default-apps watch
-  dwm-default-apps set-role <browser|terminal|file-manager> <desktop-id>
+  dwm-default-apps set-role <browser|terminal|file-manager|editor> <desktop-id>
   dwm-default-apps set-mime <mime-type> <desktop-id>
-  dwm-default-apps reset-role <browser|terminal|file-manager>
+  dwm-default-apps reset-role <browser|terminal|file-manager|editor>
   dwm-default-apps reset-mime <mime-type>
   dwm-default-apps status
   dwm-default-apps browsers
@@ -333,6 +337,10 @@ parsed_desktop_matches_role() {
 	terminal)
 		desktop_token_present "$desktop_parsed_categories" TerminalEmulator
 		;;
+	editor)
+		desktop_token_present \"$desktop_parsed_categories\" TextEditor ||
+			desktop_token_present \"$desktop_parsed_mime_types\" text/plain
+		;;
 	*) return 1 ;;
 	esac
 }
@@ -360,6 +368,41 @@ terminal_id_for_command() {
 		file=$(desktop_file_for_id "$id" 2>/dev/null) || continue
 		desktop_usable "$file" || continue
 		parsed_desktop_matches_role terminal || continue
+		printf '%s\n' "$id"
+		return 0
+	done
+	return 1
+}
+
+editor_command_for_id() {
+	case $1 in
+	nvim.desktop) printf '%s\n' nvim ;;
+	vim.desktop) printf '%s\n' vim ;;
+	vi.desktop) printf '%s\n' vi ;;
+	nano.desktop) printf '%s\n' nano ;;
+	code.desktop | visual-studio-code.desktop | com.visualstudio.code.desktop) printf '%s\n' code ;;
+	vscodium.desktop | com.vscodium.codium.desktop) printf '%s\n' codium ;;
+	gedit.desktop | org.gnome.gedit.desktop | org.gnome.TextEditor.desktop) printf '%s\n' gedit ;;
+	kate.desktop | org.kde.kate.desktop) printf '%s\n' kate ;;
+	mousepad.desktop) printf '%s\n' mousepad ;;
+	neovide.desktop) printf '%s\n' neovide ;;
+	*) return 1 ;;
+	esac
+}
+
+editor_id_for_command() {
+	local command_name=$1
+	local id command_candidate file
+	for id in nvim.desktop vim.desktop vi.desktop nano.desktop code.desktop \
+		visual-studio-code.desktop vscodium.desktop gedit.desktop \
+		org.gnome.gedit.desktop org.gnome.TextEditor.desktop kate.desktop \
+		org.kde.kate.desktop mousepad.desktop neovide.desktop; do
+		command_candidate=$(editor_command_for_id "$id") || continue
+		[[ $command_candidate == "$command_name" ]] || continue
+		command -v "$command_candidate" >/dev/null 2>&1 || continue
+		file=$(desktop_file_for_id "$id" 2>/dev/null) || continue
+		desktop_usable "$file" || continue
+		parsed_desktop_matches_role editor || continue
 		printf '%s\n' "$id"
 		return 0
 	done
@@ -1026,6 +1069,12 @@ set_role() {
 		printf 'defaults-result\t1\t0\tset-role\tfile-manager\t%s\tok\n' \
 			"$(clean_field "$desktop_id")"
 		;;
+	editor)
+		require_role_candidate editor "$desktop_id"
+		set_xdg_defaults role-editor "$desktop_id" "${editor_mimes[@]}"
+		printf 'defaults-result\t1\t0\tset-role\teditor\t%s\tok\n' \
+			"$(clean_field "$desktop_id")"
+		;;
 	terminal) set_terminal "$desktop_id" ;;
 	*)
 		printf 'dwm-default-apps: invalid role: %s\n' "$role" >&2
@@ -1067,6 +1116,17 @@ emit_role() {
 			current=
 			state=unavailable
 			detail='Install xdg-utils or repair the directory association'
+		fi
+		;;
+	editor)
+		provider=xdg-mime
+		if current=$(query_mime text/plain 2>/dev/null) && [[ -n $current ]]; then
+			state=available
+			detail='Default editor is readable'
+		else
+			current=
+			state=unavailable
+			detail='Install xdg-utils or repair the text/plain association'
 		fi
 		;;
 	terminal)
@@ -1162,7 +1222,7 @@ emit_candidates() {
 			desktop_usable "$file" || continue
 			name=$desktop_parsed_name
 			[[ -n $name ]] || name=$id
-			for role in browser file-manager terminal; do
+			for role in browser file-manager terminal editor; do
 				parsed_desktop_matches_role "$role" || continue
 				command_name=
 				candidate_state=available
@@ -1196,7 +1256,7 @@ emit_recovery() {
 	local mime_fingerprint hotkeys_fingerprint
 	mime_fingerprint=$(file_fingerprint "$mime_file")
 	hotkeys_fingerprint=$(file_fingerprint "$hotkeys_file")
-	for scope in role-browser role-terminal role-file-manager; do
+	for scope in role-browser role-terminal role-file-manager role-editor; do
 		target=$mime_file
 		current=$mime_fingerprint
 		if [[ $scope == role-terminal ]]; then
@@ -1246,6 +1306,7 @@ snapshot() {
 	emit_role browser
 	emit_role terminal
 	emit_role file-manager
+	emit_role editor
 	emit_mimes
 	emit_candidates
 	emit_recovery
@@ -1260,6 +1321,7 @@ status() {
 	printf 'x-scheme-handler/http=%s\n' "$(query_mime x-scheme-handler/http 2>/dev/null || true)"
 	printf 'x-scheme-handler/https=%s\n' "$(query_mime x-scheme-handler/https 2>/dev/null || true)"
 	printf 'inode/directory=%s\n' "$(query_mime inode/directory 2>/dev/null || true)"
+	printf 'text/plain=%s\n' "$(query_mime text/plain 2>/dev/null || true)"
 }
 
 open_browser() {
@@ -1639,6 +1701,7 @@ main() {
 		}
 		case $2 in
 		browser | file-manager) reset_scope "role-$2" "$mime_file" reset-role ;;
+		editor) reset_scope "role-$2" "$mime_file" reset-role ;;
 		terminal) reset_scope role-terminal "$hotkeys_file" reset-role ;;
 		*)
 			printf 'dwm-default-apps: invalid role: %s\n' "$2" >&2
