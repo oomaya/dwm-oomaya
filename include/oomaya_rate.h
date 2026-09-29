@@ -1,4 +1,6 @@
+#ifndef _POSIX_C_SOURCE
 #define _POSIX_C_SOURCE 200809L
+#endif
 /* oomaya_rate.h — Per-client token-bucket rate limiter.
  *
  * Phase 2 Core — Operational Shield (Priority 1).
