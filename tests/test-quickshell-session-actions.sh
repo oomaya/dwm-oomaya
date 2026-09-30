@@ -273,13 +273,18 @@ grep -Fq 'no usable screen locker found' "$work/action.err" || {
 trace "locker-grep-done"
 
 # A verified current DWM receives SIGUSR2; another same-name process survives.
+trace "dwm-fixture-start"
 start_dwm_fixture target
 target_pid=$fixture_pid
+trace "dwm-fixture-target-done"
 start_dwm_fixture unrelated
 other_pid=$fixture_pid
+trace "dwm-fixture-unrelated-done"
 : >"$work/xprop-details.count"
 export DWM_SESSION_TEST_DWM_PID=$target_pid
+trace "dwm-logout-start"
 [ "$(run_helper session-action logout)" = 'session-action	logout	accepted' ]
+trace "dwm-logout-done"
 i=0
 while process_running "$target_pid" && [ "$i" -lt 50 ]; do
 	i=$((i + 1))
