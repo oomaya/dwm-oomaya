@@ -212,34 +212,37 @@ time_text() {
 	local state_file="$runtime_dir/dwm-status-clock.state"
 	local level=0 mode=12
 	if [[ -f $state_file ]]; then
-		IFS=: read -r level mode <"$state_file" 2>/dev/null || { level=0; mode=12; }
+		IFS=: read -r level mode <"$state_file" 2>/dev/null || {
+			level=0
+			mode=12
+		}
 	fi
 
 	local day_kr=""
 	case $(date +%u) in
-		1) day_kr="월" ;;
-		2) day_kr="화" ;;
-		3) day_kr="수" ;;
-		4) day_kr="목" ;;
-		5) day_kr="금" ;;
-		6) day_kr="토" ;;
-		7) day_kr="일" ;;
+	1) day_kr="월" ;;
+	2) day_kr="화" ;;
+	3) day_kr="수" ;;
+	4) day_kr="목" ;;
+	5) day_kr="금" ;;
+	6) day_kr="토" ;;
+	7) day_kr="일" ;;
 	esac
 
 	local fmt
 	if [[ $mode == 24 ]]; then
 		case $level in
-			0) fmt='%H:%M' ;;
-			1) fmt='%m/%d %a %H:%M' ;;
-			2) fmt="%Y-%m-%d (${day_kr}) %H:%M" ;;
-			*) fmt='%H:%M' ;;
+		0) fmt='%H:%M' ;;
+		1) fmt='%m/%d %a %H:%M' ;;
+		2) fmt="%Y-%m-%d (${day_kr}) %H:%M" ;;
+		*) fmt='%H:%M' ;;
 		esac
 	else
 		case $level in
-			0) fmt='%I:%M %p' ;;
-			1) fmt='%m/%d %a %I:%M %p' ;;
-			2) fmt="%Y-%m-%d (${day_kr}) %I:%M %p" ;;
-			*) fmt='%I:%M %p' ;;
+		0) fmt='%I:%M %p' ;;
+		1) fmt='%m/%d %a %I:%M %p' ;;
+		2) fmt="%Y-%m-%d (${day_kr}) %I:%M %p" ;;
+		*) fmt='%I:%M %p' ;;
 		esac
 	fi
 
