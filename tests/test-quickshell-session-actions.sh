@@ -249,12 +249,17 @@ grep -Fq 'denied or could not be accepted' "$work/action.err" || {
 }
 unset DWM_SESSION_TEST_SYSTEMCTL_STATUS
 expect_failure_without_success 2 run_helper session-action unknown
+trace "unknown-action-done"
 expect_failure_without_success 2 run_helper session-action
+trace "no-action-done"
 expect_failure_without_success 2 run_helper session-action lock extra
+trace "extra-arg-done"
 
 # Lock reports success only after the managed locker accepts the request.
 export DWM_SESSION_TEST_LOCK_SUCCESS=1
+trace "lock-test-start"
 [ "$(run_helper session-action lock)" = 'session-action	lock	accepted' ]
+trace "lock-test-done"
 unset DWM_SESSION_TEST_LOCK_SUCCESS
 expect_failure_without_success 1 run_helper session-action lock
 grep -Fq 'no usable screen locker found' "$work/action.err"
