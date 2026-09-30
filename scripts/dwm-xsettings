@@ -341,7 +341,7 @@ status() {
 			printf 'state\tunavailable\t%s\n' "${xsettings_dpi:-active}"
 		else
 			identities=$(matching_identities)
-			if [[ -n $identities && ( -z $xsettings_dpi || $(published_dpi 2>/dev/null || true) == "$xsettings_dpi" ) ]]; then
+			if [[ -n $identities && (-z $xsettings_dpi || $(published_dpi 2>/dev/null || true) == "$xsettings_dpi") ]]; then
 				printf 'state\tactive\t%s\n' "${xsettings_dpi:-active}"
 			else
 				printf 'state\tinactive\t%s\n' "${xsettings_dpi:-active}"
