@@ -545,9 +545,14 @@ SH
 		printf '%s\n' 'Nested DWM did not exit after the logout request.' >&2
 		exit 1
 	fi
+	trace "nested-dwm-exited"
 	wait "$real_dwm_pid" 2>/dev/null || true
 	forget_test_pid "$real_dwm_pid"
-	test -f "$work/autostop.marker"
+	test -f "$work/autostop.marker" || {
+		printf 'DEBUG autostop.marker: missing\n' >&2
+		ls -la "$work/"*.marker >&2 || true
+		exit 1
+	}
 	trace "nested-autostop-done"
 fi
 trace "nested-done"
