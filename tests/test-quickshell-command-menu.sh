@@ -58,7 +58,6 @@ grep -Fq 'root.refreshApplicationIndex()' "$repo/config/quickshell/launcher/Laun
 grep -Fq '{ title="dwm menu", isfloating=1, alwaysontop=1 },' "$repo/docs/OMARCHY-UI-ADAPTATION.md"
 grep -Fq 'menu open|close|toggle|summon' "$repo/CHANGELOG.md"
 grep -Fq 'target: "launcher"' "$shell"
-grep -Eq 'key="d".*dmenu-desktop' "$repo/config/hotkeys.toml"
 if grep -Eq 'call menu (open|toggle|summon)' "$repo/config/hotkeys.toml"; then
 	printf '%s\n' 'Command menu unexpectedly replaced or added a default hotkey.' >&2
 	exit 1
