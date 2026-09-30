@@ -342,6 +342,7 @@ unset DWM_SESSION_TEST_STAT_UID
 trace "wrong-uid-done"
 
 # A concurrent current-WM replacement is not folded into the captured cohort.
+trace "replace-start"
 start_dwm_fixture first-owner
 first_pid=$fixture_pid
 start_dwm_fixture replacement-owner
@@ -350,19 +351,26 @@ second_pid=$fixture_pid
 export DWM_SESSION_TEST_DWM_PID=$first_pid
 export DWM_SESSION_TEST_SECOND_PID=$second_pid
 expect_failure_without_success 1 run_helper session-action logout
+trace "replace-logout-done"
 process_running "$first_pid"
+trace "replace-first-alive"
 process_running "$second_pid"
 unset DWM_SESSION_TEST_SECOND_PID
+trace "replace-done"
 
 # A running installed DWM whose inode was replaced remains a valid endpoint.
+trace "deleted-start"
 start_dwm_fixture deleted-owner
 deleted_pid=$fixture_pid
 rm "$work/deleted-owner/dwm"
 : >"$work/xprop-details.count"
 export DWM_SESSION_TEST_DWM_PID=$deleted_pid
+trace "deleted-logout-start"
 [ "$(run_helper session-action logout)" = 'session-action	logout	accepted' ]
+trace "deleted-logout-done"
 wait "$deleted_pid" 2>/dev/null || :
 forget_test_pid "$deleted_pid"
+trace "deleted-done"
 
 # Exercise the real EWMH property and graceful main-loop exit when nested X11
 # is available. The task-local autostop marker proves the normal exit path ran.
