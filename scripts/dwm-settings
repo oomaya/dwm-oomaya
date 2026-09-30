@@ -27,7 +27,7 @@ open | close | toggle | refresh | status)
 	helper=dwm-settings-hub
 	if [ -n "${HOME:-}" ] && [ -x "$HOME/.local/bin/dwm-settings-hub" ]; then
 		helper="$HOME/.local/bin/dwm-settings-hub"
-	elif case $0 in */*) [ -x "${0%/*}/dwm-settings-hub" ] ;; *) false ;; esac; then
+	elif case $0 in */*) [ -x "${0%/*}/dwm-settings-hub" ] ;; *) false ;; esac then
 		helper="${0%/*}/dwm-settings-hub"
 	fi
 	exec "$helper"
