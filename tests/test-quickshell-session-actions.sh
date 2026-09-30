@@ -149,7 +149,12 @@ expect_status() {
 	"$@" >"$work/action.out" 2>"$work/action.err"
 	status=$?
 	set -e
-	[ "$status" -eq "$expected" ]
+	if [ "$status" -ne "$expected" ]; then
+		printf 'DEBUG expect_status: got=%s expected=%s\n' "$status" "$expected" >&2
+		printf 'DEBUG action.out:\n' >&2; cat "$work/action.out" >&2
+		printf 'DEBUG action.err:\n' >&2; cat "$work/action.err" >&2
+		exit 1
+	fi
 }
 
 expect_failure_without_success() {
@@ -234,7 +239,8 @@ done
 trace "action-loop-done"
 export DWM_SESSION_TEST_SYSTEMCTL_STATUS=1
 expect_failure_without_success 1 run_helper session-action suspend
-grep -Fq 'denied or could not be accepted' "$work/action.err"
+trace "systemctl-fail-test-done"
+grep -Fq 'denied or could not be accepted' "$work/action.err" || { printf 'DEBUG grep-fail: action.err was:\n' >&2; cat "$work/action.err" >&2; exit 1; }
 unset DWM_SESSION_TEST_SYSTEMCTL_STATUS
 expect_failure_without_success 2 run_helper session-action unknown
 expect_failure_without_success 2 run_helper session-action
