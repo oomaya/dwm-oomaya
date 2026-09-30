@@ -59,7 +59,9 @@ debian)
 	}
 	;;
 *)
-	warn "Distribution $DISTRO_NAME is not officially tested, but continuing anyway."
+	err "Unsupported distribution: $DISTRO_NAME"
+	err "dwm-titus supports Fedora only."
+	exit 1
 	;;
 esac
 
