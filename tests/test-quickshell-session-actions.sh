@@ -374,7 +374,9 @@ trace "deleted-done"
 
 # Exercise the real EWMH property and graceful main-loop exit when nested X11
 # is available. The task-local autostop marker proves the normal exit path ran.
+trace "nested-check-start"
 if command -v Xvfb >/dev/null 2>&1 && [ -x "$repo/dwm" ]; then
+	trace "nested-entered"
 	runtime_display_number=$((200 + $$ % 3000))
 	while [ -e "/tmp/.X11-unix/X$runtime_display_number" ]; do
 		runtime_display_number=$((runtime_display_number + 1))
@@ -517,11 +519,18 @@ SH
 	wait "$real_dwm_pid" 2>/dev/null || true
 	forget_test_pid "$real_dwm_pid"
 	test -f "$work/autostop.marker"
+	trace "nested-autostop-done"
 fi
+trace "nested-done"
 
+trace "dwmc-grep-start"
 grep -Fq 'static volatile sig_atomic_t running = 1;' "$repo/dwm.c"
+trace "dwmc-grep-1-done"
 grep -Fq 'signal(SIGUSR2, sigusr2_handler);' "$repo/dwm.c"
+trace "dwmc-grep-2-done"
 grep -Fq 'netatom[NetWMPid] = XInternAtom(dpy, "_NET_WM_PID", False);' "$repo/dwm.c"
+trace "dwmc-grep-3-done"
 grep -Fq 'XChangeProperty(dpy, wmcheckwin, netatom[NetWMPid], XA_CARDINAL, 32,' "$repo/dwm.c"
+trace "dwmc-grep-4-done"
 
 printf '%s\n' 'Quickshell session action model, backend, and graceful logout: PASS'
