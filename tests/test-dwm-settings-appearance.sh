@@ -13,7 +13,13 @@ mkdir -p "$config_home/dwm-titus" "$config_home/alacritty" "$config_home/kitty" 
 	"$config_home/gtk-3.0" "$config_home/gtk-4.0" \
 	"$data_root/themes/Nordic/gtk-3.0" "$data_root/themes/Nordic/gtk-4.0" \
 	"$data_root/icons/Capitaine-Cursors-White/cursors" "$bin_dir"
-cp "$repo/config/themes.toml" "$config_home/dwm-titus/themes.toml"
+# Fixture baseline: the repo default theme moved to tokyonight (9874a29), but
+# this test's assertions are built around the nord palette, so every fixture
+# restore below uses this normalized copy pinned to nord.
+themes_fixture=$work/themes-fixture-baseline.toml
+cp "$repo/config/themes.toml" "$themes_fixture"
+sed -i '/^\[active\]$/,/^\[/ s/^theme = "[^"]*"/theme = "nord"/' "$themes_fixture"
+cp "$themes_fixture" "$config_home/dwm-titus/themes.toml"
 declare -A fixture_color=()
 while read -r key _ color; do
 	fixture_color[$key]=${color//\"/}
@@ -315,7 +321,7 @@ grep -Fqx $'active\tnord\tnord\tselected' <<<"$immutable_snapshot"
 grep -Fq 'theme = "dracula"' "$config_home/dwm-titus/themes.toml"
 rm -f "$bin_dir/awk"
 ln -s "$real_awk" "$bin_dir/awk"
-cp "$repo/config/themes.toml" "$config_home/dwm-titus/themes.toml"
+cp "$themes_fixture" "$config_home/dwm-titus/themes.toml"
 
 no_qt_bin=$work/no-qt-bin
 cp -a "$bin_dir" "$no_qt_bin"
@@ -479,7 +485,7 @@ if grep -Fq $'error\tparser\tmalformed-section\t' <<<"$commented_headers"; then
 	printf 'Valid commented section header was rejected\n' >&2
 	exit 1
 fi
-cp "$repo/config/themes.toml" "$config_home/dwm-titus/themes.toml"
+cp "$themes_fixture" "$config_home/dwm-titus/themes.toml"
 
 sed -i 's/^\[theme\.dracula\]$/[theme.dracula] trailing/' "$config_home/dwm-titus/themes.toml"
 malformed_header=$(snapshot)
@@ -492,7 +498,7 @@ if grep -Fq $'theme\tdracula\t' <<<"$malformed_header"; then
 	exit 1
 fi
 
-cp "$repo/config/themes.toml" "$config_home/dwm-titus/themes.toml"
+cp "$themes_fixture" "$config_home/dwm-titus/themes.toml"
 sed -i 's/^\[active\]$/[active/' "$config_home/dwm-titus/themes.toml"
 truncated_header=$(snapshot)
 grep -Fqx $'provider\tappearance\tpartial\tread-only\tShared theme inventory and integration state' \
@@ -500,11 +506,11 @@ grep -Fqx $'provider\tappearance\tpartial\tread-only\tShared theme inventory and
 grep -Fqx $'active\tnone\tnord\trecovery' <<<"$truncated_header"
 grep -Fq $'error\tparser\tmalformed-section\tMalformed theme section header at line ' \
 	<<<"$truncated_header"
-cp "$repo/config/themes.toml" "$config_home/dwm-titus/themes.toml"
+cp "$themes_fixture" "$config_home/dwm-titus/themes.toml"
 
 {
 	printf '%s\n' '[ignored]' 'extra = [{x="a=b"}, {x='"'"'c=d'"'"'}] # ignored = comment'
-	cat "$repo/config/themes.toml"
+	cat "$themes_fixture"
 } >"$config_home/dwm-titus/themes.toml"
 set +e
 inline_table=$(snapshot)
@@ -517,7 +523,7 @@ grep -Fqx $'active\tnord\tnord\tselected' <<<"$inline_table"
 
 {
 	printf '[ignored]\nextra = {x=1}\n'
-	cat "$repo/config/themes.toml"
+	cat "$themes_fixture"
 } >"$config_home/dwm-titus/themes.toml"
 set +e
 direct_inline_table=$(snapshot)
@@ -530,7 +536,7 @@ grep -Fqx $'active\tnord\tnord\tselected' <<<"$direct_inline_table"
 
 {
 	printf '[ignored]\nextra = ["one", "two"]\n'
-	cat "$repo/config/themes.toml"
+	cat "$themes_fixture"
 } >"$config_home/dwm-titus/themes.toml"
 scalar_array=$(snapshot)
 grep -Fqx $'provider\tappearance\tavailable\tread-only\tShared theme inventory and integration state' \
@@ -539,14 +545,14 @@ grep -Fqx $'active\tnord\tnord\tselected' <<<"$scalar_array"
 
 {
 	printf '[ignored]\nextra = [\n  {x=1},\n  {x=2}\n]\n'
-	cat "$repo/config/themes.toml"
+	cat "$themes_fixture"
 } >"$config_home/dwm-titus/themes.toml"
 multiline_array=$(snapshot)
 grep -Fqx $'active\tnord\tnord\tselected' <<<"$multiline_array"
 
 {
 	printf '[ignored]\nextra = [\n'
-	cat "$repo/config/themes.toml"
+	cat "$themes_fixture"
 } >"$config_home/dwm-titus/themes.toml"
 set +e
 unterminated_array=$(snapshot)
@@ -560,7 +566,7 @@ grep -Fqx $'error\tparser\tunterminated-complex-value\tAn unrelated multi-line a
 
 {
 	printf '[ignored]\nextra = [\n  {x=1}, {x=2}]\n'
-	cat "$repo/config/themes.toml"
+	cat "$themes_fixture"
 } >"$config_home/dwm-titus/themes.toml"
 set +e
 runtime_stuck_array=$(snapshot)
@@ -589,13 +595,13 @@ done
 		printf '  {outer={inner="x"}},\n'
 	done
 	printf ']\n'
-	cat "$repo/config/themes.toml"
+	cat "$themes_fixture"
 } >"$config_home/dwm-titus/themes.toml"
 nested_inline_tables=$(snapshot)
 grep -Fqx $'active\tnord\tnord\tselected' <<<"$nested_inline_tables"
 grep -Fqx $'error\tparser\tentry-limit\tTheme configuration exceeds the runtime parser limit of 512 entries' \
 	<<<"$nested_inline_tables"
-cp "$repo/config/themes.toml" "$config_home/dwm-titus/themes.toml"
+cp "$themes_fixture" "$config_home/dwm-titus/themes.toml"
 
 printf '\n[theme.@unsafe]\nterm_bg = "#000000"\n' >>"$config_home/dwm-titus/themes.toml"
 unsafe_name=$(snapshot)
@@ -607,7 +613,7 @@ if grep -Fq $'theme\t@unsafe\t' <<<"$unsafe_name"; then
 	printf 'Unsafe theme identifier was inventoried\n' >&2
 	exit 1
 fi
-cp "$repo/config/themes.toml" "$config_home/dwm-titus/themes.toml"
+cp "$themes_fixture" "$config_home/dwm-titus/themes.toml"
 
 rmdir "$data_root/themes/Nordic/gtk-4.0"
 partial_gtk_assets=$(snapshot)
