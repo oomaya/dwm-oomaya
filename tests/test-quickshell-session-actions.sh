@@ -482,6 +482,7 @@ SH
 		}
 		sleep 0.02
 	done
+	trace "nested-hotreload-done"
 	i=0
 	while [ "$(wc -c <"$work/theme-apply.marker")" -le "$initial_theme_applies" ]; do
 		i=$((i + 1))
