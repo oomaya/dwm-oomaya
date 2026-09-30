@@ -408,6 +408,7 @@ static void runtime_config_reload(void);
 static void runtime_config_reload_if_pending(void);
 static void runtime_config_setup(void);
 static void setup_inotify(void);
+static int setup_user_config_paths(void);
 static void *toml_alloc(size_t sz);
 
 /* variables */
@@ -4253,15 +4254,58 @@ runtime_config_reload(void)
 	reload_config();
 }
 
+static int
+setup_user_config_paths(void)
+{
+	char test_path[PATH_MAX];
+	char prev_dir[PATH_MAX];
+	const char *chosen_cfg = "dwm-oomaya";
+
+	if (dwm_config_home_dir[0] == '\0')
+		return 0;
+
+	copystr(prev_dir, sizeof(prev_dir), toml_config_dir);
+
+	if (pathjoin(test_path, sizeof(test_path), dwm_config_home_dir, "dwm-oomaya") && access(test_path, F_OK) == 0) {
+		chosen_cfg = "dwm-oomaya";
+	} else if (pathjoin(test_path, sizeof(test_path), dwm_config_home_dir, "dwm-titus") && access(test_path, F_OK) == 0) {
+		chosen_cfg = "dwm-titus";
+	}
+
+	if (!pathjoin(toml_config_dir, sizeof(toml_config_dir),
+	              dwm_config_home_dir, chosen_cfg)
+	    || !pathjoin(toml_hotkeys_path, sizeof(toml_hotkeys_path),
+	                 toml_config_dir, "hotkeys.toml")
+	    || !pathjoin(toml_themes_path, sizeof(toml_themes_path),
+	                 toml_config_dir, "themes.toml")
+	    || !pathjoin(toml_rules_path, sizeof(toml_rules_path),
+	                 toml_config_dir, "window-rules.toml")) {
+		fprintf(stderr, "dwm: user config path exceeds PATH_MAX\n");
+		return 0;
+	}
+
+	return strcmp(prev_dir, toml_config_dir) != 0;
+}
+
 static void
 runtime_config_ensure_user_watch(void)
 {
-	if (inotify_wd >= 0 || toml_config_dir[0] == '\0')
-		return;
+	int dir_changed;
+
 	if (inotify_fd < 0) {
 		setup_inotify();
 		return;
 	}
+
+	dir_changed = setup_user_config_paths();
+	if (dir_changed && inotify_wd >= 0) {
+		inotify_rm_watch(inotify_fd, inotify_wd);
+		inotify_wd = -1;
+	}
+
+	if (inotify_wd >= 0 || toml_config_dir[0] == '\0')
+		return;
+
 	inotify_wd = inotify_add_watch(inotify_fd, toml_config_dir,
 	                               IN_CLOSE_WRITE | IN_MOVED_TO);
 	if (inotify_wd < 0)
@@ -4323,27 +4367,10 @@ setup_inotify(void)
 	}
 
 	/* User-editable config: ${XDG_CONFIG_HOME:-$HOME/.config}/dwm-oomaya/ (fallback: dwm-titus) */
-	char test_path[PATH_MAX];
-	const char *chosen_cfg = "dwm-oomaya";
-	if (pathjoin(test_path, sizeof(test_path), config_home, "dwm-oomaya") && access(test_path, F_OK) == 0) {
-		chosen_cfg = "dwm-oomaya";
-	} else if (pathjoin(test_path, sizeof(test_path), config_home, "dwm-titus") && access(test_path, F_OK) == 0) {
-		chosen_cfg = "dwm-titus";
-	}
-
-	if (!pathjoin(toml_config_dir, sizeof(toml_config_dir),
-	              config_home, chosen_cfg)
-	    || !pathjoin(toml_hotkeys_path, sizeof(toml_hotkeys_path),
-	                 toml_config_dir, "hotkeys.toml")
-	    || !pathjoin(toml_themes_path, sizeof(toml_themes_path),
-	                 toml_config_dir, "themes.toml")
-	    || !pathjoin(toml_rules_path, sizeof(toml_rules_path),
-	                 toml_config_dir, "window-rules.toml")) {
-		fprintf(stderr, "dwm: user config path exceeds PATH_MAX\n");
-		return;
-	}
+	setup_user_config_paths();
 
 	/* Default config: ${XDG_DATA_HOME:-$HOME/.local/share}/dwm-oomaya/config/ (fallback: dwm-titus) */
+	char test_path[PATH_MAX];
 	const char *chosen_data = "dwm-oomaya";
 	if (pathjoin(test_path, sizeof(test_path), data_home, "dwm-oomaya") && access(test_path, F_OK) == 0) {
 		chosen_data = "dwm-oomaya";

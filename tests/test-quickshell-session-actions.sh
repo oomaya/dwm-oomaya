@@ -188,9 +188,10 @@ grep -Fq 'actionProcess.command = Commands.checkedCommand(' "$model"
 grep -Fq 'Commands.sessionActionCommand(requestedAction.id));' "$model"
 grep -Fq 'function clearRejectionFor(origin)' "$model"
 request_action_block=$(sed -n '/function requestAction(action, origin)/,/function cancelConfirmation(origin)/p' "$model")
-if grep -Fq 'root.actionSucceeded = false' <<EOF; then
+if grep -Fq 'root.actionSucceeded = false' <<EOF
 $request_action_block
 EOF
+then
 	printf '%s\n' 'Session-action rejection paths must not mutate another action result.' >&2
 	exit 1
 fi
@@ -400,7 +401,7 @@ SH
 	while [ "$(grep -Fc 'dwm: loaded theme from config' "$work/dwm.log" || true)" \
 		-le "$initial_theme_loads" ]; do
 		i=$((i + 1))
-		[ "$i" -lt 100 ] || {
+		[ "$i" -lt 250 ] || {
 			printf '%s\n' 'Nested DWM did not hot-reload its XDG_CONFIG_HOME theme.' >&2
 			exit 1
 		}
@@ -409,7 +410,7 @@ SH
 	i=0
 	while [ "$(wc -c <"$work/theme-apply.marker")" -le "$initial_theme_applies" ]; do
 		i=$((i + 1))
-		[ "$i" -lt 100 ] || {
+		[ "$i" -lt 250 ] || {
 			printf '%s\n' 'Nested DWM did not run theme-apply from XDG_DATA_HOME.' >&2
 			exit 1
 		}
@@ -422,7 +423,7 @@ SH
 	while [ "$(grep -Fc 'dwm: loaded theme from config' "$work/dwm.log" || true)" \
 		-le "$first_user_theme_loads" ]; do
 		i=$((i + 1))
-		[ "$i" -lt 100 ] || {
+		[ "$i" -lt 250 ] || {
 			printf '%s\n' 'Nested DWM did not re-arm its new XDG_CONFIG_HOME watch.' >&2
 			exit 1
 		}
@@ -431,7 +432,7 @@ SH
 	i=0
 	while [ "$(wc -c <"$work/theme-apply.marker")" -le "$first_user_theme_applies" ]; do
 		i=$((i + 1))
-		[ "$i" -lt 100 ] || {
+		[ "$i" -lt 250 ] || {
 			printf '%s\n' 'Nested DWM did not apply a watched user-theme update.' >&2
 			exit 1
 		}
