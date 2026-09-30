@@ -28,14 +28,6 @@ check_cmd() {
 	fi
 }
 
-check_optional_cmd() {
-	if command -v "$1" &>/dev/null; then
-		printf "  ${GREEN}✓${NC} %s\n" "$1"
-	else
-		printf "  ${YELLOW}!${NC} %s ${YELLOW}(optional, missing)${NC}\n" "$1"
-	fi
-}
-
 check_pkg_config() {
 	if pkg-config --exists "$1" 2>/dev/null; then
 		printf "  ${GREEN}✓${NC} pkg-config:%s\n" "$1"
