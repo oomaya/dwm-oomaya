@@ -303,15 +303,20 @@ trace "dwm-other-alive-done"
 
 # Missing/forged X11 ownership and unverified processes fail without signaling.
 for mode in malformed-root wrong-self wrong-name missing-pid; do
+	trace "xprop-loop: $mode-start"
 	start_dwm_fixture "invalid-$mode"
 	candidate_pid=$fixture_pid
+	trace "xprop-loop: $mode-fixture-done"
 	: >"$work/xprop-details.count"
 	export DWM_SESSION_TEST_DWM_PID=$candidate_pid
 	export DWM_SESSION_TEST_XPROP_MODE=$mode
 	expect_failure_without_success 1 run_helper session-action logout
+	trace "xprop-loop: $mode-logout-done"
 	process_running "$candidate_pid"
+	trace "xprop-loop: $mode-alive-done"
 done
 unset DWM_SESSION_TEST_XPROP_MODE
+trace "xprop-loop-done"
 
 /usr/bin/sleep 30 &
 wrong_exe_pid=$!
