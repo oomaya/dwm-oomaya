@@ -262,7 +262,15 @@ trace "lock-test-start"
 trace "lock-test-done"
 unset DWM_SESSION_TEST_LOCK_SUCCESS
 expect_failure_without_success 1 run_helper session-action lock
-grep -Fq 'no usable screen locker found' "$work/action.err"
+trace "lock-fail-status-ok"
+grep -Fq 'no usable screen locker found' "$work/action.err" || {
+	printf 'DEBUG locker-grep-fail: action.err was:\n' >&2
+	cat "$work/action.err" >&2
+	printf 'DEBUG locker-grep-fail: action.out was:\n' >&2
+	cat "$work/action.out" >&2
+	exit 1
+}
+trace "locker-grep-done"
 
 # A verified current DWM receives SIGUSR2; another same-name process survives.
 start_dwm_fixture target
