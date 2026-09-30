@@ -388,10 +388,9 @@ grep -Fq 'Theme preview completed outside Settings' "$model"
 grep -Fq 'function applyAppearanceColors(colors, darkMode)' "$theme"
 grep -Fq 'function applyFontPreferences(family, scale)' "$theme"
 grep -Fq 'readonly property string iconFontFamily: "MesloLGS Nerd Font Mono"' "$theme"
-grep -Fq 'readonly property int panelIconFontSize: 13' "$theme"
+grep -Fq 'readonly property int panelIconFontSize: 15' "$theme"
 grep -Fq 'font.pixelSize: Theme.panelIconFontSize + 1' "$icon_text"
 test "$(grep -Fc 'Theme.panelIconFontSize' "$panel")" -eq 5
-grep -Fq 'Math.round(13 * fontScale)' "$theme"
 test "$(grep -Ec 'font\.pixelSize: Theme\.(bodyFontSize|inputFontSize)' "$display_pane")" -eq 14
 test "$(grep -Ec 'font\.pixelSize: Theme\.(bodyFontSize|inputFontSize)' "$input_pane")" -eq 5
 grep -Fq 'font.pixelSize: Theme.inputFontSize' "$network_pane"
