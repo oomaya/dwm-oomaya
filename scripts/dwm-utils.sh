@@ -63,7 +63,7 @@ export PKG_CMD
 
 install_packages() {
 	case "$DISTRO_FAMILY" in
-	fedora|arch|debian)
+	fedora | arch | debian)
 		"${DWM_PACKAGE_COMMAND[@]}" "$@"
 		;;
 	*)
