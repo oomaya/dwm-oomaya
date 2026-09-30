@@ -525,11 +525,17 @@ SH
 	DISPLAY=$runtime_display /usr/bin/xprop -id "$support_window" _NET_WM_PID |
 		grep -Fqx "_NET_WM_PID(CARDINAL) = $real_dwm_pid"
 	trace "nested-xprop-pid-done"
+	trace "nested-logout-start"
 	real_logout=$(DWM_SESSION_TEST_AUTOSTOP_MARKER="$work/autostop.marker" \
 		DISPLAY=$runtime_display HOME="$runtime_home" \
 		XDG_CONFIG_HOME=relative-config XDG_DATA_HOME=relative-data PATH=/usr/bin:/bin \
 		"$helper" session-action logout)
-	[ "$real_logout" = 'session-action	logout	accepted' ]
+	trace "nested-logout-cmd-done"
+	[ "$real_logout" = 'session-action	logout	accepted' ] || {
+		printf 'DEBUG real_logout: got [%s]\n' "$real_logout" >&2
+		exit 1
+	}
+	trace "nested-logout-check-done"
 	i=0
 	while process_running "$real_dwm_pid" && [ "$i" -lt 500 ]; do
 		i=$((i + 1))
