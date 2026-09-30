@@ -496,6 +496,7 @@ SH
 	first_user_theme_loads=$(grep -Fc 'dwm: loaded theme from config' "$work/dwm.log" || true)
 	first_user_theme_applies=$(wc -c <"$work/theme-apply.marker")
 	printf '\n' >>"$runtime_config_home/dwm-titus/themes.toml"
+	trace "nested-rearm-setup-done"
 	i=0
 	while [ "$(grep -Fc 'dwm: loaded theme from config' "$work/dwm.log" || true)" \
 		-le "$first_user_theme_loads" ]; do
@@ -506,6 +507,7 @@ SH
 		}
 		sleep 0.02
 	done
+	trace "nested-rearm-done"
 	i=0
 	while [ "$(wc -c <"$work/theme-apply.marker")" -le "$first_user_theme_applies" ]; do
 		i=$((i + 1))
