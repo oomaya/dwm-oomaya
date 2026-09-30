@@ -828,7 +828,7 @@ if [ -f "$REPO_DIR/assets/dwm-oomaya.jpg" ]; then
 fi
 
 if install_recommended_profile; then
-	if [ ! -d "$BG_DIR/.git" ] && [ -z "$(ls -A "$BG_DIR" 2>/dev/null | grep -v 'dwm-oomaya.jpg' || true)" ]; then
+	if [ ! -d "$BG_DIR/.git" ] && [ -z "$(find "$BG_DIR" -mindepth 1 -maxdepth 1 ! -name 'dwm-oomaya.jpg' -print -quit 2>/dev/null)" ]; then
 		info "Downloading Nord wallpapers pack..."
 		if dwm_git_safe_clone https://github.com/ChrisTitusTech/nord-background.git "$BG_DIR" 2>/dev/null; then
 			ok "Wallpapers downloaded to $BG_DIR"
