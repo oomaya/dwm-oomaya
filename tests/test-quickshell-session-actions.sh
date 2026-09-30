@@ -8,8 +8,6 @@ window=$repo/config/quickshell/power/PowerMenuWindow.qml
 commands=$repo/config/quickshell/core/Commands.qml
 work=$(mktemp -d)
 test_pids=
-trace() { printf 'TRACE: %s\n' "$1" >&2; }
-trace "setup-done"
 
 forget_test_pid() {
 	forgotten_pid=$1
@@ -59,7 +57,6 @@ main(void)
 }
 C
 "${CC:-cc}" -std=c99 -Wall -Wextra -Werror -o "$work/dwm-fixture" "$work/dwm-fixture.c"
-trace "fixture-compiled"
 
 cat >"$work/bin/systemctl" <<'SH'
 #!/bin/sh
@@ -129,7 +126,6 @@ for locker in light-locker-command xdg-screensaver mate-screensaver-command \
 	cp "$work/bin/locker-fixture" "$work/bin/$locker"
 done
 chmod +x "$work/bin/"*
-trace "stubs-ready"
 
 run_helper() {
 	HOME="$work/home" \
@@ -149,14 +145,7 @@ expect_status() {
 	"$@" >"$work/action.out" 2>"$work/action.err"
 	status=$?
 	set -e
-	if [ "$status" -ne "$expected" ]; then
-		printf 'DEBUG expect_status: got=%s expected=%s\n' "$status" "$expected" >&2
-		printf 'DEBUG action.out:\n' >&2
-		cat "$work/action.out" >&2
-		printf 'DEBUG action.err:\n' >&2
-		cat "$work/action.err" >&2
-		exit 1
-	fi
+	[ "$status" -eq "$expected" ]
 }
 
 expect_failure_without_success() {
@@ -225,11 +214,9 @@ grep -Fq 'readonly property bool foreignSessionConfirmation: powerMenuModel.conf
 grep -Fq 'Another surface is awaiting confirmation for a session action' \
 	"$repo/config/quickshell/settings/PowerSettingsPane.qml"
 
-trace "qml-asserts-done"
 # Every destructive operation is delegated through one fixed systemctl verb.
 for specification in 'suspend suspend' 'reboot reboot' 'shutdown poweroff'; do
 	action=${specification%% *}
-	trace "action-loop: $action"
 	systemctl_action=${specification#* }
 	: >"$work/systemctl.log"
 	result=$(run_helper session-action "$action")
@@ -238,53 +225,29 @@ for specification in 'suspend suspend' 'reboot reboot' 'shutdown poweroff'; do
 	grep -Fqx -- "--no-block $systemctl_action" "$work/systemctl.log"
 done
 
-trace "action-loop-done"
 export DWM_SESSION_TEST_SYSTEMCTL_STATUS=1
 expect_failure_without_success 1 run_helper session-action suspend
-trace "systemctl-fail-test-done"
-grep -Fq 'denied or could not be accepted' "$work/action.err" || {
-	printf 'DEBUG grep-fail: action.err was:\n' >&2
-	cat "$work/action.err" >&2
-	exit 1
-}
+grep -Fq 'denied or could not be accepted' "$work/action.err"
 unset DWM_SESSION_TEST_SYSTEMCTL_STATUS
 expect_failure_without_success 2 run_helper session-action unknown
-trace "unknown-action-done"
 expect_failure_without_success 2 run_helper session-action
-trace "no-action-done"
 expect_failure_without_success 2 run_helper session-action lock extra
-trace "extra-arg-done"
 
 # Lock reports success only after the managed locker accepts the request.
 export DWM_SESSION_TEST_LOCK_SUCCESS=1
-trace "lock-test-start"
 [ "$(run_helper session-action lock)" = 'session-action	lock	accepted' ]
-trace "lock-test-done"
 unset DWM_SESSION_TEST_LOCK_SUCCESS
 expect_failure_without_success 1 run_helper session-action lock
-trace "lock-fail-status-ok"
-grep -Fq 'no usable screen locker found' "$work/action.err" || {
-	printf 'DEBUG locker-grep-fail: action.err was:\n' >&2
-	cat "$work/action.err" >&2
-	printf 'DEBUG locker-grep-fail: action.out was:\n' >&2
-	cat "$work/action.out" >&2
-	exit 1
-}
-trace "locker-grep-done"
+grep -Fq 'no usable screen locker found' "$work/action.err"
 
 # A verified current DWM receives SIGUSR2; another same-name process survives.
-trace "dwm-fixture-start"
 start_dwm_fixture target
 target_pid=$fixture_pid
-trace "dwm-fixture-target-done"
 start_dwm_fixture unrelated
 other_pid=$fixture_pid
-trace "dwm-fixture-unrelated-done"
 : >"$work/xprop-details.count"
 export DWM_SESSION_TEST_DWM_PID=$target_pid
-trace "dwm-logout-start"
 [ "$(run_helper session-action logout)" = 'session-action	logout	accepted' ]
-trace "dwm-logout-done"
 i=0
 while process_running "$target_pid" && [ "$i" -lt 50 ]; do
 	i=$((i + 1))
@@ -295,54 +258,39 @@ if process_running "$target_pid"; then
 	exit 1
 fi
 wait "$target_pid" 2>/dev/null || :
-trace "dwm-target-wait-done"
 forget_test_pid "$target_pid"
-trace "dwm-target-forget-done"
 process_running "$other_pid"
-trace "dwm-other-alive-done"
 
 # Missing/forged X11 ownership and unverified processes fail without signaling.
 for mode in malformed-root wrong-self wrong-name missing-pid; do
-	trace "xprop-loop: $mode-start"
 	start_dwm_fixture "invalid-$mode"
 	candidate_pid=$fixture_pid
-	trace "xprop-loop: $mode-fixture-done"
 	: >"$work/xprop-details.count"
 	export DWM_SESSION_TEST_DWM_PID=$candidate_pid
 	export DWM_SESSION_TEST_XPROP_MODE=$mode
 	expect_failure_without_success 1 run_helper session-action logout
-	trace "xprop-loop: $mode-logout-done"
 	process_running "$candidate_pid"
-	trace "xprop-loop: $mode-alive-done"
 done
 unset DWM_SESSION_TEST_XPROP_MODE
-trace "xprop-loop-done"
 
-trace "wrong-exe-start"
 /usr/bin/sleep 30 &
 wrong_exe_pid=$!
 test_pids="$test_pids $wrong_exe_pid"
 : >"$work/xprop-details.count"
 export DWM_SESSION_TEST_DWM_PID=$wrong_exe_pid
 expect_failure_without_success 1 run_helper session-action logout
-trace "wrong-exe-logout-done"
 process_running "$wrong_exe_pid"
-trace "wrong-exe-done"
 
-trace "wrong-uid-start"
 start_dwm_fixture wrong-uid
 candidate_pid=$fixture_pid
 : >"$work/xprop-details.count"
 export DWM_SESSION_TEST_DWM_PID=$candidate_pid
 export DWM_SESSION_TEST_STAT_UID=$(($(id -u) + 1))
 expect_failure_without_success 1 run_helper session-action logout
-trace "wrong-uid-logout-done"
 process_running "$candidate_pid"
 unset DWM_SESSION_TEST_STAT_UID
-trace "wrong-uid-done"
 
 # A concurrent current-WM replacement is not folded into the captured cohort.
-trace "replace-start"
 start_dwm_fixture first-owner
 first_pid=$fixture_pid
 start_dwm_fixture replacement-owner
@@ -351,32 +299,23 @@ second_pid=$fixture_pid
 export DWM_SESSION_TEST_DWM_PID=$first_pid
 export DWM_SESSION_TEST_SECOND_PID=$second_pid
 expect_failure_without_success 1 run_helper session-action logout
-trace "replace-logout-done"
 process_running "$first_pid"
-trace "replace-first-alive"
 process_running "$second_pid"
 unset DWM_SESSION_TEST_SECOND_PID
-trace "replace-done"
 
 # A running installed DWM whose inode was replaced remains a valid endpoint.
-trace "deleted-start"
 start_dwm_fixture deleted-owner
 deleted_pid=$fixture_pid
 rm "$work/deleted-owner/dwm"
 : >"$work/xprop-details.count"
 export DWM_SESSION_TEST_DWM_PID=$deleted_pid
-trace "deleted-logout-start"
 [ "$(run_helper session-action logout)" = 'session-action	logout	accepted' ]
-trace "deleted-logout-done"
 wait "$deleted_pid" 2>/dev/null || :
 forget_test_pid "$deleted_pid"
-trace "deleted-done"
 
 # Exercise the real EWMH property and graceful main-loop exit when nested X11
 # is available. The task-local autostop marker proves the normal exit path ran.
-trace "nested-check-start"
 if command -v Xvfb >/dev/null 2>&1 && [ -x "$repo/dwm" ]; then
-	trace "nested-entered"
 	runtime_display_number=$((200 + $$ % 3000))
 	while [ -e "/tmp/.X11-unix/X$runtime_display_number" ]; do
 		runtime_display_number=$((runtime_display_number + 1))
@@ -451,27 +390,12 @@ SH
 		}
 		sleep 0.02
 	done
-	trace "nested-theme-env-start"
-	grep -Fqx "$runtime_config_home" "$work/theme-env.marker" || {
-		printf 'DEBUG theme-env: expected %s, got:\n' "$runtime_config_home" >&2
-		cat "$work/theme-env.marker" >&2
-		exit 1
-	}
-	trace "nested-theme-env-config-done"
-	grep -Fqx "$runtime_data_home" "$work/theme-env.marker" || {
-		printf 'DEBUG theme-env: expected %s, got:\n' "$runtime_data_home" >&2
-		cat "$work/theme-env.marker" >&2
-		exit 1
-	}
-	trace "nested-theme-env-done"
+	grep -Fqx "$runtime_config_home" "$work/theme-env.marker"
+	grep -Fqx "$runtime_data_home" "$work/theme-env.marker"
 	initial_theme_applies=$(wc -c <"$work/theme-apply.marker")
-	trace "nested-theme-applies-read"
 	mkdir -p "$runtime_config_home/dwm-titus"
-	trace "nested-mkdir-done"
 	cp "$repo/config/themes.toml" "$runtime_config_home/dwm-titus/themes.toml"
-	trace "nested-cp-done"
 	kill -USR1 "$real_dwm_pid"
-	trace "nested-usr1-done"
 	i=0
 	while [ "$(grep -Fc 'dwm: loaded theme from config' "$work/dwm.log" || true)" \
 		-le "$initial_theme_loads" ]; do
@@ -482,7 +406,6 @@ SH
 		}
 		sleep 0.02
 	done
-	trace "nested-hotreload-done"
 	i=0
 	while [ "$(wc -c <"$work/theme-apply.marker")" -le "$initial_theme_applies" ]; do
 		i=$((i + 1))
@@ -492,11 +415,9 @@ SH
 		}
 		sleep 0.02
 	done
-	trace "nested-theme-apply-done"
 	first_user_theme_loads=$(grep -Fc 'dwm: loaded theme from config' "$work/dwm.log" || true)
 	first_user_theme_applies=$(wc -c <"$work/theme-apply.marker")
 	printf '\n' >>"$runtime_config_home/dwm-titus/themes.toml"
-	trace "nested-rearm-setup-done"
 	i=0
 	while [ "$(grep -Fc 'dwm: loaded theme from config' "$work/dwm.log" || true)" \
 		-le "$first_user_theme_loads" ]; do
@@ -507,7 +428,6 @@ SH
 		}
 		sleep 0.02
 	done
-	trace "nested-rearm-done"
 	i=0
 	while [ "$(wc -c <"$work/theme-apply.marker")" -le "$first_user_theme_applies" ]; do
 		i=$((i + 1))
@@ -517,25 +437,15 @@ SH
 		}
 		sleep 0.02
 	done
-	trace "nested-user-theme-done"
-	trace "nested-xprop-start"
 	support_window=$(DISPLAY=$runtime_display /usr/bin/xprop -root \
 		_NET_SUPPORTING_WM_CHECK | awk '{ print $NF }')
-	trace "nested-xprop-window-done"
 	DISPLAY=$runtime_display /usr/bin/xprop -id "$support_window" _NET_WM_PID |
 		grep -Fqx "_NET_WM_PID(CARDINAL) = $real_dwm_pid"
-	trace "nested-xprop-pid-done"
-	trace "nested-logout-start"
 	real_logout=$(DWM_SESSION_TEST_AUTOSTOP_MARKER="$work/autostop.marker" \
 		DISPLAY=$runtime_display HOME="$runtime_home" \
 		XDG_CONFIG_HOME=relative-config XDG_DATA_HOME=relative-data PATH=/usr/bin:/bin \
 		"$helper" session-action logout)
-	trace "nested-logout-cmd-done"
-	[ "$real_logout" = 'session-action	logout	accepted' ] || {
-		printf 'DEBUG real_logout: got [%s]\n' "$real_logout" >&2
-		exit 1
-	}
-	trace "nested-logout-check-done"
+	[ "$real_logout" = 'session-action	logout	accepted' ]
 	i=0
 	while process_running "$real_dwm_pid" && [ "$i" -lt 500 ]; do
 		i=$((i + 1))
@@ -545,26 +455,14 @@ SH
 		printf '%s\n' 'Nested DWM did not exit after the logout request.' >&2
 		exit 1
 	fi
-	trace "nested-dwm-exited"
 	wait "$real_dwm_pid" 2>/dev/null || true
 	forget_test_pid "$real_dwm_pid"
-	test -f "$work/autostop.marker" || {
-		printf 'DEBUG autostop.marker: missing\n' >&2
-		ls -la "$work/"*.marker >&2 || true
-		exit 1
-	}
-	trace "nested-autostop-done"
+	test -f "$work/autostop.marker"
 fi
-trace "nested-done"
 
-trace "dwmc-grep-start"
 grep -Fq 'static volatile sig_atomic_t running = 1;' "$repo/dwm.c"
-trace "dwmc-grep-1-done"
 grep -Fq 'signal(SIGUSR2, sigusr2_handler);' "$repo/dwm.c"
-trace "dwmc-grep-2-done"
 grep -Fq 'netatom[NetWMPid] = XInternAtom(dpy, "_NET_WM_PID", False);' "$repo/dwm.c"
-trace "dwmc-grep-3-done"
 grep -Fq 'XChangeProperty(dpy, wmcheckwin, netatom[NetWMPid], XA_CARDINAL, 32,' "$repo/dwm.c"
-trace "dwmc-grep-4-done"
 
 printf '%s\n' 'Quickshell session action model, backend, and graceful logout: PASS'
