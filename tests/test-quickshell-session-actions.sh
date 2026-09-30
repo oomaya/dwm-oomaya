@@ -517,6 +517,7 @@ SH
 		}
 		sleep 0.02
 	done
+	trace "nested-user-theme-done"
 	support_window=$(DISPLAY=$runtime_display /usr/bin/xprop -root \
 		_NET_SUPPORTING_WM_CHECK | awk '{ print $NF }')
 	DISPLAY=$runtime_display /usr/bin/xprop -id "$support_window" _NET_WM_PID |
