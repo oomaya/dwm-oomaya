@@ -492,6 +492,7 @@ SH
 		}
 		sleep 0.02
 	done
+	trace "nested-theme-apply-done"
 	first_user_theme_loads=$(grep -Fc 'dwm: loaded theme from config' "$work/dwm.log" || true)
 	first_user_theme_applies=$(wc -c <"$work/theme-apply.marker")
 	printf '\n' >>"$runtime_config_home/dwm-titus/themes.toml"
