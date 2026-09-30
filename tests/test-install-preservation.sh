@@ -401,6 +401,14 @@ for user_path in \
 	test "$(stat -c %U "$user_path")" = "$OWNER"
 	test "$(stat -c %G "$user_path")" = "$OWNER_GROUP"
 done
+test -f "$TEST_HOME/Pictures/backgrounds/dwm-oomaya-wallpaper.jpg"
+cmp "$TEST_REPO/assets/dwm-oomaya-wallpaper.jpg" \
+	"$TEST_HOME/Pictures/backgrounds/dwm-oomaya-wallpaper.jpg"
+test -f "$FRESH_HOME/Pictures/backgrounds/dwm-oomaya-wallpaper.jpg"
+cmp "$TEST_REPO/assets/dwm-oomaya-wallpaper.jpg" \
+	"$FRESH_HOME/Pictures/backgrounds/dwm-oomaya-wallpaper.jpg"
+test "$(stat -c %U "$FRESH_HOME/Pictures/backgrounds/dwm-oomaya-wallpaper.jpg")" = "$OWNER"
+test "$(stat -c %G "$FRESH_HOME/Pictures/backgrounds/dwm-oomaya-wallpaper.jpg")" = "$OWNER_GROUP"
 
 EMPTY_CONFIG_HOME="$WORK_DIR/empty-config"
 EMPTY_CONFIG_DIRS="$WORK_DIR/empty-etc-xdg"

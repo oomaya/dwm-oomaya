@@ -824,13 +824,13 @@ fi
 mkdir -p "$HOME/Pictures"
 mkdir -p "$HOME/Pictures/Screenshots"
 mkdir -p "$BG_DIR"
-if [ -f "$REPO_DIR/assets/dwm-oomaya.jpg" ]; then
-	cp -n "$REPO_DIR/assets/dwm-oomaya.jpg" "$BG_DIR/" 2>/dev/null || true
+if [ -f "$REPO_DIR/assets/dwm-oomaya-wallpaper.jpg" ]; then
+	cp -n "$REPO_DIR/assets/dwm-oomaya-wallpaper.jpg" "$BG_DIR/" 2>/dev/null || true
 	ok "Default dwm-oomaya wallpaper seeded in $BG_DIR."
 fi
 
 if install_recommended_profile; then
-	if [ ! -d "$BG_DIR/.git" ] && [ -z "$(find "$BG_DIR" -mindepth 1 -maxdepth 1 ! -name 'dwm-oomaya.jpg' -print -quit 2>/dev/null)" ]; then
+	if [ ! -d "$BG_DIR/.git" ] && [ -z "$(find "$BG_DIR" -mindepth 1 -maxdepth 1 ! -name 'dwm-oomaya-wallpaper.jpg' -print -quit 2>/dev/null)" ]; then
 		info "Downloading Nord wallpapers pack..."
 		if dwm_git_safe_clone https://github.com/ChrisTitusTech/nord-background.git "$BG_DIR" 2>/dev/null; then
 			ok "Wallpapers downloaded to $BG_DIR"

@@ -11,6 +11,7 @@ XDG_CONFIG_HOME ?= ${USER_HOME}/.config
 XDG_DATA_HOME ?= ${USER_HOME}/.local/share
 DATA_DIR  := ${XDG_DATA_HOME}/dwm-oomaya
 CFG_DIR   := ${XDG_CONFIG_HOME}
+BG_DIR    ?= ${USER_HOME}/Pictures/backgrounds
 DATADIR   ?= ${PREFIX}/share
 SYSTEMDUSERDIR ?= ${PREFIX}/lib/systemd/user
 CAPITAINE_DARK_THEME = Capitaine-Cursors
@@ -324,6 +325,11 @@ install-user:
 	test -f ${CFG_DIR}/dwm-oomaya/hotkeys.toml || install -Dm644 config/hotkeys.toml ${CFG_DIR}/dwm-oomaya/hotkeys.toml
 	test -f ${CFG_DIR}/dwm-oomaya/themes.toml  || install -Dm644 config/themes.toml  ${CFG_DIR}/dwm-oomaya/themes.toml
 	test -f ${CFG_DIR}/dwm-oomaya/window-rules.toml || install -Dm644 config/window-rules.toml ${CFG_DIR}/dwm-oomaya/window-rules.toml
+	@echo "==> Seeding default wallpaper (skipping existing file)..."
+	mkdir -p "${BG_DIR}"
+	if [ -f assets/dwm-oomaya-wallpaper.jpg ] && [ ! -f "${BG_DIR}/dwm-oomaya-wallpaper.jpg" ]; then \
+		install -Dm644 assets/dwm-oomaya-wallpaper.jpg "${BG_DIR}/dwm-oomaya-wallpaper.jpg"; \
+	fi
 	@echo "==> Migrating legacy graphical-session startup..."
 	HOME="${USER_HOME}" XDG_CONFIG_HOME="${XDG_CONFIG_HOME}" scripts/migrate-graphical-session.sh
 	@echo "==> Installing Meslo font aliases..."
