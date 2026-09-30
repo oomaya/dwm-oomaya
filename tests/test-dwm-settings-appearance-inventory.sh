@@ -36,6 +36,7 @@ mkdir -p "$config_home/dwm-titus" "$config_home/dconf" "$config_home/fontconfig"
 	"$data_root/themes/Bad\"GTK/gtk-3.0" "$data_root/themes/Bad\"GTK/gtk-4.0" \
 	"$data_root/themes/Legacy/gtk-3.0" \
 	"$state_root/dwm-titus/appearance/wallpaper" \
+	"$home/.local/state/dwm-titus/appearance" \
 	"$wallpaper_dir/nested" "$legacy_font_dir/nested" "$bin_dir" "$link_dir" \
 	"$proc_root/4242"
 printf '[Icon Theme]\nName=Papirus\nDirectories=scalable/apps\n' \
