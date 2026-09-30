@@ -76,10 +76,10 @@ scan_alt_bars_body=$(sed -n '/^scanaltbars(void)/,/^}$/p' "$repo_dir/dwm.c")
 query_tree_line=$(printf '%s\n' "$scan_alt_bars_body" |
 	grep -n 'XQueryTree' | cut -d: -f1)
 clear_bars_line=$(printf '%s\n' "$scan_alt_bars_body" |
-	grep -n 'm->barwin = 0;' | cut -d: -f1)
+	grep -n 'm->barwin = m->nativebarwin;' | cut -d: -f1)
 test "$query_tree_line" -lt "$clear_bars_line"
 printf '%s\n' "$scan_alt_bars_body" | grep -q 'knownbars\[i\] = m->barwin;'
-printf '%s\n' "$scan_alt_bars_body" | grep -q 'm->barwin = 0;'
+printf '%s\n' "$scan_alt_bars_body" | grep -q 'm->barwin = m->nativebarwin;'
 printf '%s\n' "$scan_alt_bars_body" | grep -q 'wa.map_state != IsViewable'
 printf '%s\n' "$scan_alt_bars_body" | grep -q '!isaltbar(wins\[i\], &wa)'
 printf '%s\n' "$scan_alt_bars_body" | grep -q 'knownbars\[j\] == wins\[i\]'
