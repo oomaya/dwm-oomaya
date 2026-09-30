@@ -1,0 +1,376 @@
+#!/usr/bin/env python3
+# 원본: oomaya/dotfiles@1ad0597 — 업데이트 시 재벤더링
+"""
+Universal Hotkey & Desktop Command Validator (validate-desktop-command)
+
+Validates desktop keybinding configurations (TOML, KDL, etc.) and launch commands across the fleet.
+Enforces:
+  1. Headless TUI Trap Prevention (KNOWN_TUI table)
+  2. Zero Hardcoded Literals Law (no /home/* paths)
+  3. Binary Availability in $PATH & Repo Scripts (with fallback resilience for || chains)
+  4. Robust Command Chaining & Syntax
+"""
+
+import sys
+import os
+import re
+import shlex
+import shutil
+import argparse
+from pathlib import Path
+
+# Interactive TUI tools that fail silently or crash if spawned detached by a WM without a TTY
+KNOWN_TUI = {
+    "antigravity-cli": (
+        "'antigravity-cli' is an interactive terminal agent CLI requiring a TTY.\n"
+        "      Did you mean 'antigravity-ide' (GUI editor)?\n"
+        "      If running CLI, wrap with: '$terminal -e antigravity-cli' or 'ghostty -e antigravity-cli'."
+    ),
+    "antigravity": (
+        "'antigravity' is an interactive terminal agent CLI requiring a TTY.\n"
+        "      Did you mean 'antigravity-ide' (GUI editor)?\n"
+        "      If running CLI, wrap with: '$terminal -e antigravity' or 'ghostty -e antigravity'."
+    ),
+    "nvim": "Neovim requires a terminal. Wrap with '$terminal -e nvim' or 'ghostty -e nvim'.",
+    "vim": "Vim requires a terminal. Wrap with '$terminal -e vim' or 'ghostty -e vim'.",
+    "htop": "htop requires a terminal. Wrap with '$terminal -e htop' or 'ghostty -e htop'.",
+    "btop": "btop requires a terminal. Wrap with '$terminal -e btop' or 'ghostty -e btop'.",
+}
+
+TERMINAL_WRAPPERS = {
+    "ghostty", "kitty", "alacritty", "foot", "st", "xterm",
+    "wezterm", "gnome-terminal", "konsole", "urxvt", "$terminal"
+}
+
+# Optional binaries that might not be installed on all fleet nodes or in CI containers
+OPTIONAL_BINARIES = {
+    "looking-glass-client", "looking-glass", "discord", "spotify",
+    "steam", "slack", "zoom", "obs", "gimp"
+}
+
+
+def check_hardcoded_literals(cmd: str) -> list[str]:
+    """Flag any hardcoded /home/ user paths violating the Zero Hardcoded Literals Law."""
+    errors = []
+    matches = re.findall(r"/home/[a-zA-Z0-9_\-\.]+", cmd)
+    for m in matches:
+        errors.append(f"Hardcoded user literal detected: {m}")
+    return errors
+
+
+def split_command_chain(cmd: str) -> list[str]:
+    """Split compound shell command into individual fallback/pipe branches."""
+    return [branch.strip() for branch in re.split(r"\|\||&&|;", cmd) if branch.strip()]
+
+
+def extract_primary_executable(subcmd: str) -> tuple[str | None, str | None, bool]:
+    """
+    Extracts (wrapper, executable, is_wrapped) from a subcommand string.
+    Handles environment variables (VAR=val) and pipes.
+    """
+    pipeline_parts = [p.strip() for p in subcmd.split("|") if p.strip()]
+    if not pipeline_parts:
+        return None, None, False
+
+    first_part = pipeline_parts[0]
+    try:
+        tokens = shlex.split(first_part)
+    except Exception:
+        tokens = first_part.split()
+
+    idx = 0
+    while idx < len(tokens) and "=" in tokens[idx] and not tokens[idx].startswith("-"):
+        idx += 1
+
+    if idx >= len(tokens):
+        return None, None, False
+
+    prog = tokens[idx]
+    base_prog = Path(prog).name
+    if base_prog in TERMINAL_WRAPPERS or prog in TERMINAL_WRAPPERS:
+        inner_idx = idx + 1
+        while inner_idx < len(tokens):
+            arg = tokens[inner_idx]
+            if arg in ("-e", "-x", "--execute", "--") and inner_idx + 1 < len(tokens):
+                inner_cmd = tokens[inner_idx + 1]
+                return prog, Path(inner_cmd).name, True
+            inner_idx += 1
+        return prog, None, True
+
+    return None, base_prog, False
+
+
+def resolve_binary(bin_name: str, extra_search_paths: list[Path] | None = None) -> tuple[bool, bool]:
+    """
+    Check if binary exists in PATH or in repo search paths.
+    Returns (found, is_repo_script).
+    """
+    if extra_search_paths:
+        for p in extra_search_paths:
+            candidate = p / bin_name
+            if candidate.is_file():
+                return True, True
+    if shutil.which(bin_name) or os.path.exists(bin_name):
+        return True, False
+    return False, False
+
+
+def validate_single_command(
+    cmd: str,
+    extra_search_paths: list[Path] | None = None,
+    strict: bool = False
+) -> tuple[list[str], list[str]]:
+    """
+    Validates a single desktop command string.
+    Returns (errors, warnings).
+    """
+    errors = []
+    warnings = []
+
+    # 1. Zero Hardcoded Literals check (always fatal)
+    lit_errors = check_hardcoded_literals(cmd)
+    errors.extend(lit_errors)
+
+    branches = split_command_chain(cmd)
+    if not branches:
+        return errors, warnings
+
+    branch_checks = []
+    tui_traps = []
+
+    for b in branches:
+        wrapper, prog, is_wrapped = extract_primary_executable(b)
+        
+        # Check TUI traps (always fatal)
+        if not is_wrapped and prog in KNOWN_TUI:
+            tui_traps.append((prog, KNOWN_TUI[prog]))
+
+        branch_checks.append((b, wrapper, prog, is_wrapped))
+
+    for prog, reason in tui_traps:
+        errors.append(f"Headless TUI trap: '{prog}' spawned without terminal wrapper!\n      {reason}")
+
+    # Check binary presence for each branch
+    found_any_branch = False
+    missing_targets = []
+    missing_repo_scripts = []
+
+    for b, wrapper, prog, is_wrapped in branch_checks:
+        branch_ok = True
+        branch_missing = []
+
+        if is_wrapped:
+            if wrapper and not wrapper.startswith("$"):
+                w_name = Path(wrapper).name
+                found, is_repo = resolve_binary(w_name, extra_search_paths)
+                if not found:
+                    branch_ok = False
+                    branch_missing.append(w_name)
+            if prog and not prog.startswith("$"):
+                p_name = Path(prog).name
+                found, is_repo = resolve_binary(p_name, extra_search_paths)
+                if not found:
+                    branch_ok = False
+                    branch_missing.append(p_name)
+                    if p_name.startswith("dwm-") or p_name.startswith("webapp-"):
+                        missing_repo_scripts.append(p_name)
+        else:
+            if prog and not prog.startswith("$"):
+                p_name = Path(prog).name
+                found, is_repo = resolve_binary(p_name, extra_search_paths)
+                if not found:
+                    branch_ok = False
+                    branch_missing.append(p_name)
+                    if p_name.startswith("dwm-") or p_name.startswith("webapp-"):
+                        missing_repo_scripts.append(p_name)
+
+        if branch_ok:
+            found_any_branch = True
+        else:
+            missing_targets.extend(branch_missing)
+
+    # Missing repo-internal scripts are always fatal (broken repo integrity)
+    if missing_repo_scripts:
+        unique_repo = list(dict.fromkeys(missing_repo_scripts))
+        errors.append(f"Missing internal repo script in scripts/: {', '.join(unique_repo)}")
+
+    # Missing external binaries in non-strict mode (e.g. CI container or bare clone) are warnings
+    if not found_any_branch and missing_targets:
+        unique_missing = [t for t in dict.fromkeys(missing_targets) if t not in missing_repo_scripts]
+        if unique_missing:
+            if strict:
+                errors.append(f"Missing binary in PATH: {', '.join(unique_missing)}")
+            else:
+                warnings.append(f"Missing external desktop binary (not installed on host): {', '.join(unique_missing)}")
+    elif missing_targets:
+        unique_missing = [t for t in dict.fromkeys(missing_targets) if t not in missing_repo_scripts]
+        for t in unique_missing:
+            warnings.append(f"Fallback alternative binary not in PATH: {t}")
+
+    return errors, warnings
+
+
+def parse_hotkeys_toml(file_path: Path) -> list[tuple[str, str]]:
+    """Parse hotkeys.toml (dwm format) and return list of (label, cmd)."""
+    import tomllib
+    with open(file_path, "rb") as f:
+        data = tomllib.load(f)
+
+    keys = data.get("keys") or data.get("vars", {}).get("keys") or data.get("hotkeys", [])
+    commands = []
+    for item in keys:
+        if not isinstance(item, dict):
+            continue
+        func = item.get("func", "")
+        cmd = item.get("cmd") or " ".join(item.get("exec", []))
+        if func == "spawn" and cmd:
+            mod = item.get("mod", "")
+            key = item.get("key", "")
+            desc = item.get("desc", "")
+            label = f"{mod} + {key}".strip(" +")
+            if desc:
+                label += f" ({desc})"
+            commands.append((label, cmd))
+
+    buttons = data.get("buttons") or data.get("vars", {}).get("buttons", [])
+    for b in buttons:
+        if isinstance(b, dict) and b.get("func") == "spawn":
+            cmd = b.get("cmd") or " ".join(b.get("exec", []))
+            if cmd:
+                click = b.get("click", "Mouse")
+                btn = b.get("button", "")
+                commands.append((f"{click} Button {btn}", cmd))
+
+    return commands
+
+
+def parse_kdl(file_path: Path) -> list[tuple[str, str]]:
+    """Extract spawn / spawn-sh commands from Niri KDL files."""
+    commands = []
+    content = file_path.read_text(encoding="utf-8")
+    spawn_regex = re.compile(r'(?:spawn|spawn-sh)\s+"([^"]+)"')
+    for line_no, line in enumerate(content.splitlines(), 1):
+        line_clean = line.strip()
+        if line_clean.startswith("//"):
+            continue
+        m = spawn_regex.search(line_clean)
+        if m:
+            cmd = m.group(1)
+            commands.append((f"{file_path.name}:{line_no}", cmd))
+    return commands
+
+
+def get_extra_search_paths(target: Path) -> list[Path]:
+    """Find related scripts directories relative to the target config file."""
+    search_paths = []
+    resolved = target.resolve()
+    candidates = [
+        resolved.parent / "scripts",
+        resolved.parent.parent / "scripts",
+        resolved.parent / "bin",
+        resolved.parent.parent / "bin",
+        Path.home() / ".local/bin",
+    ]
+    for c in candidates:
+        if c.is_dir():
+            search_paths.append(c)
+    return search_paths
+
+
+def validate_file(target: Path, strict: bool = False) -> int:
+    """Validate a given config file or directory."""
+    if not target.exists():
+        print(f"Error: Target '{target}' does not exist.", file=sys.stderr)
+        return 1
+
+    extra_search_paths = get_extra_search_paths(target)
+    commands = []
+    if target.suffix == ".toml" or "hotkeys.toml" in target.name:
+        commands = parse_hotkeys_toml(target)
+    elif target.suffix == ".kdl":
+        commands = parse_kdl(target)
+    elif target.is_dir():
+        for p in target.glob("**/*.toml"):
+            commands.extend(parse_hotkeys_toml(p))
+        for p in target.glob("**/*.kdl"):
+            commands.extend(parse_kdl(p))
+    else:
+        for line in target.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line and not line.startswith("#"):
+                commands.append(("cmd", line))
+
+    total = len(commands)
+    failed = 0
+    warnings_count = 0
+
+    print(f"Validating desktop keybindings in: {target}")
+    for label, cmd in commands:
+        errs, warns = validate_single_command(cmd, extra_search_paths, strict=strict)
+        if errs:
+            failed += 1
+            print(f"  ✗ [FAIL] {label} -> {cmd}")
+            for e in errs:
+                print(f"      {e}")
+        else:
+            status = "✓ [PASS]"
+            if warns:
+                warnings_count += len(warns)
+                status = "▲ [WARN]"
+            print(f"  {status} {label} -> {cmd}")
+            for w in warns:
+                print(f"      (warning) {w}")
+
+    passed = total - failed
+    print("----------------------------------------------------")
+    print(f"[Summary] {total} checked, {passed} passed, {failed} failed, {warnings_count} optional warning(s)")
+
+    if failed == 0:
+        print(f"✓ [PASS] Desktop keybindings valid (0 TUI traps, 0 literal leaks): {target.name}")
+        return 0
+    else:
+        print(f"✗ [FAIL] Desktop keybindings validation failed: {target.name} ({failed} failure(s))", file=sys.stderr)
+        return 1
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Universal Hotkey & Desktop Command Validator (validate-desktop-command)"
+    )
+    parser.add_argument(
+        "target",
+        help="Config file (TOML/KDL), directory, or command string to validate"
+    )
+    parser.add_argument(
+        "-s", "--strict",
+        action="store_true",
+        default=bool(os.environ.get("VALIDATE_DESKTOP_STRICT")),
+        help="Enforce that all external desktop binaries must exist in PATH"
+    )
+
+    args = parser.parse_args()
+    target_path = Path(args.target)
+
+    if target_path.exists():
+        return validate_file(target_path, strict=args.strict)
+
+    # Direct command string validation
+    extra_paths = [Path.home() / ".local/bin"]
+    errs, warns = validate_single_command(args.target, extra_paths, strict=args.strict)
+    if errs:
+        print(f"✗ [FAIL] Command invalid: {args.target}", file=sys.stderr)
+        for e in errs:
+            print(f"    {e}", file=sys.stderr)
+        return 1
+
+    if warns:
+        print(f"▲ [WARN] Command passed with warnings: {args.target}")
+        for w in warns:
+            print(f"    {w}")
+    else:
+        print(f"✓ [PASS] Command valid: {args.target}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
