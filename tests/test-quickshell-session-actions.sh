@@ -451,8 +451,19 @@ SH
 		}
 		sleep 0.02
 	done
-	grep -Fqx "$runtime_config_home" "$work/theme-env.marker"
-	grep -Fqx "$runtime_data_home" "$work/theme-env.marker"
+	trace "nested-theme-env-start"
+	grep -Fqx "$runtime_config_home" "$work/theme-env.marker" || {
+		printf 'DEBUG theme-env: expected %s, got:\n' "$runtime_config_home" >&2
+		cat "$work/theme-env.marker" >&2
+		exit 1
+	}
+	trace "nested-theme-env-config-done"
+	grep -Fqx "$runtime_data_home" "$work/theme-env.marker" || {
+		printf 'DEBUG theme-env: expected %s, got:\n' "$runtime_data_home" >&2
+		cat "$work/theme-env.marker" >&2
+		exit 1
+	}
+	trace "nested-theme-env-done"
 	initial_theme_applies=$(wc -c <"$work/theme-apply.marker")
 	mkdir -p "$runtime_config_home/dwm-titus"
 	cp "$repo/config/themes.toml" "$runtime_config_home/dwm-titus/themes.toml"
