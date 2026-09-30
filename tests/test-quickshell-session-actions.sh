@@ -295,8 +295,11 @@ if process_running "$target_pid"; then
 	exit 1
 fi
 wait "$target_pid" 2>/dev/null || :
+trace "dwm-target-wait-done"
 forget_test_pid "$target_pid"
+trace "dwm-target-forget-done"
 process_running "$other_pid"
+trace "dwm-other-alive-done"
 
 # Missing/forged X11 ownership and unverified processes fail without signaling.
 for mode in malformed-root wrong-self wrong-name missing-pid; do
