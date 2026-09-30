@@ -465,9 +465,13 @@ SH
 	}
 	trace "nested-theme-env-done"
 	initial_theme_applies=$(wc -c <"$work/theme-apply.marker")
+	trace "nested-theme-applies-read"
 	mkdir -p "$runtime_config_home/dwm-titus"
+	trace "nested-mkdir-done"
 	cp "$repo/config/themes.toml" "$runtime_config_home/dwm-titus/themes.toml"
+	trace "nested-cp-done"
 	kill -USR1 "$real_dwm_pid"
+	trace "nested-usr1-done"
 	i=0
 	while [ "$(grep -Fc 'dwm: loaded theme from config' "$work/dwm.log" || true)" \
 		-le "$initial_theme_loads" ]; do
