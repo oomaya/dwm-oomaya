@@ -8,6 +8,8 @@ window=$repo/config/quickshell/power/PowerMenuWindow.qml
 commands=$repo/config/quickshell/core/Commands.qml
 work=$(mktemp -d)
 test_pids=
+trace() { printf 'TRACE: %s\n' "$1" >&2; }
+trace "setup-done"
 
 forget_test_pid() {
 	forgotten_pid=$1
@@ -57,6 +59,7 @@ main(void)
 }
 C
 "${CC:-cc}" -std=c99 -Wall -Wextra -Werror -o "$work/dwm-fixture" "$work/dwm-fixture.c"
+trace "fixture-compiled"
 
 cat >"$work/bin/systemctl" <<'SH'
 #!/bin/sh
@@ -126,6 +129,7 @@ for locker in light-locker-command xdg-screensaver mate-screensaver-command \
 	cp "$work/bin/locker-fixture" "$work/bin/$locker"
 done
 chmod +x "$work/bin/"*
+trace "stubs-ready"
 
 run_helper() {
 	HOME="$work/home" \
@@ -214,9 +218,11 @@ grep -Fq 'readonly property bool foreignSessionConfirmation: powerMenuModel.conf
 grep -Fq 'Another surface is awaiting confirmation for a session action' \
 	"$repo/config/quickshell/settings/PowerSettingsPane.qml"
 
+trace "qml-asserts-done"
 # Every destructive operation is delegated through one fixed systemctl verb.
 for specification in 'suspend suspend' 'reboot reboot' 'shutdown poweroff'; do
 	action=${specification%% *}
+	trace "action-loop: $action"
 	systemctl_action=${specification#* }
 	: >"$work/systemctl.log"
 	result=$(run_helper session-action "$action")
@@ -225,6 +231,7 @@ for specification in 'suspend suspend' 'reboot reboot' 'shutdown poweroff'; do
 	grep -Fqx -- "--no-block $systemctl_action" "$work/systemctl.log"
 done
 
+trace "action-loop-done"
 export DWM_SESSION_TEST_SYSTEMCTL_STATUS=1
 expect_failure_without_success 1 run_helper session-action suspend
 grep -Fq 'denied or could not be accepted' "$work/action.err"
