@@ -318,22 +318,28 @@ done
 unset DWM_SESSION_TEST_XPROP_MODE
 trace "xprop-loop-done"
 
+trace "wrong-exe-start"
 /usr/bin/sleep 30 &
 wrong_exe_pid=$!
 test_pids="$test_pids $wrong_exe_pid"
 : >"$work/xprop-details.count"
 export DWM_SESSION_TEST_DWM_PID=$wrong_exe_pid
 expect_failure_without_success 1 run_helper session-action logout
+trace "wrong-exe-logout-done"
 process_running "$wrong_exe_pid"
+trace "wrong-exe-done"
 
+trace "wrong-uid-start"
 start_dwm_fixture wrong-uid
 candidate_pid=$fixture_pid
 : >"$work/xprop-details.count"
 export DWM_SESSION_TEST_DWM_PID=$candidate_pid
 export DWM_SESSION_TEST_STAT_UID=$(($(id -u) + 1))
 expect_failure_without_success 1 run_helper session-action logout
+trace "wrong-uid-logout-done"
 process_running "$candidate_pid"
 unset DWM_SESSION_TEST_STAT_UID
+trace "wrong-uid-done"
 
 # A concurrent current-WM replacement is not folded into the captured cohort.
 start_dwm_fixture first-owner
