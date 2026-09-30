@@ -424,7 +424,8 @@ default_gtk_theme() {
 				printf '%s\n' "adw-gtk3-dark"
 			else
 				printf '%s\n' "Adwaita"
-			fi ;;
+			fi
+			;;
 		tokyonight | tokyo-night)
 			if gtk_theme_available "Tokyonight-Dark"; then
 				printf '%s\n' "Tokyonight-Dark"
@@ -434,7 +435,8 @@ default_gtk_theme() {
 				printf '%s\n' "adw-gtk3-dark"
 			else
 				printf '%s\n' "Adwaita"
-			fi ;;
+			fi
+			;;
 		*)
 			if gtk_theme_available "adw-gtk3-dark"; then
 				printf '%s\n' "adw-gtk3-dark"
@@ -442,7 +444,8 @@ default_gtk_theme() {
 				printf '%s\n' "Adwaita-dark"
 			else
 				printf '%s\n' "Adwaita"
-			fi ;;
+			fi
+			;;
 		esac
 	else
 		if gtk_theme_available "adw-gtk3"; then
