@@ -90,7 +90,7 @@ expect_success_boundary_signal() {
 		printf 'Interrupted success-boundary action emitted success: %s\n' "$label" >&2
 		exit 1
 	fi
-	[[ ! -e $work/config/autostart/.dwm-titus.lock ]]
+	[[ ! -e $work/config/autostart/.dwm-oomaya.lock ]]
 	rm -f -- "$fifo"
 }
 
@@ -480,7 +480,7 @@ expect_interrupted env \
 	"$helper" set only.desktop disabled "$only_transaction_revision"
 [[ $(sha256sum "$work/config/autostart/only.desktop" | awk '{ print $1 }') == "$only_transaction_hash" ]]
 [[ $(stat -c %a "$work/config/autostart/only.desktop") == "$only_transaction_mode" ]]
-[[ ! -e $work/config/autostart/.dwm-titus.lock ]]
+[[ ! -e $work/config/autostart/.dwm-oomaya.lock ]]
 
 expect_interrupted env \
 	HOME="$work/home" XDG_CONFIG_HOME="$work/config" \
@@ -490,7 +490,7 @@ expect_interrupted env \
 	DWM_TEST_SIGNAL_MARKER="$work/set-new.signal" \
 	"$helper" set conditional.desktop disabled "$conditional_transaction_revision"
 [[ ! -e $work/config/autostart/conditional.desktop ]]
-[[ ! -e $work/config/autostart/.dwm-titus.lock ]]
+[[ ! -e $work/config/autostart/.dwm-oomaya.lock ]]
 rm -f "$work/bin/mv"
 
 real_rm=$(command -v rm)
@@ -522,7 +522,7 @@ expect_interrupted env \
 	"$helper" reset only.desktop "$reset_transaction_revision"
 [[ $(sha256sum "$work/config/autostart/only.desktop" | awk '{ print $1 }') == "$only_transaction_hash" ]]
 [[ $(stat -c %a "$work/config/autostart/only.desktop") == "$only_transaction_mode" ]]
-[[ ! -e $work/config/autostart/.dwm-titus.lock ]]
+[[ ! -e $work/config/autostart/.dwm-oomaya.lock ]]
 rm -f "$work/bin/rm"
 
 real_awk=$(command -v awk)
@@ -570,10 +570,10 @@ expect_failure 'could not back up' env \
 [[ $(sha256sum "$work/config/autostart/only.desktop") == "$only_hash" ]]
 rm -f "$work/bin/cp"
 
-mkdir "$work/config/autostart/.dwm-titus.lock"
+mkdir "$work/config/autostart/.dwm-oomaya.lock"
 expect_failure 'another autostart action' \
 	run_helper set only.desktop disabled "$only_current_revision"
-rmdir "$work/config/autostart/.dwm-titus.lock"
+rmdir "$work/config/autostart/.dwm-oomaya.lock"
 
 expect_failure 'invalid desktop id' \
 	run_helper set ../escape.desktop disabled "$only_current_revision"
