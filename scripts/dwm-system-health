@@ -410,7 +410,7 @@ scan_user_services() {
 	if ((${#audio_units[@]} > 0)); then
 		status=ok
 		for unit in "${audio_units[@]}"; do
-			systemctl --user is-active --quiet "$unit" || status=warn
+			systemctl --user is-active --quiet "$unit" 2>/dev/null || status=warn
 		done
 		emit_check services "$status" audio-services "Audio services" "$([[ $status == ok ]] && printf running || printf degraded)" "${audio_units[*]}" restart-audio "Restart audio services" user
 	else

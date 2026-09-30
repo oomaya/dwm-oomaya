@@ -31,7 +31,7 @@ SH
 	chmod +x "$work/bin/$name"
 }
 
-for name in quickshell xprop dwm-quickshell-launcher dwm-quickshell-controlcenter dex picom feh maim notify-send pactl brightnessctl xset gsettings light-locker setsid dwm-terminal dwm-default-apps dwm-settings-wallpaper xdg-open nwg-look pkill pgrep dnf; do
+for name in quickshell xprop dwm-quickshell-launcher dwm-quickshell-controlcenter dex picom feh maim notify-send pactl brightnessctl xset gsettings light-locker setsid dwm-terminal dwm-default-apps dwm-settings-wallpaper xdg-open nwg-look pkill pgrep dnf systemctl; do
 	stub_command "$name"
 done
 
@@ -276,11 +276,11 @@ sed -i 's/^\[theme.dracula\]$/  [theme.dracula] # retained theme comment/' \
 	"$work/config/dwm-titus/themes.toml"
 
 info=$(run_helper info)
-printf '%s\n' "$info" | grep -Fqx 'Theme	nord'
+printf '%s\n' "$info" | grep -Fqx 'Theme	tokyonight'
 printf '%s\n' "$info" | grep -Fqx 'Audio	PipeWire'
 
 themes=$(run_helper themes)
-printf '%s\n' "$themes" | grep -Fqx 'active	nord'
+printf '%s\n' "$themes" | grep -Fqx 'active	tokyonight'
 printf '%s\n' "$themes" | grep -Fqx 'available	dracula'
 
 run_helper theme-set dracula >"$work/theme-set.out"
@@ -299,7 +299,7 @@ cp "$repo/scripts/dwm-quickshell-controlcenter" "$repo/scripts/dwm-session-launc
 rm "$work/config/dwm-titus/themes.toml"
 installed_themes=$(HOME="$work/home" XDG_CONFIG_HOME="$work/config" \
 	XDG_DATA_HOME="$work/data" "$work/prefix/bin/dwm-quickshell-controlcenter" themes)
-printf '%s\n' "$installed_themes" | grep -Fqx 'active	nord'
+printf '%s\n' "$installed_themes" | grep -Fqx 'active	tokyonight'
 printf '%s\n' "$installed_themes" | grep -Fqx 'available	dracula'
 cp "$work/data/dwm-titus/config/themes.toml" "$work/config/dwm-titus/themes.toml"
 printf '%s\n' 'export QT_QPA_PLATFORMTHEME=qt6ct' \
@@ -320,14 +320,14 @@ grep -Fqx 'theme	dracula' "$work/theme-set-source.out"
 grep -Fq 'theme = "dracula"' "$work/config/dwm-titus/themes.toml"
 
 keybinds=$(run_helper keybinds)
-printf '%s\n' "$keybinds" | grep -Fqx 'Super + r	App launcher'
-printf '%s\n' "$keybinds" | grep -Fqx 'Super + F1	Control center'
+printf '%s\n' "$keybinds" | grep -Fqx 'Super + d	App Launcher'
+printf '%s\n' "$keybinds" | grep -Fqx 'Super + F1	Control Center'
 printf '%s\n' "$keybinds" | grep -Fqx 'Super + 0	Show all tags'
-if printf '%s\n' "$keybinds" | grep -Fq 'Super + Alt + 0'; then
+if printf '%s\n' "$keybinds" | grep -Fq 'Super Alt + 0	Show all tags'; then
 	printf 'Legacy tag-10 show-all binding is still exposed.\n' >&2
 	exit 1
 fi
-grep -Fq 'title: "dwm control center utility"' \
+grep -Fq 'title: "dwm control center utility' \
 	"$repo/config/quickshell/controlcenter/UtilityDetailWindow.qml"
 grep -Fq '{ title="dwm control center utility", isfloating=1, alwaysontop=1 }' \
 	"$repo/config/window-rules.toml"
