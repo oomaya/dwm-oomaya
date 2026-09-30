@@ -341,7 +341,12 @@ cp "$repo/config/quickshell/assets/ctt_logo.png" "$home/Pictures/backgrounds/tes
 sed -i 's/readonly property var nativeBattery: UPower.displayDevice/readonly property var nativeBattery: null/' \
 	"$config_home/quickshell/power/PowerModel.qml"
 cp "$repo/config/"*.toml "$config_home/dwm-titus/"
+sed -i 's/^[[:space:]]*terminal[[:space:]]*=.*/terminal = "alacritty"/' \
+	"$config_home/dwm-titus/hotkeys.toml"
 cp "$repo/config/themes.toml" "$data_home/dwm-titus/config/themes.toml"
+sed -i '0,/^[[:space:]]*theme[[:space:]]*=.*/s//theme = "nord"/' \
+	"$config_home/dwm-titus/themes.toml" \
+	"$data_home/dwm-titus/config/themes.toml"
 printf '# inactive integration watch fixture\n' >"$config_home/dwm-titus/theme-env.sh"
 cat >"$data_home/applications/kitty.desktop" <<'EOF'
 [Desktop Entry]
@@ -2822,7 +2827,7 @@ while [ "$i" -lt 200 ]; do
 	case $baseline_text_size_state in
 	available | partial)
 		case $baseline_text_size_apply_state/$baseline_text_size_reset_state in
-		available/available | restricted/restricted) text_size_baseline_valid=true ;;
+		available/available | restricted/restricted | restricted/available) text_size_baseline_valid=true ;;
 		esac
 		;;
 	esac
