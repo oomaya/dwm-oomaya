@@ -518,10 +518,13 @@ SH
 		sleep 0.02
 	done
 	trace "nested-user-theme-done"
+	trace "nested-xprop-start"
 	support_window=$(DISPLAY=$runtime_display /usr/bin/xprop -root \
 		_NET_SUPPORTING_WM_CHECK | awk '{ print $NF }')
+	trace "nested-xprop-window-done"
 	DISPLAY=$runtime_display /usr/bin/xprop -id "$support_window" _NET_WM_PID |
 		grep -Fqx "_NET_WM_PID(CARDINAL) = $real_dwm_pid"
+	trace "nested-xprop-pid-done"
 	real_logout=$(DWM_SESSION_TEST_AUTOSTOP_MARKER="$work/autostop.marker" \
 		DISPLAY=$runtime_display HOME="$runtime_home" \
 		XDG_CONFIG_HOME=relative-config XDG_DATA_HOME=relative-data PATH=/usr/bin:/bin \
