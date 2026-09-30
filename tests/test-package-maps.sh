@@ -19,8 +19,8 @@ pass() {
 # 1. Test supported families and core profiles
 for family in fedora arch debian; do
 	for profile in build x11 runtime-required required desktop recommended full; do
-		packages=$(dwm_packages "$family" "$profile") || fail "dwm_packages $family $profile failed with exit code $?"
-		[[ -n $packages ]] || fail "dwm_packages $family $profile returned empty output"
+		pkg_list=$(dwm_packages "$family" "$profile") || fail "dwm_packages $family $profile failed with exit code $?"
+		[[ -n $pkg_list ]] || fail "dwm_packages $family $profile returned empty output"
 	done
 	pass "All core profiles for $family returned valid non-empty package sets"
 done
