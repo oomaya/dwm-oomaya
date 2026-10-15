@@ -30,12 +30,17 @@ root_property_value() {
 }
 
 root_status() {
-	xprop -root WM_NAME 2>/dev/null |
+	xprop -notype -root -f WM_NAME 8u WM_NAME 2>/dev/null |
 		awk -F'= ' '
 			/^WM_NAME/ {
 				status = $2
 				gsub(/^"/, "", status)
 				gsub(/"$/, "", status)
+				gsub(/\\00[0-9]/, " | ", status)
+				gsub(/[\x00-\x1F]/, " | ", status)
+				gsub(/( *\| *)+/, " | ", status)
+				gsub(/^ *\| */, "", status)
+				gsub(/ *\| *$/, "", status)
 				print status
 				found = 1
 				exit
