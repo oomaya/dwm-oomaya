@@ -545,7 +545,7 @@ else
 fi
 
 # fcitx5 hangul input tool.
-start_detached_once fcitx5 -d
+start_detached_once fcitx5 fcitx5 -d
 
 # Event-driven bridge for loginctl/logind lock requests. This keeps external
 # lock commands working without leaving light-locker resident for DPMS events.
