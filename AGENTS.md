@@ -2,15 +2,18 @@
 
 ## Purpose
 
-This repository is a Fedora-only X11 desktop environment built around a
-heavily patched fork of suckless dwm and a managed Quickshell shell. The
-product is a complete Fedora desktop installed from Fedora Server Network
-Install media or onto an existing Fedora installation. Fedora is the sole
-supported distribution.
+This repository is a sovereign, high-performance X11 desktop environment engineered
+around a heavily patched suckless dwm core, paired with an adaptive dual-shell
+architecture (managed Quickshell or ultra-lean ChadDWM C-status bar) and the
+brutalist, sharp-corner design grammar of Omarchy / OMACOM.
 
-Read `SPEC.md` before making product, platform, installer, dependency, or
-packaging changes. Treat `SPEC.md` as the source of truth for project scope and
-acceptance criteria.
+The environment provides 100% native desktop parity across Fedora, Arch Linux,
+and Debian—deployable onto minimal base installations, bare-metal server netinstalls,
+or layered cleanly over existing desktop systems without session collision.
+
+Read `SPEC.md` before making architectural, platform, installer, dependency, or
+packaging changes. Treat `SPEC.md` as the single source of truth for project scope
+and acceptance criteria.
 
 ## Priorities
 
@@ -23,13 +26,11 @@ acceptance criteria.
    explicit.
 6. Prefer focused changes that can be reviewed and tested independently.
 
-## Fedora Support Contract
+## Multi-Platform Support Contract
 
-The sole supported platform is Fedora Linux. The current documented Fedora Server
-Network Install release is the image base, with separate standard and NVIDIA
-variants. The existing-system installer also supports Fedora. Every other
-operating-system identity must fail clearly instead of entering an untested
-package or installation path.
+The primary tier-1 platforms are **Fedora, Arch Linux, and Debian**. 
+Operating system identity is detected dynamically via `/etc/os-release` or standard package manager interfaces (`dnf`, `pacman`, `apt`). 
+Unsupported or legacy platforms gracefully fall back to the standalone suckless core with ChadDWM-style status bar rather than aborting abruptly.
 
 ## Repository Map
 
