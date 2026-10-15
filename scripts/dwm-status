@@ -271,9 +271,9 @@ publish() {
 	bt=$(bluetooth_text)
 
 	if [[ -n $bt ]]; then
-		status_name=$(printf '\x01%s \x02%s \x03%s | %s | %s' "$weather" "$clock" "$volume" "$bt" "$power")
+		status_name=$(printf '%s | %s | %s | %s | %s' "$weather" "$clock" "$volume" "$bt" "$power")
 	else
-		status_name=$(printf '\x01%s \x02%s \x03%s | %s' "$weather" "$clock" "$volume" "$power")
+		status_name=$(printf '%s | %s | %s | %s' "$weather" "$clock" "$volume" "$power")
 	fi
 
 	if ! timeout --kill-after=0.2 "$publish_timeout" \
