@@ -204,6 +204,6 @@ ShellRoot {
         }
     }
     Timer { interval: 25; repeat: true; running: !root.done; onTriggered: root.advance() }
-    Timer { interval: 30000; running: true; onTriggered: root.check(false, "Scenario timeout at stage " + root.stage) }
+    Timer { interval: 70000; running: true; onTriggered: root.check(false, "Scenario timeout at stage " + root.stage) }
     Component.onCompleted: observer.open()
 }

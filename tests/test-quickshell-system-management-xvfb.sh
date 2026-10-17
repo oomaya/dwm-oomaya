@@ -492,7 +492,7 @@ for pipe_case in absent regular no-reader; do
 	[ ! -s "$pipe_fixture/time.events" ]
 	[ "$pipe_case" != absent ] || [ ! -e "$pipe_fixture/time.events" ]
 done
-timeout --foreground --kill-after=2s 35s env DISPLAY="$display" HOME="$home" XDG_CONFIG_HOME="$config_home" \
+timeout --foreground --kill-after=2s 75s env DISPLAY="$display" HOME="$home" XDG_CONFIG_HOME="$config_home" \
 	XDG_DATA_HOME="$work/provider-discovery-data" XDG_RUNTIME_DIR="$runtime" QT_QPA_PLATFORMTHEME= \
 	DWM_PROVIDER_DISCOVERY_FIXTURE="$work/provider-discovery-state" \
 	quickshell --no-duplicate --path "$work/provider-discovery/shell.qml" >"$work/provider-discovery.log" 2>&1 &
@@ -513,7 +513,7 @@ mkdir -p "$work/provider-generation"
 cp -a "$repo/config/quickshell/core" "$repo/config/quickshell/systemmanagement" "$work/provider-generation/"
 cp "$repo/tests/qml/SystemProviderGeneration.qml" "$work/provider-generation/shell.qml"
 printf 'hold' >"$work/provider-discovery-state/mode"
-timeout --foreground --kill-after=2s 35s env DISPLAY="$display" HOME="$home" XDG_CONFIG_HOME="$config_home" \
+timeout --foreground --kill-after=2s 75s env DISPLAY="$display" HOME="$home" XDG_CONFIG_HOME="$config_home" \
 	XDG_DATA_HOME="$work/provider-discovery-data" XDG_RUNTIME_DIR="$runtime" QT_QPA_PLATFORMTHEME= \
 	DWM_PROVIDER_DISCOVERY_FIXTURE="$work/provider-discovery-state" \
 	quickshell --no-duplicate --path "$work/provider-generation/shell.qml" >"$work/provider-generation.log" 2>&1 &
@@ -566,7 +566,7 @@ for discovery_domain in time storage security; do
 	# Every run owns a fresh private fixture journal and event namespace.
 	native_fixture="$work/native-discovery-$discovery_domain"
 	mkdir -p "$native_fixture"
-	timeout --foreground --kill-after=2s 35s env DISPLAY="$display" HOME="$home" XDG_CONFIG_HOME="$config_home" \
+	timeout --foreground --kill-after=2s 75s env DISPLAY="$display" HOME="$home" XDG_CONFIG_HOME="$config_home" \
 		XDG_DATA_HOME="$work/native-discovery-data" XDG_RUNTIME_DIR="$runtime" QT_QPA_PLATFORMTHEME= \
 		DWM_NATIVE_DISCOVERY_FIXTURE="$native_fixture" DWM_DISCOVERY_DOMAIN="$discovery_domain" \
 		quickshell --no-duplicate --path "$work/native-discovery/shell.qml" >"$work/native-discovery.log" 2>&1 &

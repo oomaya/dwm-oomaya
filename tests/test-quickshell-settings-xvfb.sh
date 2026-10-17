@@ -25,7 +25,15 @@ if [ "$(id -u)" -eq 0 ] && [ "${DWM_SETTINGS_XVFB_UNPRIVILEGED:-0}" != 1 ]; then
 	# Root home directories are not traversable by the unprivileged fixture,
 	# and Quickshell IPC sockets require a short AF_UNIX path.
 	root_runner_work=$(mktemp -d /var/tmp/dwm-settings-xvfb-root.XXXXXX)
-	trap 'rm -rf -- "$root_runner_work"' EXIT
+	cleanup_root_runner() {
+		pkill -u "$unprivileged_uid" 2>/dev/null || true
+		for _ in 1 2 3 4 5; do
+			rm -rf -- "$root_runner_work" 2>/dev/null && return 0
+			sleep 0.1
+		done
+		rm -rf -- "$root_runner_work" 2>/dev/null || true
+	}
+	trap cleanup_root_runner EXIT
 	fixture_repo=$root_runner_work/repo
 	mkdir -p "$root_runner_work/cache" "$root_runner_work/config" \
 		"$root_runner_work/data" "$root_runner_work/runtime" \
@@ -52,7 +60,7 @@ if [ "$(id -u)" -eq 0 ] && [ "${DWM_SETTINGS_XVFB_UNPRIVILEGED:-0}" != 1 ]; then
 	else
 		root_runner_status=$?
 	fi
-	rm -rf -- "$root_runner_work"
+	cleanup_root_runner
 	trap - EXIT
 	exit "$root_runner_status"
 fi

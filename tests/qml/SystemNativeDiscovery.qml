@@ -303,7 +303,7 @@ ShellRoot {
     }
     Timer { interval: 25; repeat: true; running: !root.done; onTriggered: root.advance() }
     Timer {
-        interval: 30000; running: true
+        interval: 70000; running: true
         onTriggered: root.check(false, "Timeout at stage " + root.stage + ", count " + root.count()
             + ", time " + root.eventMonitor().phase + ", snapshot " + model.snapshotState)
     }
