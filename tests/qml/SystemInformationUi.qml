@@ -73,7 +73,7 @@ ShellRoot {
             }
             done = true;
             console.info("Information UI tests: PASS (" + assertions + " assertions)");
-            Qt.quit();
+            Qt.callLater(function() { Qt.quit(); });
         }
     }
     QtObject {

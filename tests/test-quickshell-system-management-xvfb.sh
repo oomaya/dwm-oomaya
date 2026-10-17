@@ -376,6 +376,7 @@ for size in 640x480 780x580 1000x740; do
 	quickshell_pid=
 	if [ "$status" -ne 0 ] || ! grep -F 'Information UI tests: PASS' "$work/information-ui-$size.log" ||
 		grep -Eq 'Information UI FAILED:|ReferenceError:|TypeError:|Binding loop' "$work/information-ui-$size.log"; then
+		printf 'Information UI tests failed for size %s (exit status %s)\n' "$size" "$status" >&2
 		cat "$work/information-ui-$size.log" >&2
 		exit 1
 	fi
