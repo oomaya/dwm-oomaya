@@ -47,6 +47,20 @@ editor_mimes=(
 	text/plain
 )
 
+image_mimes=(
+	image/png
+	image/jpeg
+	image/gif
+	image/webp
+)
+
+video_mimes=(
+	video/mp4
+	video/x-matroska
+	video/webm
+	audio/mpeg
+)
+
 supported_mimes=(
 	x-scheme-handler/http
 	x-scheme-handler/https
@@ -66,9 +80,9 @@ usage() {
 Usage:
   dwm-default-apps snapshot
   dwm-default-apps watch
-  dwm-default-apps set-role <browser|terminal|file-manager|editor> <desktop-id>
+  dwm-default-apps set-role <browser|terminal|file-manager|editor|image-viewer|video-player> <desktop-id>
   dwm-default-apps set-mime <mime-type> <desktop-id>
-  dwm-default-apps reset-role <browser|terminal|file-manager|editor>
+  dwm-default-apps reset-role <browser|terminal|file-manager|editor|image-viewer|video-player>
   dwm-default-apps reset-mime <mime-type>
   dwm-default-apps status
   dwm-default-apps browsers
@@ -340,6 +354,16 @@ parsed_desktop_matches_role() {
 	editor)
 		desktop_token_present "$desktop_parsed_categories" TextEditor ||
 			desktop_token_present "$desktop_parsed_mime_types" text/plain
+		;;
+	image-viewer)
+		desktop_token_present "$desktop_parsed_categories" ImageViewer ||
+			desktop_token_present "$desktop_parsed_categories" Graphics ||
+			desktop_token_present "$desktop_parsed_mime_types" image/png
+		;;
+	video-player)
+		desktop_token_present "$desktop_parsed_categories" Video ||
+			desktop_token_present "$desktop_parsed_categories" AudioVideo ||
+			desktop_token_present "$desktop_parsed_mime_types" video/mp4
 		;;
 	*) return 1 ;;
 	esac
@@ -1075,6 +1099,18 @@ set_role() {
 		printf 'defaults-result\t1\t0\tset-role\teditor\t%s\tok\n' \
 			"$(clean_field "$desktop_id")"
 		;;
+	image-viewer)
+		require_role_candidate image-viewer "$desktop_id"
+		set_xdg_defaults role-image-viewer "$desktop_id" "${image_mimes[@]}"
+		printf 'defaults-result\t1\t0\tset-role\timage-viewer\t%s\tok\n' \
+			"$(clean_field "$desktop_id")"
+		;;
+	video-player)
+		require_role_candidate video-player "$desktop_id"
+		set_xdg_defaults role-video-player "$desktop_id" "${video_mimes[@]}"
+		printf 'defaults-result\t1\t0\tset-role\tvideo-player\t%s\tok\n' \
+			"$(clean_field "$desktop_id")"
+		;;
 	terminal) set_terminal "$desktop_id" ;;
 	*)
 		printf 'dwm-default-apps: invalid role: %s\n' "$role" >&2
@@ -1222,7 +1258,7 @@ emit_candidates() {
 			desktop_usable "$file" || continue
 			name=$desktop_parsed_name
 			[[ -n $name ]] || name=$id
-			for role in browser file-manager terminal editor; do
+			for role in browser file-manager terminal editor image-viewer video-player; do
 				parsed_desktop_matches_role "$role" || continue
 				command_name=
 				candidate_state=available
@@ -1256,7 +1292,7 @@ emit_recovery() {
 	local mime_fingerprint hotkeys_fingerprint
 	mime_fingerprint=$(file_fingerprint "$mime_file")
 	hotkeys_fingerprint=$(file_fingerprint "$hotkeys_file")
-	for scope in role-browser role-terminal role-file-manager role-editor; do
+	for scope in role-browser role-terminal role-file-manager role-editor role-image-viewer role-video-player; do
 		target=$mime_file
 		current=$mime_fingerprint
 		if [[ $scope == role-terminal ]]; then
@@ -1307,6 +1343,8 @@ snapshot() {
 	emit_role terminal
 	emit_role file-manager
 	emit_role editor
+	emit_role image-viewer
+	emit_role video-player
 	emit_mimes
 	emit_candidates
 	emit_recovery
@@ -1701,7 +1739,7 @@ main() {
 		}
 		case $2 in
 		browser | file-manager) reset_scope "role-$2" "$mime_file" reset-role ;;
-		editor) reset_scope "role-$2" "$mime_file" reset-role ;;
+		editor | image-viewer | video-player) reset_scope "role-$2" "$mime_file" reset-role ;;
 		terminal) reset_scope role-terminal "$hotkeys_file" reset-role ;;
 		*)
 			printf 'dwm-default-apps: invalid role: %s\n' "$2" >&2
