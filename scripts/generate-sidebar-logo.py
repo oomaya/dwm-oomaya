@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Generate DWM-Titus sidebar version badges for Anaconda installer.
+"""Generate DWM-Oomaya sidebar version badges for Anaconda installer.
 
 Creates 160x64 PNG badges with:
-  - 'DWM-Titus' in 20pt NotoSans-Bold (rgba(235, 235, 240, 240))
+  - 'DWM-Oomaya' in 20pt NotoSans-Bold (rgba(235, 235, 240, 240))
   - 'v<version>' in 16pt NotoSans-Regular (rgba(235, 235, 240, 240))
 """
 
@@ -33,7 +33,7 @@ def parse_version(value: str) -> str:
 
 
 def render_logo(version: str, fill=DEFAULT_FILL) -> Image.Image:
-    """Render a 160x64 sidebar logo badge with DWM-Titus and version text.
+    """Render a 160x64 sidebar logo badge with DWM-Oomaya and version text.
 
     Args:
         version: Release version string (e.g. '0.7.0' or 'v0.7.0').
@@ -49,7 +49,7 @@ def render_logo(version: str, fill=DEFAULT_FILL) -> Image.Image:
     font_main = load_font('Bold', 20)
     font_sub = load_font('Regular', 16)
 
-    text_main = 'DWM-Titus'
+    text_main = 'DWM-Oomaya'
     text_sub = f'v{version}'
 
     bbox_m = draw.textbbox((0, 0), text_main, font=font_main)
@@ -86,7 +86,7 @@ def generate_series(out_dir: str):
 
 def main():
     """Parse command-line arguments and execute sidebar logo badge generation."""
-    parser = argparse.ArgumentParser(description='Generate DWM-Titus sidebar version badges')
+    parser = argparse.ArgumentParser(description='Generate DWM-Oomaya sidebar version badges')
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument('--version', type=parse_version, help='Generate logo for specific version (e.g. 0.7.0)')
     parser.add_argument('--output', help='Output PNG path')

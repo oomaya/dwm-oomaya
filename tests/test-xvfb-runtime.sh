@@ -592,7 +592,7 @@ floating_win=$(cat "$work/floating-window-id")
 [ -n "$floating_win" ]
 wait_for_active_window "$floating_win"
 
-DISPLAY=$display xdotool key Super+space
+DISPLAY=$display xdotool key Super+Shift+space
 DISPLAY=$display xdotool key Super+k
 wait_for_active_window "$win"
 wait_for_window_above "$floating_win" "$win"
@@ -610,7 +610,7 @@ done
 floating_peer_win=$(cat "$work/floating-peer-window-id")
 [ -n "$floating_peer_win" ]
 wait_for_active_window "$floating_peer_win"
-DISPLAY=$display xdotool key Super+space
+DISPLAY=$display xdotool key Super+Shift+space
 wait_for_window_above "$floating_peer_win" "$floating_win"
 wait_for_window_above "$floating_win" "$win"
 
