@@ -98,8 +98,10 @@ case "$choice" in
 			"🌐  Change Default Browser" \
 			"📁  Change Default File Manager" \
 			"📝  Change Default Editor" \
-			"💻  Change Default Terminal" \
-			"📋  View Defaults Status" | dmenu -p "󰖲 Defaults >" -l 5)
+			"💻  Change Default Terminal" \ \
+			"🖼️  Change Default Image Viewer" \
+			"🎬  Change Default Video Player"
+			"📋  View Defaults Status" | dmenu -p "󰖲 Defaults >" -l 7)
 		case "$sub" in
 			*"Browser"*)
 				b=$(dwm-default-apps browsers 2>/dev/null | dmenu -p "Browser >" -l 5 | cut -f1)
