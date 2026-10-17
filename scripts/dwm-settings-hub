@@ -122,6 +122,18 @@ case "$choice" in
 				tm=$(printf "%s\n" "$tm_list" | dmenu -p "Terminal >" -l 5)
 				[ -n "$tm" ] && dwm-default-apps set-role terminal "$tm"
 				;;
+			*"Image Viewer"*)
+				iv_list=$(dwm-default-apps snapshot 2>/dev/null | awk -F '\\t' '$1=="candidate" && $2=="image-viewer" && $5=="available" {print $3}')
+				[ -z "$iv_list" ] && iv_list=$(printf "%s\n" "imv.desktop" "sxiv.desktop" "nsxiv.desktop" "eog.desktop" "org.gnome.eog.desktop" "shotwell.desktop" "gwenview.desktop" "org.kde.gwenview.desktop")
+				iv=$(printf "%s\n" "$iv_list" | dmenu -p "Image Viewer >" -l 8)
+				[ -n "$iv" ] && dwm-default-apps set-role image-viewer "$iv"
+				;;
+			*"Video Player"*)
+				vp_list=$(dwm-default-apps snapshot 2>/dev/null | awk -F '\\t' '$1=="candidate" && $2=="video-player" && $5=="available" {print $3}')
+				[ -z "$vp_list" ] && vp_list=$(printf "%s\n" "mpv.desktop" "vlc.desktop" "celluloid.desktop" "io.github.celluloid_player.Celluloid.desktop" "totem.desktop" "org.gnome.Totem.desktop")
+				vp=$(printf "%s\n" "$vp_list" | dmenu -p "Video Player >" -l 6)
+				[ -n "$vp" ] && dwm-default-apps set-role video-player "$vp"
+				;;
 			*"Status"*)
 				dwm-default-apps status 2>/dev/null | sed -e 's/^inode\/directory=/Default File Manager (inode\/directory)=/' -e 's/^text\/plain=/Default Editor (text\/plain)=/' | dmenu -p "Defaults Status" -l 12 || true
 				;;
