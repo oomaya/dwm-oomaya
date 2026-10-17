@@ -43,7 +43,6 @@ submitting a pull request.
 | System update UI | `scripts/run-tests tests/test-quickshell-update-ui-xvfb.sh` for the focused native fixture, plus configured QML lint |
 | Documentation | `npm --prefix docs ci`, then `npm --prefix docs run build` |
 | Installer or package mapping | `scripts/run-tests make check-fedora-packages` on Fedora 44 |
-| Fedora Kickstart or ISO | `scripts/run-tests make check-kickstart` plus all evidence required by [SPEC.md Section 9.4](SPEC.md#94-fedora-image-validation) |
 | Release automation | `scripts/run-tests make release-check` and a dry run of the release helper |
 
 Fedora package, VM, and X11 checks require their documented host tools. If a

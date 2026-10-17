@@ -43,7 +43,6 @@ Unsupported or legacy platforms gracefully fall back to the standalone suckless 
 - `scripts/`: session startup, dependency checks, desktop helpers, and
   operational scripts.
 - `install.sh`: supported existing-system installer for Fedora.
-- `dwm-fedora.ks`, `dwm-fedora-nvidia.ks`: Fedora image installation profiles.
 - `dwm.desktop`: display-manager X session entry.
 - `AGENTS.md`: durable engineering and agent-execution rules.
 - `SPEC.md`: product scope, interfaces, and acceptance criteria.
@@ -123,21 +122,6 @@ Unsupported or legacy platforms gracefully fall back to the standalone suckless 
 - Open ready pull requests by default, not drafts. Never merge, release,
   deploy, or send external announcements without explicit user authorization.
 
-## Fedora Image Rules
-
-- Base released images on the Fedora Server Network Install ISO documented in
-  `SPEC.md` and `docs/RELEASING.md`, not on a Fedora Live image.
-- Preserve separate standard and NVIDIA Kickstarts. Proprietary NVIDIA changes
-  belong only to the explicitly selected NVIDIA image.
-- Keep Kickstart package capabilities aligned with the shared dependency map.
-- Run `make check-kickstart` for Kickstart or ISO-builder changes, then validate
-  a real or virtual install before claiming the image boots or reaches a usable
-  desktop.
-- Record the Fedora release, source image checksum, architecture, firmware
-  mode, image variant, and untested hardware in release evidence.
-- The dedicated Fedora images currently set SELinux disabled by explicit
-  product policy. Existing-system installs must not change host SELinux state.
-  Any change to this policy requires a specification and migration update.
 
 ## Desktop Settings Rules
 

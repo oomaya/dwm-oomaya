@@ -727,10 +727,5 @@ source_packages=$(bash -c '. "$1"; dwm_packages fedora desktop' _ "$repo/scripts
 printf '%s\n' "$source_packages" | grep -Fqx upower
 printf '%s\n' "$source_packages" | grep -Fqx power-profiles-daemon
 printf '%s\n' "$source_packages" | grep -Fqx dbus-tools
-for kickstart in "$repo/dwm-fedora.ks" "$repo/dwm-fedora-nvidia.ks"; do
-	grep -Fqx upower "$kickstart"
-	grep -Fqx power-profiles-daemon "$kickstart"
-	grep -Fqx dbus-tools "$kickstart"
-done
 
 printf 'Quickshell power backend: PASS\n'

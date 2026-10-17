@@ -7,24 +7,6 @@ eyebrow: Get unstuck
 
 # Troubleshooting
 
-## Gear Lever does not open
-
-Gear Lever requires Flatpak's document portal. If launching it prints a
-`bwrap: Can't find source path /run/user/.../doc/by-app/...` error, the portal
-process has outlived its FUSE mount. Repair the current user session with:
-
-```sh
-systemctl --user restart xdg-document-portal.service
-flatpak run it.mijorus.gearlever
-```
-
-The recommended and full installers include Flatpak, the GTK portal, and a
-user-scoped Gear Lever installation from Flathub by default. To repair only the
-application setup from an installed dwm-oomaya checkout, run:
-
-```sh
-install-gearlever
-```
 
 Run the dependency checker first — it covers most common issues:
 

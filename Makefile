@@ -28,7 +28,6 @@ INSTALL_COMMANDS = \
 	scripts/dwm-accessibility-settings \
 	scripts/dwm-app-install \
 	scripts/check-deps.sh \
-	scripts/disable-powersaving \
 	scripts/dwm-clock \
 	scripts/dwm-controlcenter \
 	scripts/dwm-default-apps \
@@ -74,7 +73,6 @@ INSTALL_COMMANDS = \
 	scripts/dwm-terminal \
 	scripts/dwm-utils.sh \
 	scripts/dwm-xdg-autostart \
-	scripts/install-gearlever \
 	scripts/install-herdr \
 	scripts/nvidia-gpu \
 	scripts/nvidia-suspend-test.sh \
@@ -453,9 +451,6 @@ check-terminal:
 check-hotkeys:
 	scripts/validate-hotkeys config/hotkeys.toml
 
-check-gearlever-install:
-	tests/test-install-gearlever.sh
-
 check-herdr-install:
 	tests/test-install-herdr.sh
 
@@ -601,24 +596,6 @@ check-quickshell-settings-xvfb: all
 check-lightdm-config:
 	tests/test-lightdm-config.sh
 
-check-kickstart:
-	for ks in dwm-fedora.ks dwm-fedora-nvidia.ks; do \
-		ksvalidator "$$ks"; \
-		awk 'BEGIN { bad = 0 } \
-			/^[[:space:]]*#/ { next } \
-			/(^user[[:space:]]|^rootpw[[:space:]]|--hostname=|\/home\/titus|America\/Chicago|^initial-setup$$|^firstboot[[:space:]]+--enable)/ { \
-				print "Personal kickstart default remains in '"$$ks"': " $$0 > "/dev/stderr"; \
-				bad = 1; \
-			} \
-			END { exit bad }' "$$ks"; \
-		grep -Fqx 'firstboot --disable' "$$ks"; \
-	done
-	tests/test-kickstart-variants.sh
-	$(MAKE) check-fedora-iso-builder
-
-check-fedora-iso-builder:
-	tests/test-fedora-iso-builder.sh
-
 check-fedora-platform:
 	@$(call run_managed_test,tests/test-fedora-platform.sh)
 
@@ -709,9 +686,7 @@ release-check: all
 		grep -Fqx 'Exec=${PREFIX}/bin/dwm'; \
 	echo "==> Release archive validated."
 
-check:
-	$(MAKE) clean
-	$(MAKE) all
+check-core: all
 	$(MAKE) check-shell
 	$(MAKE) check-format
 	$(MAKE) check-build-config
@@ -725,6 +700,25 @@ check:
 	$(MAKE) check-display-profile
 	$(MAKE) check-display-setup
 	$(MAKE) check-monitor-tags
+	$(MAKE) check-terminal
+	$(MAKE) check-herdr-install
+	$(MAKE) check-lock
+	$(MAKE) check-session-guards
+	$(MAKE) check-session-migration
+	$(MAKE) check-webapp-launch
+	$(MAKE) check-screenshot
+	$(MAKE) check-release-helper
+	$(MAKE) check-fedora-packages
+	$(MAKE) check-install
+	$(MAKE) check-install-preservation
+	$(MAKE) check-test-runner
+	$(MAKE) check-lightdm-config
+	$(MAKE) check-xvfb-runtime
+	$(MAKE) release-check
+
+check-shell-appearance: all
+	$(MAKE) check-quickshell-qml
+	$(MAKE) check-appearance
 	$(MAKE) check-quickshell-launcher
 	$(MAKE) check-quickshell-controls
 	$(MAKE) check-quickshell-audio
@@ -734,8 +728,6 @@ check:
 	$(MAKE) check-quickshell-session-actions
 	$(MAKE) check-quickshell-defaults-model
 	$(MAKE) check-quickshell-appearance-model
-	$(MAKE) check-quickshell-settings-xvfb
-	$(MAKE) check-quickshell-settings-responsiveness-xvfb
 	$(MAKE) check-quickshell-design-system
 	$(MAKE) check-quickshell-large-surfaces
 	$(MAKE) check-quickshell-large-surfaces-xvfb
@@ -743,37 +735,30 @@ check:
 	$(MAKE) check-quickshell-panel-settings
 	$(MAKE) check-accessibility
 	$(MAKE) check-quickshell-command-menu
-	$(MAKE) check-quickshell-qml
 	$(MAKE) check-quickshell-notifications
 	$(MAKE) check-quickshell-tray
+	$(MAKE) check-quickshell-network
+	$(MAKE) check-quickshell-connectivity
+	$(MAKE) check-quickshell-settings-xvfb
+	$(MAKE) check-quickshell-settings-responsiveness-xvfb
+
+check-system: all
 	$(MAKE) check-system-health
 	$(MAKE) check-system-management
 	$(MAKE) check-quickshell-system-management
 	$(MAKE) check-settings
-	$(MAKE) check-appearance
-	$(MAKE) check-quickshell-network
-	$(MAKE) check-quickshell-connectivity
-	$(MAKE) check-terminal
-	$(MAKE) check-gearlever-install
-	$(MAKE) check-herdr-install
-	$(MAKE) check-lock
-	$(MAKE) check-session-guards
-	$(MAKE) check-session-migration
-	$(MAKE) check-webapp-launch
-	$(MAKE) check-screenshot
-	$(MAKE) check-release-helper
-	$(MAKE) check-kickstart
-	$(MAKE) check-fedora-packages
-	$(MAKE) check-install
-	$(MAKE) check-install-preservation
-	$(MAKE) check-test-runner
-	$(MAKE) check-lightdm-config
-	$(MAKE) release-check
 
-.PHONY: clean all check check-accessibility check-appearance check-phase5-optional-components check-build-config check-build-deps check-default-apps check-xdg-autostart check-dev-sync-install \
+check:
+	$(MAKE) clean
+	$(MAKE) all
+	$(MAKE) check-core
+	$(MAKE) check-shell-appearance
+	$(MAKE) check-system
+
+.PHONY: clean all check check-core check-shell-appearance check-system check-accessibility check-appearance check-phase5-optional-components check-build-config check-build-deps check-default-apps check-xdg-autostart check-dev-sync-install \
 	check-test-runner \
-	check-display-profile check-display-setup check-fedora-iso-builder check-fedora-packages check-fedora-platform check-format check-install \
-	check-gearlever-install check-herdr-install check-install-manifest check-install-preservation check-kickstart check-lock \
+	check-display-profile check-display-setup check-fedora-packages check-fedora-platform check-format check-install \
+	check-herdr-install check-install-manifest check-install-preservation check-lock \
 	check-session-guards check-session-migration check-screenshot check-release-helper check-shell check-webapp-launch check-diagnostics check-status check-system-health check-system-management check-quickshell-system-management check-settings \
 	check-quickshell-launcher check-quickshell-controls check-quickshell-audio check-quickshell-controlcenter check-quickshell-power check-quickshell-power-backend check-quickshell-power-model check-quickshell-session-actions check-quickshell-defaults-model check-quickshell-appearance-model check-quickshell-design-system check-quickshell-large-surfaces check-quickshell-large-surfaces-xvfb check-quickshell-panel-menus check-quickshell-panel-settings check-quickshell-command-menu check-quickshell-notifications check-quickshell-tray check-quickshell-health-xvfb check-quickshell-settings-xvfb check-quickshell-settings-responsiveness-xvfb check-quickshell-network check-quickshell-connectivity check-quickshell-qml check-lightdm-config check-terminal check-hotkeys check-xvfb-runtime check-deps deps install-deps install install-system install-user \
 	install-cursors native release release-check uninstall
