@@ -29,9 +29,12 @@ apply_stub=$work/apply-theme
 reload_stub=$work/reload-theme
 xsettings_stub=$work/reload-xsettings
 
-mkdir -p "$config_home/dwm-titus" "$data_home/dwm-titus/config" "$state_home" \
+mkdir -p "$config_home/dwm-titus" "$data_home/dwm-titus/config" "$state_home/dwm-titus" \
 	"$runtime_dir" "$home_dir"
-cp "$repo/config/themes.toml" "$managed_file"
+themes_fixture=$work/themes-fixture-baseline.toml
+cp "$repo/config/themes.toml" "$themes_fixture"
+sed -i '/^\[active\]$/,/^\[/ s/^theme = "[^"]*"/theme = "nord"/' "$themes_fixture"
+cp "$themes_fixture" "$managed_file"
 
 cat >"$apply_stub" <<'SH'
 #!/bin/sh
@@ -380,8 +383,8 @@ grep -Fqx 'dwm-settings-theme: XDG_RUNTIME_DIR must be an absolute path' \
 
 reset_fixture() {
 	rm -rf "$config_home" "$state_home" "$runtime_dir" "$work/dconf" "$work/xfconf"
-	mkdir -p "$config_home/dwm-titus" "$state_home" "$runtime_dir" "$work/dconf" "$work/xfconf"
-	cp "$repo/config/themes.toml" "$themes_file"
+	mkdir -p "$config_home/dwm-titus" "$state_home/dwm-titus" "$runtime_dir" "$work/dconf" "$work/xfconf"
+	cp "$themes_fixture" "$themes_file"
 	chmod 640 "$themes_file"
 	: >"$work/apply.log"
 	: >"$work/live-only.log"
@@ -436,7 +439,7 @@ grep -Fqx $'appearance-action-protocol\t1\t0' <<<"$apply_output"
 grep -Fqx $'result\tapply\tdracula\tnord' <<<"$apply_output"
 [[ $(active_theme) == dracula ]]
 [[ $(stat -c %a "$themes_file") == 640 ]]
-grep -Fqx 'theme = "dracula"   # ← change only this line to switch themes' "$themes_file"
+grep -Fqx 'theme = "dracula"   # ← default Omarchy-oomaya sovereign theme' "$themes_file"
 grep -Fqx "$before_custom" "$themes_file"
 grep -Fqx dracula "$work/apply.log"
 
@@ -444,8 +447,8 @@ relative_home=$work/relative-home
 relative_runtime=$work/relative-xdg-runtime
 mkdir -p "$relative_home/.config/dwm-titus" \
 	"$relative_home/.local/share/dwm-titus/config" "$relative_runtime"
-cp "$repo/config/themes.toml" "$relative_home/.config/dwm-titus/themes.toml"
-cp "$repo/config/themes.toml" "$relative_home/.local/share/dwm-titus/config/themes.toml"
+cp "$themes_fixture" "$relative_home/.config/dwm-titus/themes.toml"
+cp "$themes_fixture" "$relative_home/.local/share/dwm-titus/config/themes.toml"
 (
 	cd "$work"
 	HOME=$relative_home XDG_CONFIG_HOME=relative-config XDG_DATA_HOME=relative-data \
@@ -1590,7 +1593,7 @@ fi
 chmod 700 "$config_home/dwm-titus"
 rm "$themes_file"
 ln -s "$work/outside-themes.toml" "$themes_file"
-cp "$repo/config/themes.toml" "$work/outside-themes.toml"
+cp "$themes_fixture" "$work/outside-themes.toml"
 outside_hash=$(sha256sum "$work/outside-themes.toml")
 symlink_apply_output=$(HOME=$home_dir XDG_CONFIG_HOME=$config_home XDG_DATA_HOME=$data_home \
 	XDG_STATE_HOME=$state_home XDG_RUNTIME_DIR=$runtime_dir \
@@ -1941,7 +1944,7 @@ fi
 grep -Fq 'changed after the interrupted transaction' "$work/managed-source-recover.err"
 grep -Fqx $'recovery\tavailable\tpersonalize-qt\tnord' \
 	< <(run_theme recovery-status)
-cp "$repo/config/themes.toml" "$managed_file"
+cp "$themes_fixture" "$managed_file"
 reset_fixture
 
 printf 'personalization-protocol\t1\t0\nfont\tFont One\n' \

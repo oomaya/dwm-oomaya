@@ -24,7 +24,7 @@ config=$fixture/config
 state=$fixture/state
 bin=$fixture/bin
 font_config=$config/dwm-titus/font.conf
-mkdir -p "$home" "$config" "$state" "$bin"
+mkdir -p "$home/.config/dwm-titus" "$config/dwm-titus" "$state/dwm-titus" "$bin"
 
 process_is_live() {
 	local pid=$1 process_stat process_state
