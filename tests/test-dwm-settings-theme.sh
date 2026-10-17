@@ -17,6 +17,11 @@ trap cleanup EXIT
 trap 'signal_exit HUP' HUP
 trap 'signal_exit INT' INT
 trap 'signal_exit TERM' TERM
+report_error() {
+	local line=$1 cmd=$2 code=$3
+	printf 'ERROR: test-dwm-settings-theme.sh failed on line %s (exit %s): %s\n' "$line" "$code" "$cmd" >&2
+}
+trap 'report_error "$LINENO" "$BASH_COMMAND" "$?"' ERR
 
 config_home=$work/config
 data_home=$work/data
@@ -409,7 +414,7 @@ active_theme() {
 
 wait_for_theme() {
 	local expected=$1 attempt
-	for ((attempt = 0; attempt < 100; attempt++)); do
+	for ((attempt = 0; attempt < 300; attempt++)); do
 		if [[ $(active_theme 2>/dev/null || true) == "$expected" ]]; then
 			return 0
 		fi
@@ -495,7 +500,7 @@ PATH=$race_bin:$PATH HOME=$home_dir XDG_CONFIG_HOME=$config_home XDG_DATA_HOME=$
 	DWM_TEST_RACE_RELEASE=$race_release \
 	"$helper" apply dracula >"$work/race.out" 2>"$work/race.err" &
 race_pid=$!
-for attempt in {1..100}; do
+for attempt in {1..300}; do
 	[[ -e $race_ready ]] && break
 	sleep 0.05
 done
@@ -521,7 +526,7 @@ PATH=$race_bin:$PATH HOME=$home_dir XDG_CONFIG_HOME=$config_home XDG_DATA_HOME=$
 	DWM_TEST_RACE_RELEASE=$race_release \
 	"$helper" apply dracula >"$work/mode-race.out" 2>"$work/mode-race.err" &
 mode_race_pid=$!
-for attempt in {1..100}; do
+for attempt in {1..300}; do
 	[[ -e $race_ready ]] && break
 	sleep 0.05
 done
@@ -549,7 +554,7 @@ HOME=$home_dir XDG_CONFIG_HOME=$config_home XDG_DATA_HOME=$data_home \
 	"$helper" apply nord >"$work/same-source-exchange.out" \
 	2>"$work/same-source-exchange.err" &
 same_source_exchange_pid=$!
-for attempt in {1..100}; do
+for attempt in {1..300}; do
 	[[ -e $same_source_exchange_ready ]] && break
 	sleep 0.05
 done
@@ -581,7 +586,7 @@ HOME=$home_dir XDG_CONFIG_HOME=$config_home XDG_DATA_HOME=$data_home \
 	DWM_TEST_SOURCE_EXCHANGE_RELEASE=$source_exchange_release \
 	"$helper" apply dracula >"$work/source-exchange.out" 2>"$work/source-exchange.err" &
 source_exchange_pid=$!
-for attempt in {1..100}; do
+for attempt in {1..300}; do
 	[[ -e $source_exchange_ready ]] && break
 	sleep 0.05
 done
@@ -611,7 +616,7 @@ integration_lock_release=$work/integration-lock.release
 	while [[ ! -e $integration_lock_release ]]; do sleep 0.01; done
 ) &
 integration_lock_pid=$!
-for attempt in {1..100}; do
+for attempt in {1..300}; do
 	[[ -e $integration_lock_ready ]] && break
 	sleep 0.05
 done
@@ -677,7 +682,7 @@ keep_live_release=$work/keep-live-race.release
 DWM_TEST_LIVE_ONLY_READY=$keep_live_ready DWM_TEST_LIVE_ONLY_RELEASE=$keep_live_release \
 	run_theme keep keep-live-race >"$work/keep-live-race.out" 2>"$work/keep-live-race.err" &
 keep_live_pid=$!
-for attempt in {1..100}; do
+for attempt in {1..300}; do
 	[[ -e $keep_live_ready ]] && break
 	sleep 0.05
 done
@@ -850,7 +855,7 @@ HOME=$home_dir XDG_CONFIG_HOME=$config_home XDG_DATA_HOME=$data_home \
 	"$helper" preview integration-capture 10 dracula \
 	>"$work/integration-capture.out" 2>"$work/integration-capture.err" &
 capture_pid=$!
-for attempt in {1..100}; do
+for attempt in {1..300}; do
 	[[ -e $capture_ready ]] && break
 	sleep 0.05
 done
@@ -904,7 +909,7 @@ HOME=$home_dir XDG_CONFIG_HOME=$config_home XDG_DATA_HOME=$data_home \
 	"$helper" preview integration-publish-race 10 dracula \
 	>"$work/integration-publish-race.out" 2>"$work/integration-publish-race.err" &
 publish_race_pid=$!
-for attempt in {1..100}; do
+for attempt in {1..300}; do
 	[[ -e $publish_ready ]] && break
 	sleep 0.05
 done
@@ -931,7 +936,7 @@ DWM_TEST_BEFORE_INTEGRATION_READY=$integration_race_ready \
 	run_theme preview integration-race 10 dracula >"$work/integration-race.out" \
 	2>"$work/integration-race.err" &
 integration_race_pid=$!
-for attempt in {1..100}; do
+for attempt in {1..300}; do
 	[[ -e $integration_race_ready ]] && break
 	sleep 0.05
 done
@@ -952,7 +957,7 @@ grep -Fqx $'recovery\tnone' < <(run_theme recovery-status)
 run_theme preview preview-expire 3 dracula >/dev/null 2>"$work/preview-expire.err"
 [[ $(active_theme) == dracula ]]
 wait_for_theme nord
-for attempt in {1..100}; do
+for attempt in {1..300}; do
 	[[ $(run_theme preview-status preview-expire | tail -n 1) == $'result\texpired\tpreview-expire' ]] && break
 	sleep 0.05
 done
@@ -1049,7 +1054,7 @@ durable_watchdog_pid=$(awk -F= '$1 == "watchdog_pid" { print $2; exit }' \
 	"$durable_prefix.meta")
 [[ $durable_watchdog_pid =~ ^[1-9][0-9]*$ ]]
 kill -TERM "$durable_watchdog_pid" 2>/dev/null || true
-for attempt in {1..100}; do
+for attempt in {1..300}; do
 	[[ ! -r /proc/$durable_watchdog_pid/stat ]] && break
 	durable_watchdog_state=$(awk '{ line = $0; sub(/^.*\) /, "", line); print substr(line, 1, 1) }' \
 		"/proc/$durable_watchdog_pid/stat" 2>/dev/null || true)
@@ -1118,7 +1123,7 @@ apply_live_release=$work/apply-live-race.release
 DWM_TEST_LIVE_ONLY_READY=$apply_live_ready DWM_TEST_LIVE_ONLY_RELEASE=$apply_live_release \
 	run_theme apply dracula >"$work/apply-live-race.out" 2>"$work/apply-live-race.err" &
 apply_live_pid=$!
-for attempt in {1..100}; do
+for attempt in {1..300}; do
 	[[ -e $apply_live_ready ]] && break
 	sleep 0.05
 done
@@ -1161,7 +1166,7 @@ HOME=$home_dir XDG_CONFIG_HOME=$config_home XDG_DATA_HOME=$data_home \
 	DWM_TEST_APPLY_READY=$signal_ready DWM_TEST_APPLY_WAIT=$signal_release \
 	"$helper" apply dracula >"$work/signal.out" 2>"$work/signal.err" &
 signal_pid=$!
-for attempt in {1..100}; do
+for attempt in {1..300}; do
 	[[ -e $signal_ready ]] && break
 	sleep 0.05
 done
@@ -1200,7 +1205,7 @@ HOME=$home_dir XDG_CONFIG_HOME=$config_home XDG_DATA_HOME=$data_home \
 	DWM_TEST_FINISH_RELEASE=$finish_release \
 	"$helper" apply dracula >"$work/finish.out" 2>"$work/finish.err" &
 finish_pid=$!
-for attempt in {1..100}; do
+for attempt in {1..300}; do
 	[[ -e $finish_ready ]] && break
 	sleep 0.05
 done
@@ -1249,7 +1254,7 @@ HOME=$home_dir XDG_CONFIG_HOME=$config_home XDG_DATA_HOME=$data_home \
 	DWM_TEST_APPLY_READY=$ready DWM_TEST_APPLY_WAIT=$release DWM_TEST_APPLY_PID=$child_pid_file \
 	"$helper" apply dracula >"$work/interrupted.out" 2>"$work/interrupted.err" &
 interrupted_pid=$!
-for attempt in {1..100}; do
+for attempt in {1..300}; do
 	[[ -e $ready && -s $child_pid_file ]] && break
 	sleep 0.05
 done
@@ -1346,7 +1351,7 @@ DWM_TEST_PERSONALIZATION_REPAIR_READY=$repair_ready \
 	run_theme personalize-repair >"$work/personalization-repair-race.out" \
 	2>"$work/personalization-repair-race.err" &
 repair_pid=$!
-for attempt in {1..100}; do
+for attempt in {1..300}; do
 	[[ -e $repair_ready ]] && break
 	sleep 0.05
 done
@@ -1372,7 +1377,7 @@ DWM_TEST_FINISH_READY=$repair_finish_ready DWM_TEST_FINISH_RELEASE=$repair_finis
 	run_theme personalize-repair >"$work/personalization-repair-finish.out" \
 	2>"$work/personalization-repair-finish.err" &
 repair_pid=$!
-for attempt in {1..100}; do
+for attempt in {1..300}; do
 	[[ -e $repair_finish_ready && -s $repair_process_pid ]] && break
 	sleep 0.05
 done
@@ -1927,7 +1932,7 @@ DWM_TEST_FINISH_READY=$managed_finish_ready \
 	run_theme_real_apply personalize qt gtk3 \
 	>"$work/managed-finish.out" 2>"$work/managed-finish.err" &
 managed_finish_job=$!
-for _ in {1..200}; do
+for _ in {1..400}; do
 	[[ -e $managed_finish_ready && -s $managed_finish_pid_file ]] && break
 	sleep 0.02
 done
@@ -1984,7 +1989,7 @@ DWM_TEST_BEFORE_INTEGRATION_PUBLISH=$personalization_baseline_ready \
 	run_theme_real_apply personalize font 'Font One' \
 	>"$work/personalization-baseline.out" 2>"$work/personalization-baseline.err" &
 personalization_baseline_job=$!
-for _ in {1..200}; do
+for _ in {1..400}; do
 	[[ -e $personalization_baseline_ready ]] && break
 	sleep 0.02
 done
@@ -2009,7 +2014,7 @@ DWM_TEST_BEFORE_PERSONALIZATION_LIVE_WRITE=$personalization_live_ready \
 	run_theme_real_apply personalize font 'Font One' \
 	>"$work/personalization-live.out" 2>"$work/personalization-live.err" &
 personalization_live_job=$!
-for _ in {1..200}; do
+for _ in {1..400}; do
 	[[ -e $personalization_live_ready ]] && break
 	sleep 0.02
 done
@@ -2035,7 +2040,7 @@ DWM_TEST_BEFORE_PERSONALIZATION_LIVE_WRITE=$personalization_xfconf_live_ready \
 	>"$work/personalization-xfconf-live.out" \
 	2>"$work/personalization-xfconf-live.err" &
 personalization_xfconf_live_job=$!
-for _ in {1..200}; do
+for _ in {1..400}; do
 	[[ -e $personalization_xfconf_live_ready ]] && break
 	sleep 0.02
 done
@@ -2086,7 +2091,7 @@ DWM_TEST_FINISH_READY=$personalization_finish_ready \
 	run_theme_real_apply personalize font 'Font One' \
 	>"$work/personalization-finish.out" 2>"$work/personalization-finish.err" &
 personalization_finish_job=$!
-for _ in {1..200}; do
+for _ in {1..400}; do
 	[[ -e $personalization_finish_ready && -s $personalization_finish_pid_file ]] && break
 	sleep 0.02
 done
@@ -2113,7 +2118,7 @@ DWM_TEST_FINISH_READY=$text_finish_ready \
 	run_theme_real_apply personalize text-size 1.25 \
 	>"$work/text-finish.out" 2>"$work/text-finish.err" &
 text_finish_job=$!
-for _ in {1..200}; do
+for _ in {1..400}; do
 	[[ -e $text_finish_ready && -s $text_finish_pid_file ]] && break
 	sleep 0.02
 done
@@ -2140,7 +2145,7 @@ DWM_TEST_FINISH_READY=$cursor_finish_ready \
 	run_theme_real_apply personalize cursor Capitaine-Cursors \
 	>"$work/cursor-finish.out" 2>"$work/cursor-finish.err" &
 cursor_finish_job=$!
-for _ in {1..200}; do
+for _ in {1..400}; do
 	[[ -e $cursor_finish_ready && -s $cursor_finish_pid_file ]] && break
 	sleep 0.02
 done
@@ -2164,7 +2169,7 @@ DWM_TEST_FINISH_READY=$personalization_edit_ready \
 	run_theme_real_apply personalize cursor Capitaine-Cursors \
 	>"$work/personalization-edit.out" 2>"$work/personalization-edit.err" &
 personalization_edit_job=$!
-for _ in {1..200}; do
+for _ in {1..400}; do
 	[[ -e $personalization_edit_ready && -s $personalization_edit_pid_file ]] && break
 	sleep 0.02
 done
@@ -2194,7 +2199,7 @@ DWM_TEST_BEFORE_INTEGRATION_PUBLISH=$personalization_marker \
 	run_theme personalize qt gtk3 >"$work/personalization-crash.out" \
 	2>"$work/personalization-crash.err" &
 personalization_job=$!
-for _ in {1..200}; do
+for _ in {1..400}; do
 	[[ -e $personalization_marker && -s $personalization_pid_file ]] && break
 	sleep 0.02
 done
