@@ -98,9 +98,9 @@ case "$choice" in
 			"🌐  Change Default Browser" \
 			"📁  Change Default File Manager" \
 			"📝  Change Default Editor" \
-			"💻  Change Default Terminal" \ \
+			"💻  Change Default Terminal" \
 			"🖼️  Change Default Image Viewer" \
-			"🎬  Change Default Video Player"
+			"🎬  Change Default Video Player" \
 			"📋  View Defaults Status" | dmenu -p "󰖲 Defaults >" -l 7)
 		case "$sub" in
 			*"Browser"*)
