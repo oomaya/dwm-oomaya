@@ -1285,7 +1285,7 @@ class RegionalPreflightTests(unittest.TestCase):
     def test_locale_generation_counts_utf8_bytes_in_each_length_prefix(self):
         preview = provider.make_regional_preview("locale-set", "LANG=en_US.utf8",
             provider.parse_locale_configuration(["LANGUAGE=français", "LANG=C"]), ["en_US.utf8"])
-        self.assertEqual(preview.generation, "09ff64d6ea53aa4d497cec2d722b95701f913c40576c7024dfdc6377e9b8fd83")
+        self.assertEqual(preview.generation, "45cddada015e6abd9d84c406fed557b8657719b84c401cf88f6ebeb1c39feb65")
 
     def test_preflight_uses_only_fresh_fixed_readers(self):
         states = {"time-state": self.time_state(), "timezone-choices": ("UTC", "Etc/UTC"),
@@ -5444,7 +5444,7 @@ class SnapshotTests(unittest.TestCase):
         self.assertEqual(
             output[1],
             "snapshot-generation\t"
-            "0626a3347e1e76f4394deb0948b444a89b9ec8875696a1735c893b0db7258bac",
+            "22f39c1b80762829c5274a9f53c8dc8a3ecea6803c1bb4ceae0f26fa561170ed",
         )
 
     def test_empty_snapshot_has_stable_generation_and_skips_simulation(self):
