@@ -1197,6 +1197,28 @@ emit_role() {
 			detail='Terminal mutation requires an installed user hotkeys.toml'
 		fi
 		;;
+	image-viewer)
+		provider=xdg-mime
+		if current=$(query_mime image/png 2>/dev/null) && [[ -n $current ]]; then
+			state=available
+			detail='Default image viewer is readable'
+		else
+			current=
+			state=unavailable
+			detail='Install xdg-utils or repair the image/png association'
+		fi
+		;;
+	video-player)
+		provider=xdg-mime
+		if current=$(query_mime video/mp4 2>/dev/null) && [[ -n $current ]]; then
+			state=available
+			detail='Default video player is readable'
+		else
+			current=
+			state=unavailable
+			detail='Install xdg-utils or repair the video/mp4 association'
+		fi
+		;;
 	esac
 	label=
 	if [[ -n $current ]] && file=$(desktop_file_for_id "$current" 2>/dev/null); then
