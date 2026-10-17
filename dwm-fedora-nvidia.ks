@@ -85,6 +85,7 @@ psmisc
 xclip
 xdotool
 xprop
+wmctrl
 xdg-utils
 flatpak
 %include /tmp/dwm-oomaya-gaming-packages
@@ -103,9 +104,11 @@ slick-greeter
 alacritty
 kitty
 picom
+dunst
 xsettingsd
 feh
 maim
+slop
 dex-autostart
 mate-polkit
 alsa-utils
