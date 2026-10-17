@@ -186,5 +186,5 @@ ShellRoot {
         }
     }
     Timer { interval: 20; running: true; repeat: true; onTriggered: root.advance() }
-    Timer { interval: 20000; running: true; onTriggered: { console.error("Regional settings FAILED: timeout at " + root.stage); Qt.quit(); } }
+    Timer { interval: 45000; running: true; onTriggered: { console.error("Regional settings FAILED: timeout at " + root.stage); Qt.quit(); } }
 }

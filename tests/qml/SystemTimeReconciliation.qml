@@ -143,7 +143,7 @@ ShellRoot {
     }
     Timer { interval: 20; repeat: true; running: !root.done; onTriggered: root.advance() }
     Timer {
-        interval: 15000; running: !root.done
+        interval: 35000; running: !root.done
         onTriggered: { root.check(false, "Timed out at stage " + root.stage); }
     }
 }

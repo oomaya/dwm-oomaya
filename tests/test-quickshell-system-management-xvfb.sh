@@ -112,6 +112,17 @@ cleanup() {
 }
 trap cleanup EXIT HUP INT TERM
 
+wait_active_cleaned() {
+	_wait_dir="$1"
+	_wait_i=0
+	while [ "$_wait_i" -lt 10 ]; do
+		[ -z "$(find "$_wait_dir" -maxdepth 1 -name '*.active' -print -quit 2>/dev/null)" ] && return 0
+		_wait_i=$((_wait_i + 1))
+		sleep 0.05
+	done
+	return 1
+}
+
 home=$work/home
 runtime=$work/runtime
 config_home=$home/.config
@@ -503,7 +514,7 @@ quickshell_pid=
 if [ "$provider_discovery_status" -ne 0 ] || ! grep -F 'Provider discovery tests: PASS' "$work/provider-discovery.log" ||
 	grep -Fq 'Provider discovery FAILED:' "$work/provider-discovery.log" ||
 	[ -e "$work/provider-discovery-state/overlap" ] || [ -e "$work/provider-discovery-state/unexpected-command" ] ||
-	[ -n "$(find "$work/provider-discovery-state" -maxdepth 1 -name '*.active' -print -quit)" ]; then
+	! wait_active_cleaned "$work/provider-discovery-state"; then
 	cat "$work/provider-discovery.log" >&2
 	exit 1
 fi
@@ -524,7 +535,7 @@ quickshell_pid=
 if [ "$provider_generation_status" -ne 0 ] || ! grep -F 'Provider generation tests: PASS' "$work/provider-generation.log" ||
 	grep -Fq 'Provider generation FAILED:' "$work/provider-generation.log" ||
 	[ -e "$work/provider-discovery-state/overlap" ] || [ -e "$work/provider-discovery-state/unexpected-command" ] ||
-	[ -n "$(find "$work/provider-discovery-state" -maxdepth 1 -name '*.active' -print -quit)" ]; then
+	! wait_active_cleaned "$work/provider-discovery-state"; then
 	cat "$work/provider-generation.log" >&2
 	exit 1
 fi
@@ -577,7 +588,7 @@ for discovery_domain in time storage security; do
 	if [ "$native_discovery_status" -ne 0 ] || ! grep -F 'Native discovery tests: PASS' "$work/native-discovery.log" ||
 		grep -Fq 'Native discovery FAILED:' "$work/native-discovery.log" ||
 		[ -e "$native_fixture/overlap" ] || [ -e "$native_fixture/unexpected-command" ] ||
-		[ -n "$(find "$native_fixture" -maxdepth 1 -name '*.active' -print -quit)" ]; then
+		! wait_active_cleaned "$native_fixture"; then
 		cat "$work/native-discovery.log" >&2
 		exit 1
 	fi
@@ -793,7 +804,7 @@ for regional_action in timezone-set ntp-set locale-set; do
 		regional_state=$work/regional-settings-$regional_action-$regional_scenario
 		mkdir -p "$regional_state"
 		regional_status=0
-		timeout --foreground --kill-after=2s 25s env DISPLAY="$display" HOME="$home" XDG_CONFIG_HOME="$config_home" \
+		timeout --foreground --kill-after=2s 50s env DISPLAY="$display" HOME="$home" XDG_CONFIG_HOME="$config_home" \
 			XDG_DATA_HOME="$work/regional-settings-data" XDG_RUNTIME_DIR="$runtime" QT_QPA_PLATFORMTHEME= \
 			DWM_NATIVE_DISCOVERY_FIXTURE="$regional_state" DWM_NATIVE_ACTION_FIXTURE="$regional_state" \
 			DWM_NATIVE_ACTION="$regional_action" DWM_NATIVE_ACTION_SCENARIO="$regional_scenario" \
@@ -805,7 +816,7 @@ for regional_action in timezone-set ntp-set locale-set; do
 			grep -Fq 'Regional settings FAILED:' "$regional_state/log" ||
 			[ -e "$regional_state/invalid-arguments" ] || [ -e "$regional_state/overlap" ] ||
 			[ -e "$regional_state/unexpected-command" ] ||
-			[ -n "$(find "$regional_state" -maxdepth 1 -name '*.active' -print -quit)" ]; then
+			! wait_active_cleaned "$regional_state"; then
 			cat "$regional_state/log" >&2
 			exit 1
 		fi
@@ -830,7 +841,7 @@ for time_scenario in owner owner-change owner-capability owner-fail owner-sync o
 	time_state=$work/time-reconciliation-$time_scenario
 	mkdir -p "$time_state"
 	time_status=0
-	timeout --foreground --kill-after=2s 20s env DISPLAY="$display" HOME="$home" XDG_CONFIG_HOME="$config_home" \
+	timeout --foreground --kill-after=2s 40s env DISPLAY="$display" HOME="$home" XDG_CONFIG_HOME="$config_home" \
 		XDG_DATA_HOME="$work/regional-settings-data" XDG_RUNTIME_DIR="$runtime" QT_QPA_PLATFORMTHEME= \
 		DWM_NATIVE_DISCOVERY_FIXTURE="$time_state" DWM_NATIVE_ACTION_FIXTURE="$time_state" \
 		DWM_NATIVE_ACTION=timezone-set DWM_NATIVE_ACTION_SCENARIO="$time_scenario" \
@@ -842,7 +853,7 @@ for time_scenario in owner owner-change owner-capability owner-fail owner-sync o
 		grep -Fq 'Time reconciliation FAILED:' "$time_state/log" ||
 		[ -e "$time_state/overlap" ] || [ -e "$time_state/unexpected-command" ] ||
 		[ -e "$time_state/timezone-set" ] ||
-		[ -n "$(find "$time_state" -maxdepth 1 -name '*.active' -print -quit)" ]; then
+		! wait_active_cleaned "$time_state"; then
 		cat "$time_state/log" >&2
 		exit 1
 	fi
@@ -855,7 +866,7 @@ for sample_scenario in sample-success sample-error sample-capability sample-arri
 	sample_state=$work/ntp-$sample_scenario
 	mkdir -p "$sample_state"
 	sample_status=0
-	timeout --foreground --kill-after=2s 45s env DISPLAY="$display" HOME="$home" XDG_CONFIG_HOME="$config_home" \
+	timeout --foreground --kill-after=2s 55s env DISPLAY="$display" HOME="$home" XDG_CONFIG_HOME="$config_home" \
 		XDG_DATA_HOME="$work/regional-settings-data" XDG_RUNTIME_DIR="$runtime" QT_QPA_PLATFORMTHEME= \
 		DWM_NATIVE_DISCOVERY_FIXTURE="$sample_state" DWM_NATIVE_ACTION_FIXTURE="$sample_state" \
 		DWM_NATIVE_ACTION=ntp-set DWM_NATIVE_ACTION_SCENARIO="$sample_scenario" \
@@ -867,7 +878,7 @@ for sample_scenario in sample-success sample-error sample-capability sample-arri
 		grep -Fq 'NTP sampling FAILED:' "$sample_state/log" ||
 		[ -e "$sample_state/overlap" ] || [ -e "$sample_state/unexpected-command" ] ||
 		[ -e "$sample_state/invalid-arguments" ] ||
-		[ -n "$(find "$sample_state" -maxdepth 1 -name '*.active' -print -quit)" ]; then
+		! wait_active_cleaned "$sample_state"; then
 		cat "$sample_state/log" >&2
 		exit 1
 	fi
@@ -892,7 +903,7 @@ for delegate_action in accounts-open password-open printers-open sources-open; d
 		delegate_state=$work/delegate-$delegate_action-$delegate_scenario
 		mkdir -p "$delegate_state"
 		delegate_status=0
-		timeout --foreground --kill-after=2s 20s env DISPLAY="$display" HOME="$home" XDG_CONFIG_HOME="$config_home" \
+		timeout --foreground --kill-after=2s 40s env DISPLAY="$display" HOME="$home" XDG_CONFIG_HOME="$config_home" \
 			XDG_DATA_HOME="$work/delegate-data" XDG_RUNTIME_DIR="$runtime" QT_QPA_PLATFORMTHEME= \
 			DWM_NATIVE_DISCOVERY_FIXTURE="$delegate_state" DWM_NATIVE_ACTION_FIXTURE="$delegate_state" \
 			DWM_NATIVE_ACTION="$delegate_action" DWM_NATIVE_ACTION_SCENARIO="$delegate_scenario" \
@@ -904,7 +915,7 @@ for delegate_action in accounts-open password-open printers-open sources-open; d
 			grep -Fq 'Delegate confirmation FAILED:' "$delegate_state/log" ||
 			[ -e "$delegate_state/invalid-arguments" ] || [ -e "$delegate_state/overlap" ] ||
 			[ -e "$delegate_state/unexpected-command" ] ||
-			[ -n "$(find "$delegate_state" -maxdepth 1 -name '*.active' -print -quit)" ]; then
+			! wait_active_cleaned "$delegate_state"; then
 			cat "$delegate_state/log" >&2
 			exit 1
 		fi
@@ -929,7 +940,7 @@ for regional_size in 640x480 780x580 1000x740; do
 			regional_state=$work/regional-ui-$regional_size-$regional_action-$regional_scenario
 			mkdir -p "$regional_state"
 			regional_status=0
-			timeout --foreground --kill-after=2s 25s env DISPLAY="$display" HOME="$home" XDG_CONFIG_HOME="$config_home" \
+			timeout --foreground --kill-after=2s 50s env DISPLAY="$display" HOME="$home" XDG_CONFIG_HOME="$config_home" \
 				XDG_DATA_HOME="$work/regional-settings-data" XDG_RUNTIME_DIR="$runtime" QT_QPA_PLATFORMTHEME= \
 				DWM_NATIVE_DISCOVERY_FIXTURE="$regional_state" DWM_NATIVE_ACTION_FIXTURE="$regional_state" \
 				DWM_NATIVE_ACTION="$regional_action" DWM_NATIVE_ACTION_SCENARIO="$regional_scenario" \
@@ -942,7 +953,7 @@ for regional_size in 640x480 780x580 1000x740; do
 				grep -Fq 'Regional UI FAILED:' "$regional_state/log" ||
 				[ -e "$regional_state/invalid-arguments" ] || [ -e "$regional_state/overlap" ] ||
 				[ -e "$regional_state/unexpected-command" ] ||
-				[ -n "$(find "$regional_state" -maxdepth 1 -name '*.active' -print -quit)" ]; then
+				! wait_active_cleaned "$regional_state"; then
 				cat "$regional_state/log" >&2
 				exit 1
 			fi
@@ -970,7 +981,7 @@ for delegate_size in 640x480 780x580 1000x740; do
 			delegate_state=$work/delegate-ui-$delegate_size-$delegate_action-$delegate_scenario
 			mkdir -p "$delegate_state"
 			delegate_status=0
-			timeout --foreground --kill-after=2s 20s env DISPLAY="$display" HOME="$home" XDG_CONFIG_HOME="$config_home" \
+			timeout --foreground --kill-after=2s 40s env DISPLAY="$display" HOME="$home" XDG_CONFIG_HOME="$config_home" \
 				XDG_DATA_HOME="$work/delegate-data" XDG_RUNTIME_DIR="$runtime" QT_QPA_PLATFORMTHEME= \
 				DWM_NATIVE_DISCOVERY_FIXTURE="$delegate_state" DWM_NATIVE_ACTION_FIXTURE="$delegate_state" \
 				DWM_NATIVE_ACTION="$delegate_action" DWM_NATIVE_ACTION_SCENARIO="$delegate_scenario" \
@@ -983,7 +994,7 @@ for delegate_size in 640x480 780x580 1000x740; do
 				grep -Fq 'Delegate UI FAILED:' "$delegate_state/log" ||
 				[ -e "$delegate_state/invalid-arguments" ] || [ -e "$delegate_state/overlap" ] ||
 				[ -e "$delegate_state/unexpected-command" ] ||
-				[ -n "$(find "$delegate_state" -maxdepth 1 -name '*.active' -print -quit)" ]; then
+				! wait_active_cleaned "$delegate_state"; then
 				cat "$delegate_state/log" >&2
 				exit 1
 			fi

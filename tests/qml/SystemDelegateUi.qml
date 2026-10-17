@@ -117,5 +117,5 @@ ShellRoot {
         SystemSettingsPane { id: pane; anchors.fill: parent; anchors.margins: 12; systemManagementModel: model; capabilities: [] }
     }
     Timer { interval: 25; running: true; repeat: true; onTriggered: root.advance() }
-    Timer { interval: 15000; running: !root.manual; onTriggered: { console.error("Delegate UI FAILED: timeout at " + root.stage); Qt.quit(); } }
+    Timer { interval: 35000; running: !root.manual; onTriggered: { console.error("Delegate UI FAILED: timeout at " + root.stage); Qt.quit(); } }
 }

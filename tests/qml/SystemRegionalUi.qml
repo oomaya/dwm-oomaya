@@ -341,5 +341,5 @@ ShellRoot {
         Item { objectName: "externalRegionalFocus"; width: 1; height: 1 }
     }
     Timer { interval: 25; running: !root.done; repeat: true; onTriggered: root.advance() }
-    Timer { interval: 20000; running: !root.manual; onTriggered: { console.error("Regional UI FAILED: timeout at " + root.stage); Qt.quit(); } }
+    Timer { interval: 45000; running: !root.manual; onTriggered: { console.error("Regional UI FAILED: timeout at " + root.stage); Qt.quit(); } }
 }

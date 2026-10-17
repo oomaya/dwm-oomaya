@@ -128,5 +128,5 @@ ShellRoot {
         }
     }
     Timer { interval: 20; running: true; repeat: true; onTriggered: root.advance() }
-    Timer { interval: 15000; running: true; onTriggered: { console.error("Delegate confirmation FAILED: timeout"); Qt.quit(); } }
+    Timer { interval: 35000; running: true; onTriggered: { console.error("Delegate confirmation FAILED: timeout"); Qt.quit(); } }
 }

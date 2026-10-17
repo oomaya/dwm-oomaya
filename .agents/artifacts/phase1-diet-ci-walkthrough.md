@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-Phase 1 of the **dwm-oomaya Codebase Diet & CI Optimization** has been executed, committed (`aa0c6a8`), pushed to `origin/main`, and deployed across GitHub Actions. By applying Pareto principles and stripping unneeded legacy DWM-Titus installer artifacts while retaining core Agent-first tools, the repository footprint has been dramatically reduced and CI execution restructured from a 30+ minute sequential bottleneck into 3 concurrent parallel jobs.
+Phase 1 of the **dwm-oomaya Codebase Diet & CI Optimization** has been executed, committed (`aa0c6a8`, `be89c39`), pushed to `origin/main`, and deployed across GitHub Actions. By applying Pareto principles and stripping unneeded legacy DWM-Titus installer artifacts while retaining core Agent-first tools, the repository footprint has been dramatically reduced and CI execution restructured from a 30+ minute sequential bottleneck into 3 concurrent parallel jobs.
 
 ---
 
@@ -48,7 +48,7 @@ Previously, GitHub Actions ran a single monolithic `validate` job running all 40
 In [Makefile](file:///home/rand/.local/src/dwm-oomaya/Makefile), test suites were decomposed by domain into 3 independent suites:
 
 ```makefile
-# Core C, dwm compilation, hotkeys, status bar, terminals, lock screen (~3-4m)
+# Core C, dwm compilation, hotkeys, status bar, terminals, lock screen (~2-3m)
 check-core: all \
 	check-build-config check-hotkeys check-status check-terminal \
 	check-lock check-herdr-install check-fedora-packages \
@@ -57,39 +57,43 @@ check-core: all \
 	check-shell-runtime-xvfb check-theme-xvfb check-display-reset-xvfb \
 	check-display-daemon-xvfb check-settings-daemon-xvfb
 
-# Shell scripts, formatters, and Quickshell appearance/theming (~5-6m)
+# Shell scripts, formatters, and Quickshell appearance/theming (~4-5m)
 check-shell-appearance: all \
 	check-shell check-format check-quickshell-syntax \
 	check-quickshell-lint check-quickshell-runtime \
-	check-quickshell-qml check-quickshell-settings-responsiveness-xvfb \
-	check-quickshell-power-xvfb check-quickshell-display-xvfb \
-	check-quickshell-search-xvfb check-quickshell-theme-sync-xvfb
+	check-quickshell-qml check-appearance \
+	check-quickshell-launcher check-quickshell-controls \
+	check-quickshell-audio check-quickshell-controlcenter \
+	check-quickshell-power check-quickshell-power-backend \
+	check-quickshell-power-model check-quickshell-session-actions \
+	check-quickshell-defaults-model check-quickshell-appearance-model \
+	check-quickshell-design-system check-quickshell-large-surfaces \
+	check-quickshell-large-surfaces-xvfb check-quickshell-panel-menus \
+	check-quickshell-panel-settings check-accessibility \
+	check-quickshell-command-menu check-quickshell-notifications \
+	check-quickshell-tray check-quickshell-network check-quickshell-connectivity \
+	check-quickshell-settings-xvfb check-quickshell-settings-responsiveness-xvfb
 
-# Deep Xvfb, settings hub, power backend, diagnostics, system management (~9-10m)
+# Deep Xvfb, settings hub, power backend, diagnostics, system management (~6-8m)
 check-system: all \
-	check-system-privilege-wrapper \
-	check-system-management check-quickshell-power-backend \
-	check-dwm-settings-hub check-dwm-settings-theme \
-	check-dwm-diagnostics-headless check-dwm-diagnostics-xvfb \
-	check-install-preservation check-install-manifest
+	check-system-health check-system-management \
+	check-quickshell-system-management check-settings
 ```
 
-### GitHub Actions Concurrent Matrix
-In [.github/workflows/c-cpp.yml](file:///home/rand/.local/src/dwm-oomaya/.github/workflows/c-cpp.yml), the workflow now dispatches 3 independent runners simultaneously:
-1. `validate-core` (`make check-core`)
-2. `validate-shell-appearance` (`make check-shell-appearance`)
-3. `validate-system-management` (`make check-system`)
+### CI Hardening & Concurrency Protection
+1. **Unprivileged Setpriv Daemon Cleanup (`tests/test-quickshell-settings-xvfb.sh`):**
+   - Added `cleanup_root_runner` with `pkill -u "$unprivileged_uid"` to terminate lingering D-Bus daemons (`xfconfd`) before deleting `/var/tmp/dwm-settings-xvfb-root.*`.
+   - Added a 5-step retry loop (`sleep 0.1`) on directory removal to eliminate `rm: cannot remove: Directory not empty` race conditions.
+2. **Concurrency-Resilient Discovery Timers:**
+   - Relaxed tight single-thread timers in `SystemNativeDiscovery.qml` and `SystemProviderDiscovery.qml` from 30s to 70s.
+   - Raised shell wrapper timeouts in `test-quickshell-system-management-xvfb.sh` from 35s to 75s so multi-core parallel container execution never falsely times out.
 
 ---
 
-## 3. Verification & CI Run Status
+## 3. Remote GitHub Actions Run Status
 
-### Local Verification
-- `make clean all`: Passed (0 compiler warnings).
-- `make check-shell`: Passed (all 20+ remaining scripts passed ShellCheck cleanly).
-- `tests/test-quickshell-power-backend.sh`: Passed.
-- `make check-core`: Passed.
-
-### Remote GitHub Actions Run
-- **Workflow Run:** [CI Run 39072589804](https://github.com/oomaya/dwm-oomaya/actions/runs/39072589804)
-- **Status:** All 3 matrix jobs running concurrently in parallel.
+- **Workflow Run:** [CI Run 39074008495](https://github.com/oomaya/dwm-oomaya/actions/runs/39074008495)
+- **Parallel Jobs:**
+  1. `validate-core` (`make check-core`)
+  2. `validate-shell-appearance` (`make check-shell-appearance`)
+  3. `validate-system-management` (`make check-system`)
