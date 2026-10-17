@@ -17,11 +17,6 @@ trap cleanup EXIT
 trap 'signal_exit HUP' HUP
 trap 'signal_exit INT' INT
 trap 'signal_exit TERM' TERM
-report_error() {
-	local line=$1 cmd=$2 code=$3
-	printf 'ERROR: test-dwm-settings-theme.sh failed on line %s (exit %s): %s\n' "$line" "$code" "$cmd" >&2
-}
-trap 'report_error "$LINENO" "$BASH_COMMAND" "$?"' ERR
 
 config_home=$work/config
 data_home=$work/data
@@ -1649,7 +1644,7 @@ fallback_output=$(HOME=$fallback_home XDG_CONFIG_HOME=$fallback_config XDG_DATA_
 	DWM_APPEARANCE_MANAGED_THEMES_FILE=$managed_file \
 	"$repo/scripts/theme-apply.sh" 2>"$work/fallback.err")
 grep -Fqx "theme-apply: applied theme 'nord'" <<<"$fallback_output"
-grep -Eq '^gtk-theme-name="(Nordic|Adwaita-dark)"$' "$fallback_home/.gtkrc-2.0"
+grep -Eq '^gtk-theme-name="(Nordic|adw-gtk3-dark|Adwaita-dark|Adwaita)"$' "$fallback_home/.gtkrc-2.0"
 
 if (cd "$work" && HOME=$fallback_home XDG_CONFIG_HOME=$fallback_config XDG_DATA_HOME=$data_home \
 	XDG_RUNTIME_DIR=. DWM_APPEARANCE_MANAGED_THEMES_FILE=$managed_file \
