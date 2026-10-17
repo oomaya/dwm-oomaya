@@ -297,3 +297,35 @@ hardware support.
 - Do not perform destructive Git or filesystem operations without explicit
   authorization.
 - Never expose credentials, tokens, private keys, or secret file contents.
+
+## Testing
+
+Run the full suite before a change is done:
+
+```sh
+scripts/run-tests make clean all
+scripts/run-tests
+```
+
+Suite layout:
+
+- `scripts/run-tests` - the managed test workspace runner.
+- `tests/` - shell test scripts (see Required Validation for the
+  shellcheck/shfmt gates that apply to them).
+- Consistency checks: config keybindings match their documentation,
+  `config.def.h` defaults match the documented defaults, no duplicate
+  keybindings, every documented script exists in `scripts/`.
+
+Test writing rules:
+
+- Nothing may touch the real system. Test installer and script behavior
+  in a container, VM, or the managed test workspace under
+  `${DWM_TEST_TMP_ROOT:-$HOME/tmp}`.
+- Always give the script under test its stdin: `</dev/null`, or the
+  answers it should read. Inherited stdin can hang the suite.
+- New behavior gets a test. A bug fix gets a test that fails without
+  the fix; check that it does.
+- Never run `install.sh` or a system-wide installer on your own machine
+  to try a change. Test real runs in a VM or container.
+- A real X11 session or nested X server is required before declaring
+  runtime behavior fully validated; static checks alone do not prove it.
