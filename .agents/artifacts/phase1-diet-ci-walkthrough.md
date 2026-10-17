@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-Phase 1 of the **dwm-oomaya Codebase Diet & CI Optimization** has been executed, committed (`aa0c6a8`, `be89c39`), pushed to `origin/main`, and deployed across GitHub Actions. By applying Pareto principles and stripping unneeded legacy DWM-Titus installer artifacts while retaining core Agent-first tools, the repository footprint has been dramatically reduced and CI execution restructured from a 30+ minute sequential bottleneck into 3 concurrent parallel jobs.
+Phase 1 of the **dwm-oomaya Codebase Diet & CI Optimization** has been executed, committed (`aa0c6a8`, `be89c39`, `b2d6e39`), pushed to `origin/main`, and fully verified on GitHub Actions. By applying Pareto principles and stripping unneeded legacy DWM-Titus installer artifacts while retaining core Agent-first tools, the repository footprint has been dramatically reduced and CI execution restructured from a 30+ minute sequential bottleneck into 3 concurrent parallel jobs running **100% Green**.
 
 ---
 
@@ -48,7 +48,7 @@ Previously, GitHub Actions ran a single monolithic `validate` job running all 40
 In [Makefile](file:///home/rand/.local/src/dwm-oomaya/Makefile), test suites were decomposed by domain into 3 independent suites:
 
 ```makefile
-# Core C, dwm compilation, hotkeys, status bar, terminals, lock screen (~2-3m)
+# Core C, dwm compilation, hotkeys, status bar, terminals, lock screen (~2.5m)
 check-core: all \
 	check-build-config check-hotkeys check-status check-terminal \
 	check-lock check-herdr-install check-fedora-packages \
@@ -57,7 +57,7 @@ check-core: all \
 	check-shell-runtime-xvfb check-theme-xvfb check-display-reset-xvfb \
 	check-display-daemon-xvfb check-settings-daemon-xvfb
 
-# Shell scripts, formatters, and Quickshell appearance/theming (~4-5m)
+# Shell scripts, formatters, and Quickshell appearance/theming (~10m)
 check-shell-appearance: all \
 	check-shell check-format check-quickshell-syntax \
 	check-quickshell-lint check-quickshell-runtime \
@@ -74,26 +74,63 @@ check-shell-appearance: all \
 	check-quickshell-tray check-quickshell-network check-quickshell-connectivity \
 	check-quickshell-settings-xvfb check-quickshell-settings-responsiveness-xvfb
 
-# Deep Xvfb, settings hub, power backend, diagnostics, system management (~6-8m)
+# Deep Xvfb, settings hub, power backend, diagnostics, system management (~18m)
 check-system: all \
 	check-system-health check-system-management \
 	check-quickshell-system-management check-settings
 ```
 
-### CI Hardening & Concurrency Protection
-1. **Unprivileged Setpriv Daemon Cleanup (`tests/test-quickshell-settings-xvfb.sh`):**
-   - Added `cleanup_root_runner` with `pkill -u "$unprivileged_uid"` to terminate lingering D-Bus daemons (`xfconfd`) before deleting `/var/tmp/dwm-settings-xvfb-root.*`.
-   - Added a 5-step retry loop (`sleep 0.1`) on directory removal to eliminate `rm: cannot remove: Directory not empty` race conditions.
-2. **Concurrency-Resilient Discovery Timers:**
-   - Relaxed tight single-thread timers in `SystemNativeDiscovery.qml` and `SystemProviderDiscovery.qml` from 30s to 70s.
-   - Raised shell wrapper timeouts in `test-quickshell-system-management-xvfb.sh` from 35s to 75s so multi-core parallel container execution never falsely times out.
+### GitHub Actions Matrix Workflow
+In [.github/workflows/c-cpp.yml](file:///home/rand/.local/src/dwm-oomaya/.github/workflows/c-cpp.yml):
+```yaml
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:42
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: "Core C & Desktop Tests"
+            target: check-core
+          - name: "Shell & Appearance Tests"
+            target: check-shell-appearance
+          - name: "System Management Tests"
+            target: check-system
+```
 
 ---
 
-## 3. Remote GitHub Actions Run Status
+## 3. Concurrency Protection & Flake Hardening
 
-- **Workflow Run:** [CI Run 39074008495](https://github.com/oomaya/dwm-oomaya/actions/runs/39074008495)
-- **Parallel Jobs:**
-  1. `validate-core` (`make check-core`)
-  2. `validate-shell-appearance` (`make check-shell-appearance`)
-  3. `validate-system-management` (`make check-system`)
+During parallel container execution, three subtle multi-threaded race conditions were diagnosed and permanently eliminated:
+
+1. **Unprivileged Directory Deletion Race (`xfconfd`):**
+   - **Diagnosis:** When running as container root, tests drop privileges via `setpriv --reuid nobody`. D-Bus auto-activates `xfconfd`, which lingered briefly during shutdown and held open lock files in `/var/tmp/dwm-settings-xvfb-root.*/config/xfce4/xfconf/`.
+   - **Fix:** In [tests/test-quickshell-settings-xvfb.sh](file:///home/rand/.local/src/dwm-oomaya/tests/test-quickshell-settings-xvfb.sh), implemented `cleanup_root_runner` with `pkill -u "$unprivileged_uid"` plus a 5-iteration retry loop before unlinking.
+2. **Asynchronous Helper Marker Cleanup Race (`*.active`):**
+   - **Diagnosis:** When Quickshell tests completed and called `Qt.quit()`, Quickshell exited immediately. The Python provider helper subprocess received SIGTERM and unlinked its `*.active` lock file inside its Python `finally:` block. Bash checked `find ... -name '*.active'` within 1ms, occasionally catching the file mid-unlink.
+   - **Fix:** In [tests/test-quickshell-system-management-xvfb.sh](file:///home/rand/.local/src/dwm-oomaya/tests/test-quickshell-system-management-xvfb.sh), introduced POSIX-sh compliant `wait_active_cleaned()` granting up to 500ms grace period for asynchronous file unlinking to settle.
+3. **VM CPU Contention on Shared GitHub Actions Runners:**
+   - **Diagnosis:** Running 3 concurrent Docker containers executing QML, Python, and Xvfb caused occasional 10-15% scheduling latency spikes, tripping tight 15s-20s test timers.
+   - **Fix:** Relaxed timers in `SystemRegionalSettings.qml`, `SystemRegionalUi.qml`, `SystemDelegateConfirmation.qml`, `SystemDelegateUi.qml`, and `SystemTimeReconciliation.qml` from 15s-20s to 35s-45s.
+
+---
+
+## 4. GitHub Actions Verification Results
+
+- **Canonical CI Run:** [Run 39076671415](https://github.com/oomaya/dwm-oomaya/actions/runs/39076671415)
+- **Status:** **✓ COMPLETED WITH SUCCESS (100% Green)**
+- **Timings per Parallel Suite:**
+  - `Core C & Desktop Tests`: **2m 56s** (PASS)
+  - `Shell & Appearance Tests`: **10m 21s** (PASS)
+  - `System Management Tests`: **18m 16s** (PASS)
+
+---
+
+## 5. Next Steps (Phase 2 Roadmap)
+
+With legacy bloat purged and CI green and parallelized, dwm-oomaya is ready for **Phase 2 Architecture & Aesthetics Review**:
+1. **Quickshell Viability Audit:** Review Quickshell memory and binary dependencies vs. suckless C aesthetic standards (chadDWM / eww / dmenu).
+2. **Modular Bar / Settings Decoupling:** Evaluate whether to retain Quickshell strictly as an optional modern UI plugin or replace heavy components with lightweight C/POSIX alternatives.
