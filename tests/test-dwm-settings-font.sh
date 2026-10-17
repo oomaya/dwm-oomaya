@@ -23,8 +23,8 @@ home=$fixture/home
 config=$fixture/config
 state=$fixture/state
 bin=$fixture/bin
-font_config=$config/dwm-titus/font.conf
-mkdir -p "$home/.config/dwm-titus" "$config/dwm-titus" "$state/dwm-titus" "$bin"
+font_config=$config/dwm-oomaya/font.conf
+mkdir -p "$home/.config/dwm-oomaya" "$config/dwm-oomaya" "$state/dwm-oomaya" "$bin"
 
 process_is_live() {
 	local pid=$1 process_stat process_state
@@ -124,8 +124,8 @@ relative_status=$(run_font_relative_xdg status)
 grep -Fqx $'selection\tavailable\tMesloLGS Nerd Font Mono\t1.00\tManaged shell font defaults are active' \
 	<<<"$relative_status"
 run_font_relative_xdg apply Inter 1.10 >/dev/null
-grep -Fqx $'family\tInter' "$home/.config/dwm-titus/font.conf"
-grep -Fqx $'scale\t1.10' "$home/.config/dwm-titus/font.conf"
+grep -Fqx $'family\tInter' "$home/.config/dwm-oomaya/font.conf"
+grep -Fqx $'scale\t1.10' "$home/.config/dwm-oomaya/font.conf"
 run_font_relative_xdg reset >/dev/null
 
 run_font preview preview-absent-baseline 30 Inter 1.25 >/dev/null
@@ -136,13 +136,13 @@ grep -Fq $'preview\tfailed\tpreview-absent-baseline\tMesloLGS Nerd Font Mono\t1.
 run_font revert preview-absent-baseline >"$work/absent-revert.out"
 grep -Fqx $'result\trevert' "$work/absent-revert.out"
 [[ ! -e $font_config ]]
-[[ ! -e $state/dwm-titus/appearance/font/preview.current ]]
+[[ ! -e $state/dwm-oomaya/appearance/font/preview.current ]]
 
 export DWM_TEST_FONT_DEFAULT_ALIAS=1
 status=$(run_font status)
 grep -Fqx $'selection\tavailable\tMesloLGS Nerd Font Mono\t1.00\tManaged shell font defaults are active' <<<"$status"
 run_font apply 'MesloLGS Nerd Font Mono' 1.00 >/dev/null
-grep -Fqx $'family\tMesloLGS Nerd Font Mono' "$config/dwm-titus/font.conf"
+grep -Fqx $'family\tMesloLGS Nerd Font Mono' "$config/dwm-oomaya/font.conf"
 run_font reset >/dev/null
 unset DWM_TEST_FONT_DEFAULT_ALIAS
 
@@ -251,12 +251,12 @@ fi
 grep -Fq 'previous font configuration could not be restored' "$work/restore-copy-failure.err"
 [[ $(sha256sum "$font_config" | awk '{ print $1 }') == "$preview_hash" ]]
 [[ $(stat -c %a "$font_config") == 640 ]]
-[[ -e $state/dwm-titus/appearance/font/preview.current ]]
-[[ -e $state/dwm-titus/appearance/font/preview.baseline ]]
+[[ -e $state/dwm-oomaya/appearance/font/preview.current ]]
+[[ -e $state/dwm-oomaya/appearance/font/preview.baseline ]]
 status=$(run_font status)
 grep -Fq $'preview\tfailed\tpreview-restore-copy-failure\tInter\t1.25\t0\t' <<<"$status"
 run_font revert preview-restore-copy-failure >/dev/null
-[[ ! -e $state/dwm-titus/appearance/font/preview.current ]]
+[[ ! -e $state/dwm-oomaya/appearance/font/preview.current ]]
 [[ $(sha256sum "$font_config" | awk '{ print $1 }') == "$baseline_hash" ]]
 [[ $(stat -c %a "$font_config") == 640 ]]
 if DWM_TEST_FONT_EDIT_AFTER_BASELINE_COPY=1 \
@@ -270,7 +270,7 @@ grep -Fqx 'font configuration changed outside Settings; preview was not applied'
 	"$work/baseline-race.err"
 grep -Fqx $'family\tInter' "$font_config"
 grep -Fqx $'scale\t0.80' "$font_config"
-[[ ! -e $state/dwm-titus/appearance/font/preview.current ]]
+[[ ! -e $state/dwm-oomaya/appearance/font/preview.current ]]
 unlink "$bin/cp"
 ln -s "$real_cp" "$bin/cp"
 run_font apply 'Noto Sans' 0.90 >/dev/null
@@ -313,11 +313,11 @@ if DWM_TEST_FONT_KILL_BEFORE_EXCHANGE=1 \
 fi
 [[ $(sha256sum "$font_config" | awk '{ print $1 }') == "$baseline_hash" ]]
 i=0
-while [[ -e $state/dwm-titus/appearance/font/preview.current && $i -lt 80 ]]; do
+while [[ -e $state/dwm-oomaya/appearance/font/preview.current && $i -lt 80 ]]; do
 	((i += 1))
 	sleep 0.1
 done
-[[ ! -e $state/dwm-titus/appearance/font/preview.current ]]
+[[ ! -e $state/dwm-oomaya/appearance/font/preview.current ]]
 [[ $(sha256sum "$font_config" | awk '{ print $1 }') == "$baseline_hash" ]]
 [[ $(stat -c %a "$font_config") == 640 ]]
 if DWM_TEST_FONT_TERM_AFTER_EXCHANGE=1 \
@@ -329,13 +329,13 @@ fi
 grep -Fqx $'family\tInter' "$font_config"
 grep -Fqx $'scale\t1.50' "$font_config"
 [[ $(stat -c %a "$font_config") == 600 ]]
-[[ -e $state/dwm-titus/appearance/font/preview.current ]]
-[[ -e $state/dwm-titus/appearance/font/preview.baseline ]]
+[[ -e $state/dwm-oomaya/appearance/font/preview.current ]]
+[[ -e $state/dwm-oomaya/appearance/font/preview.baseline ]]
 status=$(run_font status)
 grep -Fq $'preview\tfailed\tpreview-term-after-exchange\tInter\t1.50\t0\t' <<<"$status"
 chmod 640 -- "$font_config"
 run_font revert preview-term-after-exchange >/dev/null
-[[ ! -e $state/dwm-titus/appearance/font/preview.current ]]
+[[ ! -e $state/dwm-oomaya/appearance/font/preview.current ]]
 [[ $(sha256sum "$font_config" | awk '{ print $1 }') == "$baseline_hash" ]]
 [[ $(stat -c %a "$font_config") == 640 ]]
 if DWM_TEST_FONT_KILL_ON_CONFIG_WRITE=1 DWM_TEST_FONT_KILL_SENTINEL=$work/font-killed \
@@ -345,11 +345,11 @@ if DWM_TEST_FONT_KILL_ON_CONFIG_WRITE=1 DWM_TEST_FONT_KILL_SENTINEL=$work/font-k
 fi
 grep -Fqx $'family\tInter' "$font_config"
 i=0
-while [[ -e $state/dwm-titus/appearance/font/preview.current && $i -lt 80 ]]; do
+while [[ -e $state/dwm-oomaya/appearance/font/preview.current && $i -lt 80 ]]; do
 	((i += 1))
 	sleep 0.1
 done
-[[ ! -e $state/dwm-titus/appearance/font/preview.current ]]
+[[ ! -e $state/dwm-oomaya/appearance/font/preview.current ]]
 [[ $(sha256sum "$font_config" | awk '{ print $1 }') == "$baseline_hash" ]]
 [[ $(stat -c %a "$font_config") == 640 ]]
 unlink "$bin/mv"
@@ -381,7 +381,7 @@ grep -Fqx 'font configuration changed outside Settings; preview was not applied'
 	"$work/exchange-race.err"
 grep -Fqx $'family\tInter' "$font_config"
 grep -Fqx $'scale\t0.80' "$font_config"
-[[ ! -e $state/dwm-titus/appearance/font/preview.current ]]
+[[ ! -e $state/dwm-oomaya/appearance/font/preview.current ]]
 run_font apply 'Noto Sans' 0.90 >/dev/null
 baseline_hash=$(sha256sum "$font_config" | awk '{ print $1 }')
 run_font preview preview-restore-exchange 30 Inter 1.25 >/dev/null
@@ -425,7 +425,7 @@ fi
 grep -Fqx 'font configuration changed outside Settings; preview was not applied' "$work/race.err"
 grep -Fqx $'family\tInter' "$font_config"
 grep -Fqx $'scale\t0.80' "$font_config"
-[[ ! -e $state/dwm-titus/appearance/font/preview.current ]]
+[[ ! -e $state/dwm-oomaya/appearance/font/preview.current ]]
 unlink "$bin/setsid"
 ln -s "$real_setsid" "$bin/setsid"
 run_font apply 'Noto Sans' 0.90 >/dev/null
@@ -436,7 +436,7 @@ DWM_SETTINGS_FONT_NOW=2010 run_font keep preview-keep >"$work/keep.out"
 grep -Fqx $'result\tkeep' "$work/keep.out"
 grep -Fqx $'family\tInter' "$font_config"
 grep -Fqx $'scale\t1.10' "$font_config"
-[[ ! -e $state/dwm-titus/appearance/font/preview.current ]]
+[[ ! -e $state/dwm-oomaya/appearance/font/preview.current ]]
 
 DWM_SETTINGS_FONT_NOW=2500 run_font preview preview-late-keep 5 'Noto Sans' 1.50 >/dev/null
 if DWM_SETTINGS_FONT_NOW=2506 run_font keep preview-late-keep >"$work/late-keep.out" 2>"$work/late-keep.err"; then
@@ -469,8 +469,8 @@ DWM_SETTINGS_FONT_NOW=5000 DWM_SETTINGS_FONT_BOOT_ID=$test_boot_old \
 shell_start=$(awk '{ line=$0; sub(/^.*\) /, "", line); split(line, field, " "); print field[20] }' "/proc/$$/stat")
 awk -F '\t' -v pid="$$" -v start="$shell_start" \
 	'BEGIN { OFS = "\t" } $1 == "watchdog-pid" { $2 = pid } $1 == "watchdog-start" { $2 = start } { print }' \
-	"$state/dwm-titus/appearance/font/preview.meta" >"$work/reboot.meta"
-mv "$work/reboot.meta" "$state/dwm-titus/appearance/font/preview.meta"
+	"$state/dwm-oomaya/appearance/font/preview.meta" >"$work/reboot.meta"
+mv "$work/reboot.meta" "$state/dwm-oomaya/appearance/font/preview.meta"
 status=$(DWM_SETTINGS_FONT_NOW=5001 DWM_SETTINGS_FONT_BOOT_ID=$test_boot_new run_font status)
 grep -Fqx $'preview\tnone\t\t\t\t0\tNo font preview is active' <<<"$status"
 grep -Fqx $'family\tInter' "$font_config"
@@ -483,7 +483,7 @@ baseline_hash=$(sha256sum "$font_config" | awk '{ print $1 }')
 baseline_mode=$(stat -c %a "$font_config")
 preview_hash=$(printf '%s\nfamily\t%s\nscale\t%s\n' \
 	$'appearance-font-protocol\t1\t0' 'Noto Sans' 1.25 | sha256sum | awk '{ print $1 }')
-font_state_dir=$state/dwm-titus/appearance/font
+font_state_dir=$state/dwm-oomaya/appearance/font
 cp "$font_config" "$font_state_dir/preview.baseline"
 chmod 600 "$font_state_dir/preview.baseline"
 printf '%s\n' preview-never-published >"$font_state_dir/preview.current"
@@ -514,24 +514,24 @@ grep -Fq $'preview\tfailed\tpreview-watchdog-external\tInter\t0.80\t0\tFont conf
 DWM_SETTINGS_FONT_BOOT_ID=$test_boot_new run_font_watchdog abandon preview-watchdog-external >/dev/null
 
 run_font_watchdog preview preview-watchdog-lock 5 'Noto Sans' 1.25 >/dev/null
-watchdog_lock=$state/dwm-titus/appearance/font/mutation.lock
+watchdog_lock=$state/dwm-oomaya/appearance/font/mutation.lock
 exec 8>"$watchdog_lock"
 flock -x 8
 sleep 10.5
 flock -u 8
 exec 8>&-
 i=0
-while [[ -e $state/dwm-titus/appearance/font/preview.current && $i -lt 100 ]]; do
+while [[ -e $state/dwm-oomaya/appearance/font/preview.current && $i -lt 100 ]]; do
 	((i += 1))
 	sleep 0.1
 done
-[[ ! -e $state/dwm-titus/appearance/font/preview.current ]]
+[[ ! -e $state/dwm-oomaya/appearance/font/preview.current ]]
 grep -Fqx $'family\tInter' "$font_config"
 grep -Fqx $'scale\t0.80' "$font_config"
 
 run_font_watchdog preview preview-cleanup 30 'Noto Sans' 1.25 >/dev/null
 cleanup_watchdog_pid=$(awk -F '\t' '$1 == "watchdog-pid" { print $2 }' \
-	"$state/dwm-titus/appearance/font/preview.meta")
+	"$state/dwm-oomaya/appearance/font/preview.meta")
 cleanup_children=''
 for _ in {1..50}; do
 	cleanup_children=$(cat "/proc/$cleanup_watchdog_pid/task/$cleanup_watchdog_pid/children" 2>/dev/null || true)
@@ -567,7 +567,7 @@ run_font_watchdog preview preview-watchdog 30 'Noto Sans' 1.25 >/dev/null
 status=$(run_font_watchdog status)
 grep -Fq $'preview\tactive\tpreview-watchdog\tNoto Sans\t1.25\t' <<<"$status"
 watchdog_pid=$(awk -F '\t' '$1 == "watchdog-pid" { print $2 }' \
-	"$state/dwm-titus/appearance/font/preview.meta")
+	"$state/dwm-oomaya/appearance/font/preview.meta")
 kill -TERM -- "-$watchdog_pid"
 i=0
 while kill -0 "$watchdog_pid" 2>/dev/null && [[ $i -lt 50 ]]; do
@@ -633,8 +633,8 @@ run_font reset >/dev/null
 
 unsafe=$work/unsafe
 mkdir -p "$unsafe"
-rmdir "$config/dwm-titus"
-ln -s "$unsafe" "$config/dwm-titus"
+rmdir "$config/dwm-oomaya"
+ln -s "$unsafe" "$config/dwm-oomaya"
 if run_font status >"$work/symlink.out" 2>"$work/symlink.err"; then
 	printf 'Symlinked font configuration directory unexpectedly succeeded\n' >&2
 	exit 1

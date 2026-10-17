@@ -152,15 +152,15 @@ Scope {
         ? root.configuredDataHome : root.homeDir + "/.local/share"
     readonly property string stateHome: root.configuredStateHome.startsWith("/")
         ? root.configuredStateHome : root.homeDir + "/.local/state"
-    readonly property string themesPath: root.configHome + "/dwm-titus/themes.toml"
-    readonly property string wallpaperConfigPath: root.configHome + "/dwm-titus/wallpaper.conf"
-    readonly property string fontConfigPath: root.configHome + "/dwm-titus/font.conf"
+    readonly property string themesPath: root.configHome + "/dwm-oomaya/themes.toml"
+    readonly property string wallpaperConfigPath: root.configHome + "/dwm-oomaya/wallpaper.conf"
+    readonly property string fontConfigPath: root.configHome + "/dwm-oomaya/font.conf"
     readonly property string fontPreviewPath: root.stateHome
-        + "/dwm-titus/appearance/font/preview.current"
+        + "/dwm-oomaya/appearance/font/preview.current"
     readonly property var fontCandidates: root.inventoryCandidates.filter(function(candidate) {
         return candidate.id === "font";
     })
-    readonly property string managedThemesPath: root.dataHome + "/dwm-titus/config/themes.toml"
+    readonly property string managedThemesPath: root.dataHome + "/dwm-oomaya/config/themes.toml"
     readonly property var wallpaperCandidates: root.inventoryCandidates.filter(function(candidate) {
         return candidate.id === "wallpaper";
     })
@@ -194,20 +194,20 @@ Scope {
         root.configHome + "/gtk-3.0/settings.ini",
         root.configHome + "/gtk-4.0/settings.ini",
         (Quickshell.env("HOME") || "") + "/.gtkrc-2.0",
-        root.configHome + "/dwm-titus/cursor.Xresources",
-        root.configHome + "/dwm-titus/theme-env.sh",
+        root.configHome + "/dwm-oomaya/cursor.Xresources",
+        root.configHome + "/dwm-oomaya/theme-env.sh",
         root.configHome + "/qt5ct/qt5ct.conf",
         root.configHome + "/qt6ct/qt6ct.conf",
         root.configHome + "/dconf/user"
     ]
     readonly property var statusWatchPaths: [
-        root.stateHome + "/dwm-titus/appearance/preview.current",
-        root.stateHome + "/dwm-titus/appearance/transaction.meta",
-        root.stateHome + "/dwm-titus/appearance/transaction.failed",
-        root.stateHome + "/dwm-titus/appearance/integration-transaction",
+        root.stateHome + "/dwm-oomaya/appearance/preview.current",
+        root.stateHome + "/dwm-oomaya/appearance/transaction.meta",
+        root.stateHome + "/dwm-oomaya/appearance/transaction.failed",
+        root.stateHome + "/dwm-oomaya/appearance/integration-transaction",
         root.wallpaperConfigPath,
-        root.configHome + "/dwm-titus/personalization.conf",
-        root.stateHome + "/dwm-titus/appearance/wallpaper/preview.current"
+        root.configHome + "/dwm-oomaya/personalization.conf",
+        root.stateHome + "/dwm-oomaya/appearance/wallpaper/preview.current"
     ]
     readonly property var requiredIntegrationIds: [
         "gtk", "qt", "cursor", "alacritty", "kitty", "compositor"

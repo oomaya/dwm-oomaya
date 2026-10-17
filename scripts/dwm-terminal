@@ -53,7 +53,7 @@ find_herdr() {
 configured_terminal() {
 	local config_home=${XDG_CONFIG_HOME:-${HOME:-}/.config}
 	local config=$config_home/dwm-oomaya/hotkeys.toml
-	[[ -f $config ]] || config=$config_home/dwm-titus/hotkeys.toml
+	[[ -f $config ]] || config=$config_home/dwm-oomaya/hotkeys.toml
 	local line value=
 	local count=0
 	local in_vars=0

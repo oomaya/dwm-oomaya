@@ -13,7 +13,7 @@
 ---
 
 ## 2. Compounding Desktop Symptoms
-1. **Missing Topbar**: Upstream `dwm-titus` / `dwm-oomaya` disabled the native suckless topbar in C (`drawbar(Monitor *m)` in [dwm.c](file:///home/rand/.local/src/dwm-oomaya/dwm.c#L1353-L1357) has an unconditional early `return;`), delegating 100% of topbar rendering to Quickshell. Without Quickshell running, no bar is drawn.
+1. **Missing Topbar**: Upstream `dwm-oomaya` / `dwm-oomaya` disabled the native suckless topbar in C (`drawbar(Monitor *m)` in [dwm.c](file:///home/rand/.local/src/dwm-oomaya/dwm.c#L1353-L1357) has an unconditional early `return;`), delegating 100% of topbar rendering to Quickshell. Without Quickshell running, no bar is drawn.
 2. **Missing `dmenu-desktop` / Hotkeys**: During the earlier fleet rectification build, only `sudo make install` of dwm was run. The companion `install_dmenu_ecosystem` was not invoked, leaving `dmenu-desktop`, `dmenu-windows`, `dmenu-hub`, and `dmenu-power` unbuilt on `mint-vm` (`/bin/sh: 1: dmenu-desktop: not found` in `~/.xsession-errors`).
 3. **Background Status Active**: `dwm-status` is currently running healthy in the background and populating the root window name (`WM_NAME = "AC | VOL 50%"`), but dwm's bar is not displaying it due to the early return in `drawbar()`.
 

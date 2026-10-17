@@ -90,8 +90,8 @@ runtime=$runtime_storage
 config_home=$home/.config
 data_home=$home/.local/share
 bin=$work/bin
-mkdir -p "$config_home/quickshell" "$config_home/dwm-titus" "$home/.cache" \
-	"$data_home/dwm-titus/scripts" "$data_home/applications" "$runtime" "$bin"
+mkdir -p "$config_home/quickshell" "$config_home/dwm-oomaya" "$home/.cache" \
+	"$data_home/dwm-oomaya/scripts" "$data_home/applications" "$runtime" "$bin"
 chmod 700 "$runtime_storage"
 if [ "${#runtime}" -gt 64 ]; then
 	runtime_alias_dir=$(mktemp -d /tmp/dwm-large-surface-runtime.XXXXXX)
@@ -99,15 +99,15 @@ if [ "${#runtime}" -gt 64 ]; then
 	runtime=$runtime_alias_dir/runtime
 fi
 cp -a "$repo/config/quickshell/." "$config_home/quickshell/"
-cp "$repo/tests/fixtures/system-operation-provider.py" "$data_home/dwm-titus/scripts/dwm-system-management"
-chmod +x "$data_home/dwm-titus/scripts/dwm-system-management"
-cp "$repo/config/"*.toml "$config_home/dwm-titus/"
+cp "$repo/tests/fixtures/system-operation-provider.py" "$data_home/dwm-oomaya/scripts/dwm-system-management"
+chmod +x "$data_home/dwm-oomaya/scripts/dwm-system-management"
+cp "$repo/config/"*.toml "$config_home/dwm-oomaya/"
 cp "$repo/scripts/dwm-settings-provider" "$repo/scripts/dwm-system-health" \
 	"$repo/scripts/dwm-settings-display" "$repo/scripts/dwm-settings-input" \
 	"$repo/scripts/dwm-display-setup" "$repo/scripts/dwm-quickshell-controlcenter" \
 	"$repo/scripts/dwm-quickshell-controls" "$repo/scripts/dwm-quickshell-network" \
 	"$repo/scripts/dwm-quickshell-launcher" "$repo/scripts/dwm-diagnostics" \
-	"$repo/scripts/dwm-lock" "$data_home/dwm-titus/scripts/"
+	"$repo/scripts/dwm-lock" "$data_home/dwm-oomaya/scripts/"
 
 cat >"$data_home/applications/dwm-large-surface-test.desktop" <<'DESKTOP'
 [Desktop Entry]
@@ -145,7 +145,7 @@ dwm_pid=$!
 env DISPLAY="$display" HOME="$home" XDG_CONFIG_HOME="$config_home" \
 	XDG_DATA_HOME="$data_home" XDG_CACHE_HOME="$home/.cache" XDG_RUNTIME_DIR="$runtime" \
 	QSG_RHI_BACKEND=software QT_QUICK_BACKEND=software \
-	DWM_LARGE_SURFACE_DEX_LOG="$work/dex.log" PATH="$bin:$data_home/dwm-titus/scripts:$PATH" \
+	DWM_LARGE_SURFACE_DEX_LOG="$work/dex.log" PATH="$bin:$data_home/dwm-oomaya/scripts:$PATH" \
 	quickshell --no-duplicate >"$work/quickshell.log" 2>&1 &
 quickshell_pid=$!
 config=$config_home/quickshell/shell.qml
@@ -343,9 +343,9 @@ if [ "$popup_timeout" != 4000 ]; then
 	exit 1
 fi
 if ! grep -Eq '"popupTimeoutMs"[[:space:]]*:[[:space:]]*4000' \
-	"$config_home/dwm-titus/notification-settings.json"; then
+	"$config_home/dwm-oomaya/notification-settings.json"; then
 	printf 'Notification popup timeout was not persisted:\n' >&2
-	sed -n '1,20p' "$config_home/dwm-titus/notification-settings.json" >&2
+	sed -n '1,20p' "$config_home/dwm-oomaya/notification-settings.json" >&2
 	exit 1
 fi
 # FileView does not define whether saved or fileChanged arrives first. Sample a
@@ -385,7 +385,7 @@ while [ "$i" -lt 100 ]; do
 	sleep 0.05
 done
 [ "$(ipc notifications doNotDisturb)" = true ]
-chmod 500 "$config_home/dwm-titus"
+chmod 500 "$config_home/dwm-oomaya"
 ipc notifications setDoNotDisturb false >/dev/null
 i=0
 while [ "$i" -lt 100 ]; do
@@ -396,7 +396,7 @@ done
 [ "$(ipc notifications policyState)" = unavailable ]
 [ "$(ipc notifications doNotDisturb)" = true ]
 [ "$(ipc notifications popupTimeout)" = 4000 ]
-chmod 700 "$config_home/dwm-titus"
+chmod 700 "$config_home/dwm-oomaya"
 ipc notifications resetPolicy >/dev/null
 i=0
 while [ "$i" -lt 100 ]; do
@@ -425,8 +425,8 @@ done
 [ "$(ipc notifications policyState)" = available ]
 [ "$(ipc notifications doNotDisturb)" = true ]
 [ "$(ipc notifications popupTimeout)" = 4000 ]
-chmod 000 "$config_home/dwm-titus/notification-settings.json"
-touch "$config_home/dwm-titus/notification-settings.json"
+chmod 000 "$config_home/dwm-oomaya/notification-settings.json"
+touch "$config_home/dwm-oomaya/notification-settings.json"
 i=0
 while [ "$i" -lt 100 ]; do
 	[ "$(ipc notifications policyState)" = unavailable ] && break
@@ -440,8 +440,8 @@ send_test_notification normal 'Suppressed during policy read failure'
 sleep 0.1
 [ "$(ipc notifications count)" = 0 ]
 [ "$(ipc notifications historyLatestSummary)" = 'Suppressed during policy read failure' ]
-chmod 600 "$config_home/dwm-titus/notification-settings.json"
-touch "$config_home/dwm-titus/notification-settings.json"
+chmod 600 "$config_home/dwm-oomaya/notification-settings.json"
+touch "$config_home/dwm-oomaya/notification-settings.json"
 i=0
 while [ "$i" -lt 100 ]; do
 	[ "$(ipc notifications policyState)" = available ] && break
@@ -459,7 +459,7 @@ done
 [ "$(ipc notifications doNotDisturb)" = false ]
 [ "$(ipc notifications popupTimeout)" = 6000 ]
 printf '%s\n' '{"version":1,"doNotDisturb":true,"popupTimeoutMs":6000}' \
-	>"$config_home/dwm-titus/notification-settings.json"
+	>"$config_home/dwm-oomaya/notification-settings.json"
 i=0
 while [ "$i" -lt 100 ]; do
 	policy_dnd=$(ipc notifications doNotDisturb)
@@ -470,7 +470,7 @@ done
 [ "$policy_dnd" = true ]
 [ "$(ipc notifications count)" = 0 ]
 [ "$(ipc notifications historyCount)" -gt 0 ]
-printf '%s\n' '{malformed' >"$config_home/dwm-titus/notification-settings.json"
+printf '%s\n' '{malformed' >"$config_home/dwm-oomaya/notification-settings.json"
 i=0
 while [ "$i" -lt 100 ]; do
 	[ "$(ipc notifications policyState)" = partial ] && break

@@ -17,7 +17,7 @@ repo=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 }
 
 work=$(mktemp -d)
-custom_prefix=$(mktemp -d /opt/dwm-titus-security-test.XXXXXX)
+custom_prefix=$(mktemp -d /opt/dwm-oomaya-security-test.XXXXXX)
 created_main_config=0
 cleanup() {
 	if [[ $created_main_config == 1 ]]; then
@@ -26,10 +26,10 @@ cleanup() {
 	rm -rf "$work" "$custom_prefix"
 }
 trap cleanup EXIT
-mkdir -p "$custom_prefix/bin" "$custom_prefix/libexec/dwm-titus" \
+mkdir -p "$custom_prefix/bin" "$custom_prefix/libexec/dwm-oomaya" \
 	"$work/bin" "$work/home/display-profiles"
 
-installed="$custom_prefix/libexec/dwm-titus/dwm-settings-display-root"
+installed="$custom_prefix/libexec/dwm-oomaya/dwm-settings-display-root"
 setup="$custom_prefix/bin/dwm-display-setup"
 sed "s|@PREFIX@|$custom_prefix|g" "$repo/scripts/dwm-settings-display-root" |
 	install -o root -g root -m 0755 /dev/stdin "$installed"
@@ -130,7 +130,7 @@ if env DISPLAY=:99 HOME="$work/home" DWM_DISPLAY_PROFILE_DIR="$work/home/display
 fi
 grep -Fq 'authorization denied' "$work/polkit.err"
 
-chmod 0777 "$custom_prefix/libexec/dwm-titus"
+chmod 0777 "$custom_prefix/libexec/dwm-oomaya"
 if env DISPLAY=:99 HOME="$work/home" DWM_DISPLAY_PROFILE_DIR="$work/home/display-profiles" \
 	PATH="$work/bin:$custom_prefix/bin:/usr/bin:/bin" \
 	"$repo/scripts/dwm-settings-display" install-profile desk 2>"$work/writable-parent.err"; then
@@ -138,10 +138,10 @@ if env DISPLAY=:99 HOME="$work/home" DWM_DISPLAY_PROFILE_DIR="$work/home/display
 	exit 1
 fi
 grep -Fq 'trusted persistent-display helper is unavailable' "$work/writable-parent.err"
-chmod 0755 "$custom_prefix/libexec/dwm-titus"
+chmod 0755 "$custom_prefix/libexec/dwm-oomaya"
 
-mv "$custom_prefix/libexec/dwm-titus" "$work/real-libexec"
-ln -s "$work/real-libexec" "$custom_prefix/libexec/dwm-titus"
+mv "$custom_prefix/libexec/dwm-oomaya" "$work/real-libexec"
+ln -s "$work/real-libexec" "$custom_prefix/libexec/dwm-oomaya"
 if env DISPLAY=:99 HOME="$work/home" DWM_DISPLAY_PROFILE_DIR="$work/home/display-profiles" \
 	PATH="$work/bin:$custom_prefix/bin:/usr/bin:/bin" \
 	"$repo/scripts/dwm-settings-display" install-profile desk 2>"$work/symlink-parent.err"; then
@@ -149,8 +149,8 @@ if env DISPLAY=:99 HOME="$work/home" DWM_DISPLAY_PROFILE_DIR="$work/home/display
 	exit 1
 fi
 grep -Fq 'trusted persistent-display helper is unavailable' "$work/symlink-parent.err"
-rm -f "$custom_prefix/libexec/dwm-titus"
-mv "$work/real-libexec" "$custom_prefix/libexec/dwm-titus"
+rm -f "$custom_prefix/libexec/dwm-oomaya"
+mv "$work/real-libexec" "$custom_prefix/libexec/dwm-oomaya"
 
 chmod 0777 "$custom_prefix/bin"
 if env PKEXEC_UID=1000 "$installed" rollback 2>"$work/writable-bin-parent.err"; then

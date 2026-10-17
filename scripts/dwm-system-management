@@ -101,7 +101,7 @@ JOURNAL_TERMINAL_COUNT = 32
 JOURNAL_CURSOR_NAME = "cursor"
 JOURNAL_PATH_MAX = 4095
 JOURNAL_COMPONENT_MAX = 255
-JOURNAL_DIRECTORY_SUFFIX = ("dwm-titus", "system-management")
+JOURNAL_DIRECTORY_SUFFIX = ("dwm-oomaya", "system-management")
 JOURNAL_BOOT_ID_TEMPLATE = "00000000-0000-0000-0000-000000000000"
 JOURNAL_RESTART_ALL_CLEAR_TAIL = ("-", "none", "none", "0", "no", "0")
 JOURNAL_RESTART_ALL_CLEAR_SUFFIX = (
@@ -990,7 +990,7 @@ def make_regional_preview(action: str, argument: object, state: object, choices=
             current_value = "enabled" if state.ntp_enabled else "disabled"
             target, detail = argument, "Network time synchronization setting"
             source_fields = ("yes", current_value)
-    digest = hashlib.sha256(b"dwm-titus-regional-preview-v1")
+    digest = hashlib.sha256(b"dwm-oomaya-regional-preview-v1")
     for field in (action, argument, *source_fields):
         encoded = field.encode("utf-8")
         digest.update(len(encoded).to_bytes(8, "big"))
@@ -5832,7 +5832,7 @@ def aggregate_restart(restart_types: Sequence[int]) -> str:
 
 
 def snapshot_generation(update_ids: Sequence[str], plan: Sequence[PlanRow]) -> str:
-    digest = hashlib.sha256(b"dwm-titus-update-plan-v1")
+    digest = hashlib.sha256(b"dwm-oomaya-update-plan-v1")
     for package_id in sorted(update_ids, key=lambda value: value.encode("utf-8")):
         encoded = package_id.encode("utf-8")
         digest.update(b"U")
@@ -6124,7 +6124,7 @@ class ObservedUpdateSummary:
         self._matched: set[str] = set()
         self._different = False
         self._unknown = False
-        self._digest = hashlib.sha256(b"dwm-titus-update-observed-v1")
+        self._digest = hashlib.sha256(b"dwm-oomaya-update-observed-v1")
 
     @staticmethod
     def _package_key(package_id: str) -> tuple[str, str]:

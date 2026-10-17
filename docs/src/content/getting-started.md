@@ -1,13 +1,13 @@
 ---
 title: Getting Started
-description: Learn the essential shortcuts, workspaces, and layouts for a productive first session in dwm-titus.
+description: Learn the essential shortcuts, workspaces, and layouts for a productive first session in dwm-oomaya.
 navLabel: Getting Started
 eyebrow: First session
 ---
 
 # Getting Started
 
-> dwm-titus is a Fedora-only X11 desktop. These instructions assume a supported
+> dwm-oomaya is a Fedora-only X11 desktop. These instructions assume a supported
 > Fedora installation completed through the Fedora image or `install.sh`.
 
 After installing, the first thing to know: **Super** = the Windows key.

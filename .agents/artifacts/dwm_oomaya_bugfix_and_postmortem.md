@@ -25,10 +25,10 @@
   ```
   In the scheme enum (`enum { SchemeNorm, SchemeSel, SchemeTitle, TabSel, TabNorm... }`), `SchemeTitle` is index `2`. Because the reload loop only updated indices `0` and `1`, `scheme[SchemeTitle]` was never updated and remained permanently locked to compile-time Tokyo Night colors (`themes/tokyonight.h`).
 - **Path Resolution Defect**:
-  In `scripts/dwm-settings-appearance`, `themes_file` was hardcoded to `$config_home/dwm-titus/themes.toml`. When `dwm-settings-theme` queried `dwm-settings-appearance snapshot`, it exited with error code 3 (`No readable user or managed themes.toml file is available`).
+  In `scripts/dwm-settings-appearance`, `themes_file` was hardcoded to `$config_home/dwm-oomaya/themes.toml`. When `dwm-settings-theme` queried `dwm-settings-appearance snapshot`, it exited with error code 3 (`No readable user or managed themes.toml file is available`).
 - **Remediation**:
   1. Expanded `load_themes_toml()` in `dwm.c` to rebuild `SchemeTitle` (`index 2`) dynamically with `{ c_titlefg, c_titlebg, c_titleborder }`, supporting `titlefgcolor` / `titlebgcolor` overrides with fallback to `{ c_selfg, c_normbg, c_normborder }`.
-  2. Updated `scripts/dwm-settings-appearance` and `scripts/dwm-settings-font` to dynamically resolve `$dwm_cfg_name` (`dwm-oomaya` before `dwm-titus`), enabling clean `snapshot` execution.
+  2. Updated `scripts/dwm-settings-appearance` and `scripts/dwm-settings-font` to dynamically resolve `$dwm_cfg_name` (`dwm-oomaya` before `dwm-oomaya`), enabling clean `snapshot` execution.
 
 ---
 

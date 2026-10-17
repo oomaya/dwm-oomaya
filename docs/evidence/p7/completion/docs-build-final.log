@@ -1,9 +1,9 @@
 
-> dwm-titus-docs@1.0.0 build
+> dwm-oomaya-docs@1.0.0 build
 > astro check && astro build
 
 20:55:25 [types] Generated 40ms
-20:55:25 [check] Getting diagnostics for Astro files in /home/titus/github/dwm-titus/docs...
+20:55:25 [check] Getting diagnostics for Astro files in /home/titus/github/dwm-oomaya/docs...
 Result (15 files):
 - 0 errors
 - 0 warnings
@@ -12,7 +12,7 @@ Result (15 files):
 20:55:27 [types] Generated 31ms
 20:55:27 [build] output: "static"
 20:55:27 [build] mode: "static"
-20:55:27 [build] directory: /home/titus/github/dwm-titus/docs/dist/
+20:55:27 [build] directory: /home/titus/github/dwm-oomaya/docs/dist/
 20:55:27 [build] Collecting build info...
 20:55:27 [build] ✓ Completed in 67ms.
 20:55:27 [build] Building static entrypoints...

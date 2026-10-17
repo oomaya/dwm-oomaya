@@ -1,16 +1,16 @@
-# Walkthrough: Fix `runautoscript()` dwm-titus Directory Fallback in `dwm.c`
+# Walkthrough: Fix `runautoscript()` dwm-oomaya Directory Fallback in `dwm.c`
 
 ## Executive Summary
-In `dwm.c`, `runautoscript()` previously reconstructed its script search path from `$XDG_DATA_HOME` using only the hardcoded `dwmdir` (`"dwm-oomaya"`), completely ignoring the `dwm-titus` fallback directory that `setup_user_config_paths()` / `setup_inotify()` dynamically resolves. As a result, in test and user environments using `dwm-titus` data paths, `autostart.sh` and `autostop.sh` were silently never executed.
+In `dwm.c`, `runautoscript()` previously reconstructed its script search path from `$XDG_DATA_HOME` using only the hardcoded `dwmdir` (`"dwm-oomaya"`), completely ignoring the `dwm-oomaya` fallback directory that `setup_user_config_paths()` / `setup_inotify()` dynamically resolves. As a result, in test and user environments using `dwm-oomaya` data paths, `autostart.sh` and `autostop.sh` were silently never executed.
 
 We surgically updated `runautoscript()` to reuse the already-resolved `dwm_data_dir` global when available, falling back to the legacy environment resolution only if `dwm_data_dir` is empty/unset.
 
 ---
 
 ## Root Cause Analysis
-- `setup_inotify()` in `dwm.c:4370-4378` checks for `dwm-oomaya` first and falls back to `dwm-titus` when setting `dwm_data_dir`.
-- `runautoscript()` in `dwm.c:3035-3053` built `<XDG_DATA_HOME>/dwm-oomaya/` directly and fell back to `~/.dwm-oomaya/`, never probing `dwm-titus`.
-- In `tests/test-quickshell-session-actions.sh`, the test environment uses `$runtime_data_home/dwm-titus/scripts/autostop.sh`. When dwm exited on logout, `runautoscript("scripts/autostop.sh")` looked for `dwm-oomaya` instead of `dwm-titus`, causing `autostop.marker` to never be written and resulting in:
+- `setup_inotify()` in `dwm.c:4370-4378` checks for `dwm-oomaya` first and falls back to `dwm-oomaya` when setting `dwm_data_dir`.
+- `runautoscript()` in `dwm.c:3035-3053` built `<XDG_DATA_HOME>/dwm-oomaya/` directly and fell back to `~/.dwm-oomaya/`, never probing `dwm-oomaya`.
+- In `tests/test-quickshell-session-actions.sh`, the test environment uses `$runtime_data_home/dwm-oomaya/scripts/autostop.sh`. When dwm exited on logout, `runautoscript("scripts/autostop.sh")` looked for `dwm-oomaya` instead of `dwm-oomaya`, causing `autostop.marker` to never be written and resulting in:
   ```
   TRACE: nested-dwm-exited
   DEBUG autostop.marker: missing

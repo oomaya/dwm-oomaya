@@ -46,7 +46,7 @@ before editing a Docked layout.
 This optional feature uses Fedora's `autorandr` login and hotplug integration,
 without administrator approval. Saving Undocked makes it the default fallback.
 Docked matches the connected monitor identities, not just the connector type.
-Replaced profiles are backed up in the dwm-titus `display-profile-backups`
+Replaced profiles are backed up in the dwm-oomaya `display-profile-backups`
 configuration directory. Only one Docked slot is managed here; advanced
 multi-dock profiles remain available through autorandr. These user profiles
 are separate from the administrator-controlled **Use at next login** action.
@@ -54,7 +54,7 @@ are separate from the administrator-controlled **Use at next login** action.
 The machine-oriented `dwm-settings-display` helper exposes `discover` and
 `watch`, complete-layout `save` and `preview`, named `preview-profile`, timed
 `keep`, `revert`, and `preview-status`, plus authorized `install-profile` and
-`rollback-system` actions. Named layouts live under the dwm-titus XDG config
+`rollback-system` actions. Named layouts live under the dwm-oomaya XDG config
 directory. Legacy incomplete layouts remain available to
 `dwm-display-profile`, but Settings requires them to be resaved as complete
 layouts before preview or persistent installation.
@@ -129,7 +129,7 @@ Saving the file applies the rule through dwm's normal hot reload. A customized
 rule with the same title can be retained instead.
 
 The **Use at next login** display action writes only the managed
-`90-dwm-titus-display.conf` fragment after a separate confirmation and polkit
+`90-dwm-oomaya-display.conf` fragment after a separate confirmation and polkit
 authorization. The installed helper accepts validated display records only,
 backs up the previous managed next-login fragment, and offers **Restore login
 backup**. It does not capture the live XRandR layout. Later phases add

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-profile_dir="${DWM_DISPLAY_PROFILE_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus/display-profiles}"
-runtime_base="${XDG_RUNTIME_DIR:-/tmp/dwm-titus-$UID}"
+profile_dir="${DWM_DISPLAY_PROFILE_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/dwm-oomaya/display-profiles}"
+runtime_base="${XDG_RUNTIME_DIR:-/tmp/dwm-oomaya-$UID}"
 state_dir="$runtime_base/dwm-settings-display"
-managed_config="${DWM_XORG_CONFIG:-/etc/X11/xorg.conf.d/90-dwm-titus-display.conf}"
+managed_config="${DWM_XORG_CONFIG:-/etc/X11/xorg.conf.d/90-dwm-oomaya-display.conf}"
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 setup_helper="${DWM_DISPLAY_SETUP:-$script_dir/dwm-display-setup}"
@@ -382,10 +382,10 @@ trusted_root_helper() {
 	local candidate canonical command_path derived=
 	command_path=$(command -v dwm-settings-display 2>/dev/null || true)
 	case $command_path in
-	*/bin/dwm-settings-display) derived=${command_path%/bin/dwm-settings-display}/libexec/dwm-titus/dwm-settings-display-root ;;
+	*/bin/dwm-settings-display) derived=${command_path%/bin/dwm-settings-display}/libexec/dwm-oomaya/dwm-settings-display-root ;;
 	esac
-	for candidate in "$derived" /usr/local/libexec/dwm-titus/dwm-settings-display-root \
-		/usr/libexec/dwm-titus/dwm-settings-display-root; do
+	for candidate in "$derived" /usr/local/libexec/dwm-oomaya/dwm-settings-display-root \
+		/usr/libexec/dwm-oomaya/dwm-settings-display-root; do
 		[[ -n $candidate ]] || continue
 		canonical=$(readlink -f -- "$candidate" 2>/dev/null || true)
 		[[ -n $canonical && $canonical == "$candidate" ]] || continue

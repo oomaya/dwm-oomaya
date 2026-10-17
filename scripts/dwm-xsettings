@@ -7,7 +7,7 @@ config_home=${XDG_CONFIG_HOME:-}
 if [[ -f $config_home/dwm-oomaya/xsettingsd.conf || -d $config_home/dwm-oomaya ]]; then
 	config_file=$config_home/dwm-oomaya/xsettingsd.conf
 else
-	config_file=$config_home/dwm-titus/xsettingsd.conf
+	config_file=$config_home/dwm-oomaya/xsettingsd.conf
 fi
 runtime_base=${XDG_RUNTIME_DIR:-}
 if [[ -z $runtime_base ]]; then

@@ -3,7 +3,7 @@
 ## Delivered contract
 
 - `dwm-panel-settings` owns the versioned
-  `~/.config/dwm-titus/panel-widgets.conf` status, set, and reset protocols.
+  `~/.config/dwm-oomaya/panel-widgets.conf` status, set, and reset protocols.
 - One root `PanelSettingsModel` is instantiated in `shell.qml`. Every `DwmPanel`,
   Control Center, and Settings Appearance consumes that same model, so a change
   is immediately consistent across monitors without duplicate providers.

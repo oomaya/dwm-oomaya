@@ -27,7 +27,7 @@ Scope {
     readonly property string configuredConfigHome: Quickshell.env("XDG_CONFIG_HOME")
     readonly property string configHome: root.configuredConfigHome.startsWith("/")
         ? root.configuredConfigHome : root.homeDir + "/.config"
-    readonly property string configPath: root.configHome + "/dwm-titus/panel-widgets.conf"
+    readonly property string configPath: root.configHome + "/dwm-oomaya/panel-widgets.conf"
     readonly property bool mutationReady: root.providerState !== "unavailable"
     readonly property var widgets: [
         { "id": "workspaces", "label": "Workspaces" },

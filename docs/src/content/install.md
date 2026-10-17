@@ -1,13 +1,13 @@
 ---
 title: Fedora Installation
-description: Install the complete dwm-titus Fedora X11 desktop from an image or onto an existing Fedora system.
+description: Install the complete dwm-oomaya Fedora X11 desktop from an image or onto an existing Fedora system.
 navLabel: Installation
 eyebrow: Start here
 ---
 
 # Fedora Installation
 
-> **dwm-titus is Fedora-only.** Fedora Linux with Xorg is required for every
+> **dwm-oomaya is Fedora-only.** Fedora Linux with Xorg is required for every
 > supported installation, package, test, and release path.
 
 ## Quick Install (Recommended)
@@ -28,7 +28,7 @@ run:
 install-herdr
 ```
 
-![The dwm-titus applications menu in Linutil](/images/linutil-applications.png)
+![The dwm-oomaya applications menu in Linutil](/images/linutil-applications.png)
 
 ## Manual Install
 
@@ -54,8 +54,8 @@ gaming subset without affecting other full-profile extras.
 ### 2. Clone and Build
 
 ```bash
-git clone https://github.com/ChrisTitusTech/dwm-titus.git
-cd dwm-titus
+git clone https://github.com/ChrisTitusTech/dwm-oomaya.git
+cd dwm-oomaya
 cp config.def.h config.h
 ./scripts/dev-sync-install.sh
 ```
@@ -204,7 +204,7 @@ closed so they cannot change during the backup:
 
 ```bash
 repo_dir=$(pwd -P)
-backup_dir=$(mktemp -d "$HOME/dwm-titus-backup.XXXXXX") || exit 1
+backup_dir=$(mktemp -d "$HOME/dwm-oomaya-backup.XXXXXX") || exit 1
 chmod 700 "$backup_dir" || exit 1
 tar -C "$repo_dir" -cpf "$backup_dir/source.tar" . || exit 1
 printf 'export XDG_CONFIG_HOME=%q\nexport XDG_DATA_HOME=%q\n' \
@@ -279,7 +279,7 @@ failed checkout available for inspection:
 
 ```bash
 test -f "$backup_dir/source.tar" && test -f "$backup_dir/user.tar" || exit 1
-restore_dir=$(mktemp -d "$HOME/dwm-titus-restored.XXXXXX") || exit 1
+restore_dir=$(mktemp -d "$HOME/dwm-oomaya-restored.XXXXXX") || exit 1
 tar -C "$restore_dir" -xpf "$backup_dir/source.tar" || exit 1
 tar -C / --keep-directory-symlink -xpf "$backup_dir/user.tar" || exit 1
 source "$backup_dir/xdg.env"
@@ -325,9 +325,9 @@ dwm-settings-display rollback-system
 
 Discovery and live previews require `xrandr`, and the hotplug watch requires
 `udevadm`. Persistent install and rollback additionally require `pkexec` plus
-the root-owned helper installed at `${PREFIX}/libexec/dwm-titus/`. Profiles are
+the root-owned helper installed at `${PREFIX}/libexec/dwm-oomaya/`. Profiles are
 stored under
-`${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus/display-profiles/`. No move is
+`${XDG_CONFIG_HOME:-$HOME/.config}/dwm-oomaya/display-profiles/`. No move is
 needed for profiles created by `dwm-display-profile`, which uses the same
 directory. If `DWM_DISPLAY_PROFILE_DIR` previously pointed elsewhere, either
 keep that environment override or move those `.conf` files into the default
@@ -352,7 +352,7 @@ modifier operations also require `setxkbmap`; session-wide XKB accessibility
 controls require `xkbset`; stable hardware identity and hotplug watching use
 `udevadm`, and the session watcher uses `flock` from `util-linux` to prevent
 duplicate replay workers. Kept values default to
-`${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus/input-settings.conf`. Set
+`${XDG_CONFIG_HOME:-$HOME/.config}/dwm-oomaya/input-settings.conf`. Set
 `DWM_INPUT_SETTINGS_FILE` to use a different file. The normal session startup
 invokes `apply-saved` idempotently and runs `watch-apply` to debounce input
 hotplug events before replaying saved values for returning devices.

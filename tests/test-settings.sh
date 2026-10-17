@@ -202,8 +202,8 @@ make_stub "$fedora_bin/inotifywait"
 make_failing_stub "$fedora_bin/pkexec"
 make_failing_stub "$fedora_bin/sudo"
 
-mkdir -p "$work/fedora-config/dwm-titus"
-cp "$repo/config/themes.toml" "$work/fedora-config/dwm-titus/themes.toml"
+mkdir -p "$work/fedora-config/dwm-oomaya"
+cp "$repo/config/themes.toml" "$work/fedora-config/dwm-oomaya/themes.toml"
 
 printf 'ID=fedora\nPRETTY_NAME="Fedora\tLinux 44"\n' \
 	>"$work/fedora-os-release"
@@ -535,8 +535,8 @@ fi
 
 repo_source_home=$work/repo-source-home
 repo_source_config=$work/repo-source-config
-mkdir -p "$repo_source_home" "$repo_source_config/dwm-titus"
-cp "$repo/config/themes.toml" "$repo_source_config/dwm-titus/themes.toml"
+mkdir -p "$repo_source_home" "$repo_source_config/dwm-oomaya"
+cp "$repo/config/themes.toml" "$repo_source_config/dwm-oomaya/themes.toml"
 repo_source_output=$(PATH="$repo/scripts:/usr/bin" HOME="$repo_source_home" \
 	XDG_CONFIG_HOME="$repo_source_config" XDG_DATA_HOME="$work/missing-repo-source-data" \
 	DWM_SETTINGS_OS_RELEASE="$work/fedora-os-release" "$provider" discover)
@@ -631,7 +631,7 @@ if "$provider" unknown 2>"$work/provider.err"; then
 fi
 grep -Fq 'usage:' "$work/provider.err"
 
-mkdir -p "$work/home/.config/quickshell" "$work/home/.local/share/dwm-titus/config/quickshell" "$work/launcher-bin"
+mkdir -p "$work/home/.config/quickshell" "$work/home/.local/share/dwm-oomaya/config/quickshell" "$work/launcher-bin"
 : >"$work/home/.config/quickshell/shell.qml"
 cat >"$work/launcher-bin/quickshell" <<'EOF'
 #!/bin/sh
@@ -740,7 +740,7 @@ if grep -Fq 'keepPreview(root.profileName' \
 fi
 grep -Fq 'label: "Use at next login"' "$repo/config/quickshell/settings/DisplaySettingsPane.qml"
 grep -Fq 'label: "Restore login backup"' "$repo/config/quickshell/settings/DisplaySettingsPane.qml"
-grep -Fq 'the previous dwm-titus next-login layout will be backed up' \
+grep -Fq 'the previous dwm-oomaya next-login layout will be backed up' \
 	"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
 if grep -Fq 'root.profileName = modelData;' \
 	"$repo/config/quickshell/settings/DisplaySettingsPane.qml"; then

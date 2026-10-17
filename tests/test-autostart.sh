@@ -2,6 +2,11 @@
 
 set -eu
 
+if command -v python3 >/dev/null 2>&1 && [ "${DWM_SIGHUP_RESET:-0}" != 1 ]; then
+	export DWM_SIGHUP_RESET=1
+	exec python3 -c 'import os, sys, signal; signal.signal(signal.SIGHUP, signal.SIG_DFL); os.execvp(sys.argv[1], sys.argv[1:])' "$0" "$@"
+fi
+
 DWM_AUTOSTART_NO_INPUT_WATCH=1
 export DWM_AUTOSTART_NO_INPUT_WATCH
 TEST_REAL_UID=$(id -u)
@@ -729,7 +734,7 @@ run_status_optional_lock_case() {
 	DISPLAY=:104 HOME=$home TEST_STATE=$state PATH="$work/bin:/usr/bin:/bin" \
 		XDG_CONFIG_HOME="$home/.config" XDG_RUNTIME_DIR=$runtime \
 		DWM_AUTOSTART_NO_INPUT_WATCH=1 DWM_AUTOSTART_NO_SETSID=1 \
-		TEST_CHMOD_FAILURE_TARGET="$runtime/dwm-titus" \
+		TEST_CHMOD_FAILURE_TARGET="$runtime/dwm-oomaya" \
 		sh "$repo_dir/scripts/autostart.sh"
 	wait_for_marker "$state/dwm-status.running"
 	test "$(cat "$state/dwm-status.count")" -eq 1

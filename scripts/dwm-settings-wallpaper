@@ -14,9 +14,7 @@ state_home=${XDG_STATE_HOME:-}
 [[ $state_home == /* ]] || state_home=${HOME:?HOME is required for XDG_STATE_HOME fallback}/.local/state
 
 dwm_cfg_name="dwm-oomaya"
-[[ -d $config_home/dwm-oomaya || ! -d $config_home/dwm-titus ]] || dwm_cfg_name="dwm-titus"
 dwm_state_name="dwm-oomaya"
-[[ -d $state_home/dwm-oomaya || ! -d $state_home/dwm-titus ]] || dwm_state_name="dwm-titus"
 
 runtime_base=${XDG_RUNTIME_DIR:-/tmp/dwm-oomaya-$UID}
 [[ $runtime_base == /* ]] || {

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Portable maim screenshot wrapper for dwm-titus.
+# Portable maim screenshot wrapper for dwm-oomaya.
 #
 # Usage:
 #   dwm-screenshot screen  - save the monitor containing the cursor as JPEG

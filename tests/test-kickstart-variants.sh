@@ -156,8 +156,8 @@ SH
 	fi
 	# shellcheck disable=SC2016 # Match the literal deferred expansion in Kickstart.
 	grep -Fq 'export DBUS_SYSTEM_BUS_ADDRESS=\$DBUS_SESSION_BUS_ADDRESS; exec ./install.sh' "$ks"
-	grep -Fq '%include /tmp/dwm-titus-gaming-repo' "$ks"
-	grep -Fq '%include /tmp/dwm-titus-gaming-packages' "$ks"
+	grep -Fq '%include /tmp/dwm-oomaya-gaming-repo' "$ks"
+	grep -Fq '%include /tmp/dwm-oomaya-gaming-packages' "$ks"
 	# shellcheck disable=SC2016
 	grep -Fq 'fedora-$releasever-$basearch/' "$ks"
 	# shellcheck disable=SC2016

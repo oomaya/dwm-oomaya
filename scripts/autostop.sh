@@ -71,7 +71,7 @@ stop_scoped_status() {
 	case $status_display_key in *[!0-9a-f]* | '') return 0 ;; esac
 	status_identity_file=$XDG_RUNTIME_DIR/dwm-oomaya/dwm-status.$status_display_key.identity
 	if [ ! -f "$status_identity_file" ] || [ -L "$status_identity_file" ]; then
-		status_identity_file=$XDG_RUNTIME_DIR/dwm-titus/dwm-status.$status_display_key.identity
+		status_identity_file=$XDG_RUNTIME_DIR/dwm-oomaya/dwm-status.$status_display_key.identity
 	fi
 	[ -f "$status_identity_file" ] && [ ! -L "$status_identity_file" ] || return 0
 	status_pid=

@@ -1,6 +1,6 @@
 # DWM-Oomaya Architectural Patch Map & Reference Manual
 
-This document maps all patches, layout functions, and keybinding mechanisms integrated into **dwm-oomaya** to achieve full parity with **chadwm** while building upon **dwm-titus**'s modern base, strictly adhering to the **Zero Hardcoded Literals Law** and the **Native Header-Based Configuration Law**.
+This document maps all patches, layout functions, and keybinding mechanisms integrated into **dwm-oomaya** to achieve full parity with **chadwm** while building upon **dwm-oomaya**'s modern base, strictly adhering to the **Zero Hardcoded Literals Law** and the **Native Header-Based Configuration Law**.
 
 ---
 

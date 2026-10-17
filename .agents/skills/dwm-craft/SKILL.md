@@ -1,11 +1,11 @@
 ---
 name: dwm-craft
-description: Use when modifying, patching, compiling, or auditing suckless dwm, dwm-titus, or dwm-oomaya source code, layout engines, and native header-based keybindings.
+description: Use when modifying, patching, compiling, or auditing suckless dwm, dwm-oomaya, or dwm-oomaya source code, layout engines, and native header-based keybindings.
 ---
 
 # DWM Craft & Patching Playbook (dwm-oomaya)
 
-This skill provides expert procedures, architectural laws, and troubleshooting guides for developing, patching, and maintaining `dwm` (specifically `dwm-oomaya` based on `dwm-titus` with `chadwm` layout and keybinding parity).
+This skill provides expert procedures, architectural laws, and troubleshooting guides for developing, patching, and maintaining `dwm` (specifically `dwm-oomaya` based on `dwm-oomaya` with `chadwm` layout and keybinding parity).
 
 ---
 
@@ -59,7 +59,7 @@ All vanitygap layouts query the `Monitor` struct for:
 
 ## 3. Required Patches & Function Declarations
 
-When adding or synchronizing functionality between `chadwm` and `dwm-titus`:
+When adding or synchronizing functionality between `chadwm` and `dwm-oomaya`:
 
 1. **`functions.h`**: Forward-declares layout functions and gap helpers before `config.h` is parsed. Must be guarded with `#define FORCE_VSPLIT 1`.
 2. **`shiftview.c`**: Implements tag navigation (`shiftview`) with circular bit shifting.

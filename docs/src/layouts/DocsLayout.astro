@@ -16,7 +16,7 @@ interface Props {
 
 const { frontmatter, wide = false } = Astro.props;
 const title = Astro.props.title ?? frontmatter?.title ?? "Documentation";
-const description = Astro.props.description ?? frontmatter?.description ?? "Documentation for the dwm-titus Fedora X11 desktop.";
+const description = Astro.props.description ?? frontmatter?.description ?? "Documentation for the dwm-oomaya Fedora X11 desktop.";
 const eyebrow = Astro.props.eyebrow ?? frontmatter?.eyebrow ?? "Documentation";
 const pathname = Astro.url.pathname;
 const currentHref = pathname === "/" || pathname === "/index.html" ? "/install.html" : pathname;
@@ -34,7 +34,7 @@ const canonical = new URL(pathname === "/index.html" ? "/" : pathname, Astro.sit
     <meta name="description" content={description} />
     <meta name="theme-color" content="#0d0f0f" />
     <link rel="canonical" href={canonical} />
-    <title>{title} | dwm-titus</title>
+    <title>{title} | dwm-oomaya</title>
     <script is:inline>
       document.documentElement.dataset.js = "true";
       try {
@@ -51,17 +51,17 @@ const canonical = new URL(pathname === "/index.html" ? "/" : pathname, Astro.sit
         <button class="menu-button" type="button" aria-label="Open documentation navigation" aria-expanded="false" data-menu-button>
           <span></span><span></span><span></span>
         </button>
-        <a class="site-brand" href="/" aria-label="dwm-titus documentation home">
+        <a class="site-brand" href="/" aria-label="dwm-oomaya documentation home">
           <span class="site-mark">d</span>
-          <span><strong>dwm-titus</strong><small>Fedora X11 desktop</small></span>
+          <span><strong>dwm-oomaya</strong><small>Fedora X11 desktop</small></span>
         </a>
         <div class="site-header-actions">
-          <a class="header-link" href="https://github.com/ChrisTitusTech/dwm-titus/releases/latest">Get the latest release</a>
+          <a class="header-link" href="https://github.com/ChrisTitusTech/dwm-oomaya/releases/latest">Get the latest release</a>
           <button class="theme-button" type="button" aria-label="Switch color theme" data-theme-button>
             <span class="theme-sun" aria-hidden="true">Light</span>
             <span class="theme-moon" aria-hidden="true">Dark</span>
           </button>
-          <a class="repo-button" href="https://github.com/ChrisTitusTech/dwm-titus">GitHub <span aria-hidden="true">-&gt;</span></a>
+          <a class="repo-button" href="https://github.com/ChrisTitusTech/dwm-oomaya">GitHub <span aria-hidden="true">-&gt;</span></a>
         </div>
       </div>
     </header>
@@ -109,8 +109,8 @@ const canonical = new URL(pathname === "/index.html" ? "/" : pathname, Astro.sit
           {next ? <a class="page-next" href={next.href}><span>Next</span><strong>{next.label}</strong></a> : <span></span>}
         </nav>
         <footer class="site-footer">
-          <p>dwm-titus is an open source Fedora X11 desktop.</p>
-          <p><a href="https://github.com/ChrisTitusTech/dwm-titus/blob/main/LICENSE">License</a> <span>/</span> <a href="https://github.com/ChrisTitusTech/dwm-titus/issues">Report an issue</a></p>
+          <p>dwm-oomaya is an open source Fedora X11 desktop.</p>
+          <p><a href="https://github.com/ChrisTitusTech/dwm-oomaya/blob/main/LICENSE">License</a> <span>/</span> <a href="https://github.com/ChrisTitusTech/dwm-oomaya/issues">Report an issue</a></p>
         </footer>
       </main>
     </div>

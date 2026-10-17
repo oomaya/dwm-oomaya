@@ -75,7 +75,7 @@ live parent, and terminates the inotify child after owner death.
 - Mutating light-locker, Picom, or the MATE polkit agent requires the exact
   `confirm-session-critical` token.
 - Existing user overrides receive a verified mode-0600 backup in the hidden,
-  user-owned `.dwm-titus-backups` directory before a material rewrite or
+  user-owned `.dwm-oomaya-backups` directory before a material rewrite or
   reset. Writes use a same-directory temporary file and atomic rename.
 - An expected revision and an owned action lock reject stale or overlapping
   actions. A PID/start-time owner record permits safe recovery of a stale lock.

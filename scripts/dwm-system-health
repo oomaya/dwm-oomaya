@@ -493,7 +493,6 @@ scan_desktop() {
 
 	local config_home=${XDG_CONFIG_HOME:-$HOME/.config}
 	local dwm_cfg="dwm-oomaya"
-	[[ -d $config_home/dwm-oomaya || ! -d $config_home/dwm-titus ]] || dwm_cfg="dwm-titus"
 	for detail in \
 		"hotkeys:$config_home/$dwm_cfg/hotkeys.toml" \
 		"themes:$config_home/$dwm_cfg/themes.toml" \
@@ -614,7 +613,7 @@ scan_dependencies() {
 	if diagnostics=$(find_sibling_command dwm-diagnostics); then
 		"$diagnostics" --format health-tsv || true
 	else
-		emit_check dependencies restricted diagnostics "Dependency diagnostics" "dwm-diagnostics is unavailable" "Install the dwm-titus helper scripts"
+		emit_check dependencies restricted diagnostics "Dependency diagnostics" "dwm-diagnostics is unavailable" "Install the dwm-oomaya helper scripts"
 	fi
 }
 

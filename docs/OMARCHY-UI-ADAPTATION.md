@@ -2,13 +2,13 @@
 
 ## Purpose
 
-dwm-titus borrows the visual grammar of Omarchy's Quickshell menus without
+dwm-oomaya borrows the visual grammar of Omarchy's Quickshell menus without
 adopting its Wayland or Hyprland runtime. The result must feel related while
 remaining a Fedora X11 desktop whose window manager, providers, IPC, and
-session policy continue to belong to dwm-titus.
+session policy continue to belong to dwm-oomaya.
 
 This is a design influence, not a shell transplant. Omarchy is MIT licensed;
-the implementation here uses independently written dwm-titus QML backed by the
+the implementation here uses independently written dwm-oomaya QML backed by the
 existing theme palette and X11-safe shell architecture.
 
 ## Adaptation Boundary
@@ -35,7 +35,7 @@ The following are intentionally not imported:
 colors still hot-reload from `themes.toml`; semantic roles derive from those
 colors so existing themes need no migration.
 
-| Role | dwm-titus source |
+| Role | dwm-oomaya source |
 | --- | --- |
 | Popup and menu surfaces | `bg`, `surface`, `borderStrong` |
 | Normal control | `surface`, `border`, `text` |
@@ -52,7 +52,7 @@ stable while later work migrates incrementally.
 
 ## X11 Surface Rules
 
-New menus must use the existing dwm-titus popup and panel primitives. They
+New menus must use the existing dwm-oomaya popup and panel primitives. They
 must preserve current X11 mapping, click-away, focus, monitor targeting, and
 EWMH behavior. A visual component must not own system state: it consumes the
 current root-scoped models and invokes their bounded actions.
@@ -151,7 +151,7 @@ quickshell ipc \
 
 Apps enters the shared XDG application provider. Display / Input,
 Screenshots, and System enter focused submenus; the other root rows open their
-existing dwm-titus surface directly. Type to search commands and applications
+existing dwm-oomaya surface directly. Type to search commands and applications
 across the catalog.
 
 Existing `window-rules.toml` files remain user-owned and are preserved during

@@ -714,7 +714,7 @@ ten-second aggregate bounds; the locale collector retains its three-second
 collection and bounded cleanup. No PackageKit read, journal access, arbitrary
 command, or user-selected service is involved.
 
-The generation is SHA-256 over the ASCII prefix `dwm-titus-regional-preview-v1`
+The generation is SHA-256 over the ASCII prefix `dwm-oomaya-regional-preview-v1`
 followed by action, selected argument, and source fields, each encoded as an
 eight-byte big-endian UTF-8 byte length followed by its bytes. Timezone uses the
 current timezone as its source field. NTP uses `yes|no` for `CanNTP` followed by
@@ -1423,7 +1423,7 @@ validated `terminal-handoff` row, then one
 `complete<TAB>snapshot`. An unavailable, restricted, or unsupported capability
 therefore retains an explicit status-bearing state row instead of omitting its
 value. The generation is 64 lowercase hexadecimal characters. It is the SHA-256
-digest of the ASCII prefix `dwm-titus-update-plan-v1`, followed first by the
+digest of the ASCII prefix `dwm-oomaya-update-plan-v1`, followed first by the
 exact installable update IDs sorted by unsigned UTF-8 bytes and then by the
 complete `package-change` rows sorted by the unsigned UTF-8 tuple
 `(action, package-id, name, version, summary)`. Each update ID is encoded as the
@@ -1608,7 +1608,7 @@ path, or elevation mechanism.
   not an atomic frozen plan. Actual PackageKit `Package` signals update bounded
   in-memory action counts, a SHA-256 digest, and at most 128 distinct mismatch
   samples against the preview; they are never emitted one-for-one. The digest
-  begins with the ASCII prefix `dwm-titus-update-observed-v1` and then encodes
+  begins with the ASCII prefix `dwm-oomaya-update-observed-v1` and then encodes
   each accepted signal in arrival order as the normalized action and package
   ID, each with an eight-byte big-endian byte length followed by its raw bytes.
   `DOWNLOADING` is phase-only and does not enter the observed set or digest.
@@ -1708,7 +1708,7 @@ path, or elevation mechanism.
   Once cancellation becomes unsafe, Settings explains that the RPM transaction
   must finish.
 - The journal lives under
-  `${XDG_STATE_HOME:-$HOME/.local/state}/dwm-titus/system-management/`, is mode
+  `${XDG_STATE_HOME:-$HOME/.local/state}/dwm-oomaya/system-management/`, is mode
   0700, and defines exactly 36 provider-owned paths: fixed `active`, `cursor`,
   `restart`, and `handoff` paths plus 32 fixed terminal paths named
   `terminal-00` through `terminal-31`. It never enumerates the directory and

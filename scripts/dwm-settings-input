@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus"
+config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/dwm-oomaya"
 settings_file="${DWM_INPUT_SETTINGS_FILE:-$config_dir/input-settings.conf}"
 settings_dir=${settings_file%/*}
 [[ $settings_dir != "$settings_file" ]] || settings_dir=.
-runtime_base="${XDG_RUNTIME_DIR:-/tmp/dwm-titus-$UID}"
+runtime_base="${XDG_RUNTIME_DIR:-/tmp/dwm-oomaya-$UID}"
 state_dir="$runtime_base/dwm-settings-input"
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 self="$script_dir/${BASH_SOURCE[0]##*/}"

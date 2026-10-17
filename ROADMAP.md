@@ -2,7 +2,7 @@
 
 ## Mission
 
-dwm-titus is expanding from an opinionated dwm build into a cohesive
+dwm-oomaya is expanding from an opinionated dwm build into a cohesive
 X11 desktop environment. The product is a complete Fedora desktop installed
 from the official Fedora Server Network Install ISO or onto an existing Fedora
 installation.

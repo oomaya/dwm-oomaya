@@ -12,8 +12,8 @@ release or physical-hardware certification. Validation ran on 2026-09-10/11.
 - Signed manifest: `Fedora-Server-44-1.7-x86_64-CHECKSUM`; verified signer
   `36F612DCF27F7D1A48A835E4DBFCF71C6D9F90A6`, matching the
   [Fedora security page](https://fedoraproject.org/security/).
-- Final development images: `dwm-titus-standard-ui6.iso` and
-  `dwm-titus-nvidia-ui6.iso`. Exact image hashes and per-file payload hashes are
+- Final development images: `dwm-oomaya-standard-ui6.iso` and
+  `dwm-oomaya-nvidia-ui6.iso`. Exact image hashes and per-file payload hashes are
   in [completion/ui6-images.sha256](evidence/p7/completion/ui6-images.sha256) and
   [source-ui6-manifest.json](evidence/p7/completion/source-ui6-manifest.json).
   Later qualification-record edits do not change the tested runtime payload.
@@ -25,9 +25,9 @@ release or physical-hardware certification. Validation ran on 2026-09-10/11.
 Build from the intended source snapshot, with a dedicated temporary directory:
 
 ```sh
-scripts/build-dwm-fedora-installer-iso.sh --input Fedora-Server-netinst-x86_64-44-1.7.iso --output dwm-titus-standard-ui6.iso
-scripts/build-dwm-fedora-installer-iso.sh --input Fedora-Server-netinst-x86_64-44-1.7.iso --output dwm-titus-nvidia-ui6.iso --variant nvidia
-sha256sum dwm-titus-standard-ui6.iso dwm-titus-nvidia-ui6.iso
+scripts/build-dwm-fedora-installer-iso.sh --input Fedora-Server-netinst-x86_64-44-1.7.iso --output dwm-oomaya-standard-ui6.iso
+scripts/build-dwm-fedora-installer-iso.sh --input Fedora-Server-netinst-x86_64-44-1.7.iso --output dwm-oomaya-nvidia-ui6.iso --variant nvidia
+sha256sum dwm-oomaya-standard-ui6.iso dwm-oomaya-nvidia-ui6.iso
 ```
 
 Both builders passed embedded `checkisomd5` verification. Signed source

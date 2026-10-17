@@ -34,7 +34,7 @@ jobs:
           node-version: 24
 
   deploy:
-    if: github.event_name != 'pull_request' && github.repository == 'ChrisTitusTech/dwm-titus'
+    if: github.event_name != 'pull_request' && github.repository == 'oomaya/dwm-oomaya'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

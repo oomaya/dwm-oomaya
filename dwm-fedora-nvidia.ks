@@ -1,8 +1,8 @@
-# Fedora mutable installer profile for dwm-titus with RPM Fusion NVIDIA drivers.
+# Fedora mutable installer profile for dwm-oomaya with RPM Fusion NVIDIA drivers.
 #
 # Build an installer ISO with:
 # scripts/build-dwm-fedora-installer-iso.sh --variant nvidia
-# The local checkout is available at /run/install/repo/dwm-titus during install.
+# The local checkout is available at /run/install/repo/dwm-oomaya during install.
 # Storage, locale, keyboard layout, timezone, hostname, root password, and user
 # creation are intentionally left to the Anaconda UI.
 
@@ -22,14 +22,14 @@ repo --name="rpmfusion-nonfree-updates" --metalink="https://mirrors.rpmfusion.or
 repo --name="rpmfusion-nonfree-tainted" --metalink="https://mirrors.rpmfusion.org/metalink?repo=nonfree-fedora-tainted-$releasever&arch=$basearch" --install
 repo --name="brave-browser" --baseurl="https://brave-browser-rpm-release.s3.brave.com/$basearch" --install
 repo --name="mwt-packages" --baseurl="https://mirror.mwt.me/shiftkey-desktop/rpm" --install
-%include /tmp/dwm-titus-gaming-repo
+%include /tmp/dwm-oomaya-gaming-repo
 
 bootloader --location=mbr --append="rd.driver.blacklist=nouveau modprobe.blacklist=nouveau nvidia-drm.modeset=1"
 services --enabled=NetworkManager
 
 %pre --interpreter=/bin/sh
-gaming_repo=/tmp/dwm-titus-gaming-repo
-gaming_packages=/tmp/dwm-titus-gaming-packages
+gaming_repo=/tmp/dwm-oomaya-gaming-repo
+gaming_packages=/tmp/dwm-oomaya-gaming-packages
 case "$(uname -m)" in
 x86_64)
 	cat >"$gaming_repo" <<'EOF'
@@ -87,7 +87,7 @@ xdotool
 xprop
 xdg-utils
 flatpak
-%include /tmp/dwm-titus-gaming-packages
+%include /tmp/dwm-oomaya-gaming-packages
 quickshell
 PackageKit
 PackageKit-glib
@@ -160,19 +160,19 @@ xorg-x11-drv-nvidia-cuda
 nvidia-settings
 %end
 
-%post --nochroot --erroronfail --log=/mnt/sysimage/root/dwm-titus-copy.log
+%post --nochroot --erroronfail --log=/mnt/sysimage/root/dwm-oomaya-copy.log
 set -eu
 
 install -d -m 0755 /mnt/sysimage/opt
-rm -rf /mnt/sysimage/opt/dwm-titus
-cp -a /run/install/repo/dwm-titus /mnt/sysimage/opt/dwm-titus
+rm -rf /mnt/sysimage/opt/dwm-oomaya
+cp -a /run/install/repo/dwm-oomaya /mnt/sysimage/opt/dwm-oomaya
 %end
 
-%post --erroronfail --log=/root/dwm-titus-kickstart.log
+%post --erroronfail --log=/root/dwm-oomaya-kickstart.log
 set -eu
 
-repo_dir=/opt/dwm-titus
-install_sudoers=/etc/sudoers.d/90-dwm-titus-install
+repo_dir=/opt/dwm-oomaya
+install_sudoers=/etc/sudoers.d/90-dwm-oomaya-install
 # Never leave installer-only authorization behind after a failed setup.
 trap 'rm -f "$install_sudoers"' EXIT
 trap 'exit 1' HUP INT TERM
@@ -195,7 +195,7 @@ done
 
 target_home=$(getent passwd "$target_user" | cut -d: -f6)
 target_group=$(id -gn "$target_user")
-target_repo_dir="$target_home/.local/share/dwm-titus"
+target_repo_dir="$target_home/.local/share/dwm-oomaya"
 
 for xdg_dir in \
 	"$target_home/.local" \
@@ -221,7 +221,7 @@ printf '%s ALL=(ALL) NOPASSWD: ALL\n' "$target_user" > "$install_sudoers"
 # and Gear Lever setup. Do not query the installer's host AccountsService from
 # this target chroot: it cannot resolve the newly created target user. This
 # private provisioning bus does not change the installed session's policy.
-su - "$target_user" -c 'cd "$HOME/.local/share/dwm-titus" && dbus-run-session -- sh -c "export DBUS_SYSTEM_BUS_ADDRESS=\$DBUS_SESSION_BUS_ADDRESS; exec ./install.sh --non-interactive --profile recommended"'
+su - "$target_user" -c 'cd "$HOME/.local/share/dwm-oomaya" && dbus-run-session -- sh -c "export DBUS_SYSTEM_BUS_ADDRESS=\$DBUS_SESSION_BUS_ADDRESS; exec ./install.sh --non-interactive --profile recommended"'
 
 if getent group gamemode >/dev/null 2>&1; then
 	usermod -aG gamemode "$target_user"

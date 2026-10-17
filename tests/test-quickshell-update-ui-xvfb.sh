@@ -26,15 +26,15 @@ trap 'exit 129' HUP
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-mkdir -p "$work/qml" "$work/home/.config/dwm-titus" \
-	"$work/data/dwm-titus/scripts" "$work/runtime" "$work/state"
+mkdir -p "$work/qml" "$work/home/.config/dwm-oomaya" \
+	"$work/data/dwm-oomaya/scripts" "$work/runtime" "$work/state"
 chmod 700 "$work/runtime"
 cp -a "$repo/config/quickshell/core" "$repo/config/quickshell/settings" \
 	"$repo/config/quickshell/systemmanagement" "$repo/config/quickshell/network" "$work/qml/"
-cp "$repo/config/"*.toml "$work/home/.config/dwm-titus/"
+cp "$repo/config/"*.toml "$work/home/.config/dwm-oomaya/"
 cp "$repo/tests/qml/SystemUpdateUi.qml" "$work/qml/shell.qml"
-cp "$repo/tests/fixtures/system-update-ui-provider.py" "$work/data/dwm-titus/scripts/dwm-system-management"
-chmod +x "$work/data/dwm-titus/scripts/dwm-system-management"
+cp "$repo/tests/fixtures/system-update-ui-provider.py" "$work/data/dwm-oomaya/scripts/dwm-system-management"
+chmod +x "$work/data/dwm-oomaya/scripts/dwm-system-management"
 Xvfb -displayfd 3 -screen 0 1024x768x24 -nolisten tcp -extension GLX \
 	3>"$work/display" >"$work/xvfb.log" 2>&1 &
 xvfb_pid=$!

@@ -13,7 +13,7 @@ Media status : is written , is appendable
 Boot record  : El Torito , MBR protective-msdos-label grub2-mbr cyl-align-off GPT
 Media summary: 1 session, 599797 data blocks, 1171m data,  566g free
 Volume id    : 'Fedora-S-dvd-x86_64-44'
-Drive current: -outdev '/home/titus/tmp/dwm-p7-finish/.dwm-titus-nvidia-ui6.iso.tmp.B25dy0'
+Drive current: -outdev '/home/titus/tmp/dwm-p7-finish/.dwm-oomaya-nvidia-ui6.iso.tmp.B25dy0'
 Media current: stdio file, overwriteable
 Media status : is blank
 Media summary: 0 sessions, 0 data blocks, 0 data,  566g free
@@ -26,7 +26,7 @@ Added to ISO image: file '/EFI/BOOT/grub.cfg'='/home/titus/tmp/dwm-p7-finish/sta
 xorriso : UPDATE :       1 files added in 1 seconds
 Added to ISO image: file '/boot/grub2/grub.cfg'='/home/titus/tmp/dwm-p7-finish/staging/tmp.4IzYjvykf4/_boot_grub2_grub.cfg.patched'
 xorriso : UPDATE :     799 files added in 1 seconds
-Added to ISO image: directory '/dwm-titus'='/home/titus/tmp/dwm-p7-finish/staging/tmp.4IzYjvykf4/dwm-titus'
+Added to ISO image: directory '/dwm-oomaya'='/home/titus/tmp/dwm-p7-finish/staging/tmp.4IzYjvykf4/dwm-oomaya'
 xorriso : UPDATE :       1 files added in 1 seconds
 Added to ISO image: file '/images/product.img'='/home/titus/tmp/dwm-p7-finish/staging/tmp.4IzYjvykf4/product.img'
 xorriso : NOTE : Copying to System Area: 32768 bytes from file '--interval:imported_iso:0s-15s:zero_mbrpt,zero_gpt:/home/titus/tmp/dwm-p7-20260910/media/Fedora-Server-netinst-x86_64-44-1.7.iso'
@@ -36,7 +36,7 @@ xorriso : UPDATE : Writing:     409600s   66.9%   fifo  13%  buf  50%  374.9xD
 xorriso : UPDATE : Writing:     575343s   94.0%   fifo   0%  buf  50%  244.9xD
 ISO image produced: 611675 sectors
 Written to medium : 611856 sectors at LBA 48
-Writing to '/home/titus/tmp/dwm-p7-finish/.dwm-titus-nvidia-ui6.iso.tmp.B25dy0' completed successfully.
+Writing to '/home/titus/tmp/dwm-p7-finish/.dwm-oomaya-nvidia-ui6.iso.tmp.B25dy0' completed successfully.
 
 Inserting md5sum into iso image...
 md5 = 8a600018c83f02ceb26bb1fdcfd9d07e
@@ -49,4 +49,4 @@ The media check is complete, the result is: PASS.
 
 It is OK to use this media.
 Press [Esc] to abort check.
-Created /home/titus/tmp/dwm-p7-finish/dwm-titus-nvidia-ui6.iso (nvidia)
+Created /home/titus/tmp/dwm-p7-finish/dwm-oomaya-nvidia-ui6.iso (nvidia)

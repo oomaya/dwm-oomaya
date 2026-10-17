@@ -1,20 +1,20 @@
 ---
-title: How dwm-titus Works
-description: A plain-language guide to the window management, shell, live configuration, utilities, and multi-monitor behavior behind dwm-titus.
+title: How dwm-oomaya Works
+description: A plain-language guide to the window management, shell, live configuration, utilities, and multi-monitor behavior behind dwm-oomaya.
 navLabel: How It Works
 eyebrow: Under the hood
 ---
 
-# How dwm-titus Works
+# How dwm-oomaya Works
 
-dwm-titus uses a maintained fork of
+dwm-oomaya uses a maintained fork of
 [dwm](https://dwm.suckless.org/), a compact window manager for X11. A window
 manager controls where application windows appear, how they are arranged, and
 which window receives input. Unlike a full desktop environment, upstream dwm
 focuses on this core job and is configured primarily in source code.
 
 The dwm community traditionally distributes optional features as source-code
-"patches." dwm-titus already integrates and maintains a curated set of those
+"patches." dwm-oomaya already integrates and maintains a curated set of those
 ideas alongside its own runtime configuration, Quickshell desktop layer,
 Settings experience, and system helpers. Users do not need to find or apply
 patches themselves.
@@ -71,7 +71,7 @@ Three fullscreen modes available:
 The managed Quickshell layer reads dwm workspace and active-window state through
 EWMH-compatible helpers so the panel stays synchronized with X11 state.
 The Control Center includes a Power page for screen DPMS and automatic locking
-settings backed by `${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus/power.conf`.
+settings backed by `${XDG_CONFIG_HOME:-$HOME/.config}/dwm-oomaya/power.conf`.
 
 ### EWMH Compliance
 Implements `_NET_WM_STATE`, `_NET_CURRENT_DESKTOP`, `_NET_NUMBER_OF_DESKTOPS`, and related atoms so external tools and taskbars work correctly.

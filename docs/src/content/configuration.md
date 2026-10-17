@@ -1,14 +1,14 @@
 ---
 title: Configuration
-description: Customize dwm-titus defaults, live-reloading hotkeys, window rules, and XDG autostart behavior.
+description: Customize dwm-oomaya defaults, live-reloading hotkeys, window rules, and XDG autostart behavior.
 navLabel: Configuration
 eyebrow: Make it yours
 ---
 
 # Configuration
 
-dwm-titus keeps user configuration under
-`${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus/`. Hotkeys and themes
+dwm-oomaya keeps user configuration under
+`${XDG_CONFIG_HOME:-$HOME/.config}/dwm-oomaya/`. Hotkeys and themes
 **live-reload on save** — no recompile needed for most changes.
 
 | File | Purpose |
@@ -100,7 +100,7 @@ to set the default browser, or `dwm-default-apps set-mime <mime> <desktop-id>`
 for other file types.
 
 Display profiles are optional files under
-`${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus/display-profiles`. Use
+`${XDG_CONFIG_HOME:-$HOME/.config}/dwm-oomaya/display-profiles`. Use
 `dwm-display-profile template` to print the format, `dwm-display-profile list`
 to show profiles, and `dwm-display-profile apply <name>` to run the profile
 through `xrandr`.
@@ -116,7 +116,7 @@ restored unless it is confirmed. Advanced calls may pass
 it on with an incompatible kernel or Xorg driver is rejected.
 
 Accepted layouts are installed as the isolated managed fragment
-`/etc/X11/xorg.conf.d/90-dwm-titus-display.conf`; existing Xorg files are not
+`/etc/X11/xorg.conf.d/90-dwm-oomaya-display.conf`; existing Xorg files are not
 replaced. Each change creates a versioned backup. Use
 `dwm-display-setup rollback` to restore the newest backup, or
 `dwm-display-setup status` to inspect the managed file and current layout.
@@ -130,13 +130,13 @@ the current X11 layout after validation.
 The Settings Displays page uses the same profile grammar and validation through
 `dwm-settings-display`. Named profiles remain user-owned under the XDG path.
 Installing one persistently requires explicit confirmation and authorization;
-only the root-owned helper under `${PREFIX}/libexec/dwm-titus/` may update the
+only the root-owned helper under `${PREFIX}/libexec/dwm-oomaya/` may update the
 managed Xorg fragment. Legacy profiles that omit complete position or rotation
 state remain usable with `dwm-display-profile`, but Settings will not preview or
 install them until they are resaved as a complete layout.
 
 Per-device input values kept in Settings are stored in
-`${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus/input-settings.conf`. The
+`${XDG_CONFIG_HOME:-$HOME/.config}/dwm-oomaya/input-settings.conf`. The
 event-driven input provider uses a hardware serial or path when available,
 re-resolves that identity before every change, and skips a disconnected device
 rather than applying its settings to another XInput ID. Session startup runs
@@ -150,7 +150,7 @@ are reapplied through `xkbset` at session startup and do not depend on a device
 identity or hotplug event.
 
 Managed notification policy is stored in
-`${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus/notification-settings.json`.
+`${XDG_CONFIG_HOME:-$HOME/.config}/dwm-oomaya/notification-settings.json`.
 Settings offers only fixed Do Not Disturb and ordinary-popup duration values.
 Do Not Disturb keeps every notification in history, suppresses only low and
 normal urgency popups, and never suppresses critical urgency. Reset restores
@@ -164,7 +164,7 @@ remains available when automatic locking is disabled. The screen locker runs
 only while automatic locking is enabled or for the duration of an explicit
 manual lock, so DPMS display-off events remain independent from locking.
 External `loginctl lock-session` requests are forwarded to `dwm-lock` by an
-event-driven session listener. Until `power.conf` exists, dwm-titus leaves any
+event-driven session listener. Until `power.conf` exists, dwm-oomaya leaves any
 user or Fedora-managed locker untouched.
 
 ### Modifier Syntax

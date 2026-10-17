@@ -27,7 +27,7 @@ Scope {
     readonly property string configuredConfigHome: Quickshell.env("XDG_CONFIG_HOME")
     readonly property string configHome: root.configuredConfigHome.startsWith("/")
         ? root.configuredConfigHome : root.homeDir + "/.config"
-    readonly property string configPath: root.configHome + "/dwm-titus/accessibility.conf"
+    readonly property string configPath: root.configHome + "/dwm-oomaya/accessibility.conf"
     readonly property bool mutationReady: root.mutationState === "available"
 
     function useDefaults() {

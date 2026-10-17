@@ -37,9 +37,9 @@ Scope {
     readonly property string configuredConfigHome: Quickshell.env("XDG_CONFIG_HOME") || ""
     readonly property string configHome: root.configuredConfigHome.startsWith("/")
         ? root.configuredConfigHome : root.homeDir + "/.config"
-    readonly property string configDir: root.configHome + "/dwm-titus"
+    readonly property string configDir: root.configHome + "/dwm-oomaya"
     readonly property string policyPath: root.configDir + "/notification-settings.json"
-    readonly property string cacheDir: (Quickshell.env("XDG_CACHE_HOME") || (Quickshell.env("HOME") + "/.cache")) + "/dwm-titus"
+    readonly property string cacheDir: (Quickshell.env("XDG_CACHE_HOME") || (Quickshell.env("HOME") + "/.cache")) + "/dwm-oomaya"
     readonly property string historyPath: cacheDir + "/notification-history.json"
 
     Component.onCompleted: Quickshell.execDetached(["mkdir", "-p", configDir, cacheDir])

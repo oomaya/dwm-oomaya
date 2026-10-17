@@ -1228,7 +1228,7 @@ class RegionalPreflightTests(unittest.TestCase):
 
     def test_ntp_generation_has_exact_framing_and_ignores_synchronization_samples(self):
         preview = provider.make_regional_preview("ntp-set", "enabled", self.time_state())
-        framed = b"dwm-titus-regional-preview-v1"
+        framed = b"dwm-oomaya-regional-preview-v1"
         for value in (b"ntp-set", b"enabled", b"yes", b"disabled"):
             framed += len(value).to_bytes(8, "big") + value
         self.assertEqual(preview.generation, hashlib.sha256(framed).hexdigest())
@@ -5315,7 +5315,7 @@ class ObservedUpdateTests(unittest.TestCase):
         accepted = [(11, "update", "pkg;2;x86_64;updates"),
                     (12, "install", "dep;1;x86_64;updates"),
                     (14, "obsolete", "old;1;noarch;installed")]
-        expected = hashlib.sha256(b"dwm-titus-update-observed-v1")
+        expected = hashlib.sha256(b"dwm-oomaya-update-observed-v1")
         for info, action, package_id in accepted:
             self.assertTrue(observed.observe(info, package_id))
             for field in (action, package_id):
@@ -5451,7 +5451,7 @@ class SnapshotTests(unittest.TestCase):
         backend = FixtureBackend()
         output = provider.build_snapshot(backend)
 
-        expected = hashlib.sha256(b"dwm-titus-update-plan-v1").hexdigest()
+        expected = hashlib.sha256(b"dwm-oomaya-update-plan-v1").hexdigest()
         self.assertEqual(output[1], f"snapshot-generation\t{expected}")
         self.assertEqual(backend.simulated_ids, None)
         self.assertIn(
@@ -7487,7 +7487,7 @@ class JournalStateLoadTests(unittest.TestCase):
 
     def open_initialized_chain(self, directory):
         state = pathlib.Path(directory) / "state"
-        journal = state / "dwm-titus" / "system-management"
+        journal = state / "dwm-oomaya" / "system-management"
         chain = provider.open_journal_directory_chain(str(journal))
         provider.initialize_journal_layout(chain.directory_descriptor, self.boot_id)
         return state, journal, chain
@@ -7839,7 +7839,7 @@ class JournalWritableOpenTests(unittest.TestCase):
     boot_id = "01234567-89ab-cdef-0123-456789abcdef"
 
     def open_initialized_chain(self, directory):
-        journal = pathlib.Path(directory) / "state" / "dwm-titus" / "system-management"
+        journal = pathlib.Path(directory) / "state" / "dwm-oomaya" / "system-management"
         chain = provider.open_journal_directory_chain(str(journal))
         provider.initialize_journal_layout(chain.directory_descriptor, self.boot_id)
         return journal, chain
@@ -8057,7 +8057,7 @@ class JournalWritableCommitTests(unittest.TestCase):
     boot_id = "01234567-89ab-cdef-0123-456789abcdef"
 
     def open_initialized_chain(self, directory):
-        journal = pathlib.Path(directory) / "state" / "dwm-titus" / "system-management"
+        journal = pathlib.Path(directory) / "state" / "dwm-oomaya" / "system-management"
         chain = provider.open_journal_directory_chain(str(journal))
         provider.initialize_journal_layout(chain.directory_descriptor, self.boot_id)
         return journal, chain
@@ -8230,7 +8230,7 @@ class JournalRetainedSessionTests(unittest.TestCase):
     @contextlib.contextmanager
     def session(self):
         with tempfile.TemporaryDirectory() as directory:
-            path = pathlib.Path(directory) / "state" / "dwm-titus" / "system-management"
+            path = pathlib.Path(directory) / "state" / "dwm-oomaya" / "system-management"
             with provider.open_journal_directory_chain(str(path)) as chain:
                 provider.initialize_journal_layout(chain.directory_descriptor, self.boot_id)
                 with provider.retain_writable_journal(chain) as journal:
@@ -8401,7 +8401,7 @@ class JournalLifecycleTests(unittest.TestCase):
     @contextlib.contextmanager
     def journal(self):
         with tempfile.TemporaryDirectory() as directory:
-            path = pathlib.Path(directory) / "state" / "dwm-titus" / "system-management"
+            path = pathlib.Path(directory) / "state" / "dwm-oomaya" / "system-management"
             with provider.open_journal_directory_chain(str(path)) as chain:
                 provider.initialize_journal_layout(
                     chain.directory_descriptor, self.boot_id
@@ -8744,7 +8744,7 @@ class JournalAdmissionTests(unittest.TestCase):
     operation_id = "op-0123456789abcdef0123456789abcdef"
 
     def open_initialized_chain(self, directory):
-        journal = pathlib.Path(directory) / "state" / "dwm-titus" / "system-management"
+        journal = pathlib.Path(directory) / "state" / "dwm-oomaya" / "system-management"
         chain = provider.open_journal_directory_chain(str(journal))
         provider.initialize_journal_layout(chain.directory_descriptor, self.boot_id)
         return journal, chain
@@ -9137,21 +9137,21 @@ class JournalDirectoryChainTests(unittest.TestCase):
             provider.journal_directory_path(
                 {"XDG_STATE_HOME": "/var/tmp/state", "HOME": "/ignored"}
             ),
-            "/var/tmp/state/dwm-titus/system-management",
+            "/var/tmp/state/dwm-oomaya/system-management",
         )
         self.assertEqual(
             provider.journal_directory_path({"HOME": "/var/tmp/home"}),
-            "/var/tmp/home/.local/state/dwm-titus/system-management",
+            "/var/tmp/home/.local/state/dwm-oomaya/system-management",
         )
         self.assertEqual(
             provider.journal_directory_path(
                 {"XDG_STATE_HOME": "relative", "HOME": "/var/tmp/home/"}
             ),
-            "/var/tmp/home/.local/state/dwm-titus/system-management",
+            "/var/tmp/home/.local/state/dwm-oomaya/system-management",
         )
         self.assertEqual(
             provider.journal_directory_path({"XDG_STATE_HOME": "/var/tmp/state/"}),
-            "/var/tmp/state/dwm-titus/system-management",
+            "/var/tmp/state/dwm-oomaya/system-management",
         )
 
     def test_invalid_state_inputs_fail_before_filesystem_access(self):
@@ -9178,7 +9178,7 @@ class JournalDirectoryChainTests(unittest.TestCase):
             try:
                 self.assertEqual(
                     chain.path,
-                    str(state_home / "dwm-titus" / "system-management"),
+                    str(state_home / "dwm-oomaya" / "system-management"),
                 )
                 self.assertEqual(len(descriptors), len(chain.names) + 1)
                 self.assertEqual(
@@ -9202,7 +9202,7 @@ class JournalDirectoryChainTests(unittest.TestCase):
     def test_execute_only_existing_ancestor_can_be_retained(self):
         with tempfile.TemporaryDirectory() as directory:
             ancestor = pathlib.Path(directory) / "traverse-only"
-            journal = ancestor / "state" / "dwm-titus" / "system-management"
+            journal = ancestor / "state" / "dwm-oomaya" / "system-management"
             journal.mkdir(parents=True, mode=0o700)
             os.chmod(journal, 0o700)
             os.chmod(ancestor, 0o311)
@@ -9229,7 +9229,7 @@ class JournalDirectoryChainTests(unittest.TestCase):
                 return original_open(path, flags, *args, **kwargs)
 
             try:
-                journal = ancestor / "state" / "dwm-titus" / "system-management"
+                journal = ancestor / "state" / "dwm-oomaya" / "system-management"
                 with mock.patch.object(
                     provider.os, "open", side_effect=reject_readable_ancestor
                 ):
@@ -9244,7 +9244,7 @@ class JournalDirectoryChainTests(unittest.TestCase):
     def test_restrictive_umask_cannot_remove_created_owner_access(self):
         with tempfile.TemporaryDirectory() as directory:
             journal = (
-                pathlib.Path(directory) / "state" / "dwm-titus" / "system-management"
+                pathlib.Path(directory) / "state" / "dwm-oomaya" / "system-management"
             )
             previous_umask = os.umask(0o777)
             try:
@@ -9258,7 +9258,7 @@ class JournalDirectoryChainTests(unittest.TestCase):
 
     def test_interrupted_mode_repair_leaves_a_retryable_private_directory(self):
         with tempfile.TemporaryDirectory() as directory:
-            parent = pathlib.Path(directory) / "state" / "dwm-titus"
+            parent = pathlib.Path(directory) / "state" / "dwm-oomaya"
             parent.mkdir(parents=True)
             journal = parent / "system-management"
             previous_umask = os.umask(0o777)
@@ -9282,7 +9282,7 @@ class JournalDirectoryChainTests(unittest.TestCase):
 
     def test_retry_resyncs_an_indeterminate_created_parent_entry(self):
         with tempfile.TemporaryDirectory() as directory:
-            parent = pathlib.Path(directory) / "state" / "dwm-titus"
+            parent = pathlib.Path(directory) / "state" / "dwm-oomaya"
             parent.mkdir(parents=True)
             journal = parent / "system-management"
             parent_identity = (parent.stat().st_dev, parent.stat().st_ino)
@@ -9328,7 +9328,7 @@ class JournalDirectoryChainTests(unittest.TestCase):
 
     def test_retry_resyncs_an_indeterminate_created_directory(self):
         with tempfile.TemporaryDirectory() as directory:
-            parent = pathlib.Path(directory) / "state" / "dwm-titus"
+            parent = pathlib.Path(directory) / "state" / "dwm-oomaya"
             parent.mkdir(parents=True)
             journal = parent / "system-management"
             original_fsync = os.fsync
@@ -9392,14 +9392,14 @@ class JournalDirectoryChainTests(unittest.TestCase):
             ancestor.mkdir(mode=0o755)
             os.chmod(ancestor, 0o755)
             with provider.open_journal_directory_chain(
-                str(ancestor / "state" / "dwm-titus" / "system-management")
+                str(ancestor / "state" / "dwm-oomaya" / "system-management")
             ) as chain:
                 chain.validate()
                 self.assertEqual(stat.S_IMODE(ancestor.stat().st_mode), 0o755)
 
     def test_nonprivate_existing_journal_is_rejected_without_chmod(self):
         with tempfile.TemporaryDirectory() as directory:
-            journal = pathlib.Path(directory) / "dwm-titus" / "system-management"
+            journal = pathlib.Path(directory) / "dwm-oomaya" / "system-management"
             journal.mkdir(parents=True, mode=0o755)
             os.chmod(journal, 0o755)
             with self.assertRaisesRegex(
@@ -9423,13 +9423,13 @@ class JournalDirectoryChainTests(unittest.TestCase):
                     state.write_text("not a directory", encoding="utf-8")
                 with self.assertRaises(provider.JournalLayoutError):
                     provider.open_journal_directory_chain(
-                        str(state / "dwm-titus" / "system-management")
+                        str(state / "dwm-oomaya" / "system-management")
                     )
 
     def test_renamed_ancestor_fails_identity_validation(self):
         with tempfile.TemporaryDirectory() as directory:
             state = pathlib.Path(directory) / "state"
-            journal = state / "dwm-titus" / "system-management"
+            journal = state / "dwm-oomaya" / "system-management"
             chain = provider.open_journal_directory_chain(str(journal))
             try:
                 moved = pathlib.Path(directory) / "state-moved"
@@ -9445,7 +9445,7 @@ class JournalDirectoryChainTests(unittest.TestCase):
     def test_renamed_journal_fails_identity_validation(self):
         with tempfile.TemporaryDirectory() as directory:
             state = pathlib.Path(directory) / "state"
-            journal = state / "dwm-titus" / "system-management"
+            journal = state / "dwm-oomaya" / "system-management"
             chain = provider.open_journal_directory_chain(str(journal))
             try:
                 moved = journal.with_name("system-management-moved")
@@ -9739,7 +9739,7 @@ class PackageKitExecutionTests(unittest.TestCase):
     @contextlib.contextmanager
     def journal(self):
         with tempfile.TemporaryDirectory() as directory:
-            path = pathlib.Path(directory) / "state" / "dwm-titus" / "system-management"
+            path = pathlib.Path(directory) / "state" / "dwm-oomaya" / "system-management"
             with provider.open_journal_directory_chain(str(path)) as chain:
                 provider.initialize_journal_layout(chain.directory_descriptor, self.boot_id)
                 with provider.retain_writable_journal(chain) as journal:
@@ -13445,7 +13445,7 @@ class RecoverySnapshotTests(unittest.TestCase):
                 ["available", "unavailable", "unavailable"])
             self.assertEqual(output[0], "system-management-protocol\t1\t2")
             self.assertEqual(len(rows(output, "action")), 11)
-            path = pathlib.Path(directory) / "dwm-titus" / "system-management"
+            path = pathlib.Path(directory) / "dwm-oomaya" / "system-management"
             self.assertEqual({item.name for item in path.iterdir()}, set(provider.JOURNAL_NAMES))
             self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o700)
 

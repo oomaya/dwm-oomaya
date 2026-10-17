@@ -182,11 +182,11 @@ Unsupported or legacy platforms gracefully fall back to the standalone suckless 
 - Never replace an existing `config.h`, user TOML file, `.xinitrc`, or
   application configuration without explicit user consent or a backup.
 - Runtime TOML files live under
-  `${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus/`.
+  `${XDG_CONFIG_HOME:-$HOME/.config}/dwm-oomaya/`.
 - Preserve hot reload behavior for `hotkeys.toml`, `themes.toml`, and
   `window-rules.toml`.
 - `${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/` is managed exclusively by
-  dwm-titus. Unlike user-owned dwm TOML files, install/update flows may replace
+  dwm-oomaya. Unlike user-owned dwm TOML files, install/update flows may replace
   this directory from tracked `config/quickshell/` to prevent stale shell code.
 - Relaunch the managed Quickshell instance through
   `dwm-quickshell-controlcenter action restart-quickshell` or the normal
@@ -201,7 +201,7 @@ Unsupported or legacy platforms gracefully fall back to the standalone suckless 
   event source.
 - Quickshell must not be an idle resource hog. Avoid resident hidden launcher
   models, overlapping `Process` launches from timers, and duplicate shell
-  providers such as running DMS alongside the dwm-titus managed shell. On X11,
+  providers such as running DMS alongside the dwm-oomaya managed shell. On X11,
   avoid per-screen `Variants { model: Quickshell.screens }` panels unless a
   live CPU sample proves they idle cleanly; prefer a single `PanelWindow` for
   the managed shell. After Quickshell changes, validate `quickshell --no-duplicate`

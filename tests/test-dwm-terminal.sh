@@ -8,11 +8,11 @@ BASH_BIN="${BASH:-/usr/bin/bash}"
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
-mkdir -p "$work/bin" "$work/home/.config/dwm-titus"
+mkdir -p "$work/bin" "$work/home/.config/dwm-oomaya"
 export HOME="$work/home"
 export XDG_CONFIG_HOME="$HOME/.config"
 
-cat >"$XDG_CONFIG_HOME/dwm-titus/hotkeys.toml" <<'EOF'
+cat >"$XDG_CONFIG_HOME/dwm-oomaya/hotkeys.toml" <<'EOF'
 [vars]
 terminal = "alacritty"
 EOF
@@ -40,12 +40,12 @@ grep -Fqx -- "--class" "$work/out"
 grep -Fqx "dwm-test" "$work/out"
 
 sed -i 's/terminal = "alacritty"/terminal = "kitty"/' \
-	"$XDG_CONFIG_HOME/dwm-titus/hotkeys.toml"
+	"$XDG_CONFIG_HOME/dwm-oomaya/hotkeys.toml"
 DWM_TERMINAL_TEST_OUT="$work/configured-out" \
 	PATH="$work/bin" \
 	"$BASH_BIN" "$HELPER" --print-command >"$work/configured-command"
 sed -i 's/terminal = "kitty"/terminal = "dwmterm"/' \
-	"$XDG_CONFIG_HOME/dwm-titus/hotkeys.toml"
+	"$XDG_CONFIG_HOME/dwm-oomaya/hotkeys.toml"
 cat >"$work/bin/dwmterm" <<'SCRIPT'
 #!/bin/sh
 printf '%s\n' "$0" >"$DWM_TERMINAL_TEST_OUT"
@@ -59,9 +59,9 @@ DWM_TERMINAL_TEST_OUT="$work/dwmterm-configured-out" \
 grep -Fqx dwmterm "$work/dwmterm-configured-command"
 rm -f "$work/bin/dwmterm"
 sed -i 's/terminal = "dwmterm"/terminal = "alacritty"/' \
-	"$XDG_CONFIG_HOME/dwm-titus/hotkeys.toml"
+	"$XDG_CONFIG_HOME/dwm-oomaya/hotkeys.toml"
 
-cat >>"$XDG_CONFIG_HOME/dwm-titus/hotkeys.toml" <<'EOF'
+cat >>"$XDG_CONFIG_HOME/dwm-oomaya/hotkeys.toml" <<'EOF'
 [malformed-section
 terminal = "kitty"
 EOF
@@ -131,7 +131,7 @@ DWM_TERMINAL_TEST_OUT="$work/custom-out" \
 grep -Fqx "custom" "$work/custom-out"
 
 printf '%s\n' '[vars]' 'terminal = not-quoted' \
-	>"$XDG_CONFIG_HOME/dwm-titus/hotkeys.toml"
+	>"$XDG_CONFIG_HOME/dwm-oomaya/hotkeys.toml"
 DWM_TERMINAL_TEST_OUT="$work/malformed-out" \
 	PATH="$work/bin" \
 	"$BASH_BIN" "$HELPER"

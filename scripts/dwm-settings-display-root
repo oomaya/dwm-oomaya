@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-managed_config=/etc/X11/xorg.conf.d/90-dwm-titus-display.conf
+managed_config=/etc/X11/xorg.conf.d/90-dwm-oomaya-display.conf
 main_config=/etc/X11/xorg.conf
 install_prefix='@PREFIX@'
 
@@ -35,7 +35,7 @@ trusted_file() {
 [[ $EUID == 0 && ${PKEXEC_UID:-} =~ ^[0-9]+$ ]] ||
 	die "this helper must run through polkit as root"
 self=$(readlink -f "${BASH_SOURCE[0]}")
-[[ $self == "$install_prefix/libexec/dwm-titus/dwm-settings-display-root" ]] ||
+[[ $self == "$install_prefix/libexec/dwm-oomaya/dwm-settings-display-root" ]] ||
 	die "helper is not running from its trusted installed path"
 trusted_file "$self" || die "helper is not a trusted root-owned executable"
 

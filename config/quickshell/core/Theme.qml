@@ -99,7 +99,7 @@ Singleton {
     }
 
     // Shared spacing and type scales adapted from Omarchy's shell language.
-    // Values intentionally map to the pre-existing dwm-titus geometry.
+    // Values intentionally map to the pre-existing dwm-oomaya geometry.
     readonly property int spacingXxs: 2
     readonly property int spacingXs: 3
     readonly property int spacingSm: 4

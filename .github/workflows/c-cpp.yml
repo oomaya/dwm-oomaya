@@ -18,7 +18,7 @@ jobs:
     timeout-minutes: 45
     container: fedora:44
     env:
-      DWM_TEST_TMP_ROOT: /var/tmp/dwm-titus-tests
+      DWM_TEST_TMP_ROOT: /var/tmp/dwm-oomaya-tests
 
     steps:
       - name: Install checkout dependency

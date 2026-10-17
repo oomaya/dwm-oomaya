@@ -4262,7 +4262,6 @@ runtime_config_reload(void)
 static int
 setup_user_config_paths(void)
 {
-	char test_path[PATH_MAX];
 	char prev_dir[PATH_MAX];
 	const char *chosen_cfg = "dwm-oomaya";
 
@@ -4270,12 +4269,6 @@ setup_user_config_paths(void)
 		return 0;
 
 	copystr(prev_dir, sizeof(prev_dir), toml_config_dir);
-
-	if (pathjoin(test_path, sizeof(test_path), dwm_config_home_dir, "dwm-oomaya") && access(test_path, F_OK) == 0) {
-		chosen_cfg = "dwm-oomaya";
-	} else if (pathjoin(test_path, sizeof(test_path), dwm_config_home_dir, "dwm-titus") && access(test_path, F_OK) == 0) {
-		chosen_cfg = "dwm-titus";
-	}
 
 	if (!pathjoin(toml_config_dir, sizeof(toml_config_dir),
 	              dwm_config_home_dir, chosen_cfg)
@@ -4371,17 +4364,11 @@ setup_inotify(void)
 		return;
 	}
 
-	/* User-editable config: ${XDG_CONFIG_HOME:-$HOME/.config}/dwm-oomaya/ (fallback: dwm-titus) */
+	/* User-editable config: ${XDG_CONFIG_HOME:-$HOME/.config}/dwm-oomaya/ */
 	setup_user_config_paths();
 
-	/* Default config: ${XDG_DATA_HOME:-$HOME/.local/share}/dwm-oomaya/config/ (fallback: dwm-titus) */
-	char test_path[PATH_MAX];
+	/* Default config: ${XDG_DATA_HOME:-$HOME/.local/share}/dwm-oomaya/config/ */
 	const char *chosen_data = "dwm-oomaya";
-	if (pathjoin(test_path, sizeof(test_path), data_home, "dwm-oomaya") && access(test_path, F_OK) == 0) {
-		chosen_data = "dwm-oomaya";
-	} else if (pathjoin(test_path, sizeof(test_path), data_home, "dwm-titus") && access(test_path, F_OK) == 0) {
-		chosen_data = "dwm-titus";
-	}
 
 	if (!pathjoin(dwm_data_dir, sizeof(dwm_data_dir),
 	              data_home, chosen_data)

@@ -9,20 +9,14 @@ repo_dir=$(
 config_home=${XDG_CONFIG_HOME:-${HOME:-}/.config}
 data_home=${XDG_DATA_HOME:-${HOME:-}/.local/share}
 dwm_config_dir=$config_home/dwm-oomaya
-[ -d "$dwm_config_dir" ] || dwm_config_dir=$config_home/dwm-titus
 managed_config_dir=$data_home/dwm-oomaya/config
-[ -d "$managed_config_dir" ] || managed_config_dir=$data_home/dwm-titus/config
 
 config_file() {
 	name=$1
 	if [ -f "$dwm_config_dir/$name" ]; then
 		printf '%s\n' "$dwm_config_dir/$name"
-	elif [ -f "$config_home/dwm-titus/$name" ]; then
-		printf '%s\n' "$config_home/dwm-titus/$name"
 	elif [ -f "$managed_config_dir/$name" ]; then
 		printf '%s\n' "$managed_config_dir/$name"
-	elif [ -f "$data_home/dwm-titus/config/$name" ]; then
-		printf '%s\n' "$data_home/dwm-titus/config/$name"
 	else
 		printf '%s\n' "$repo_dir/config/$name"
 	fi
@@ -255,7 +249,7 @@ write_power_config() {
 		fi
 	else
 		if ! {
-			printf '%s\n' '# dwm-titus power settings'
+			printf '%s\n' '# dwm-oomaya power settings'
 			printf 'dpms_enabled=%s\n' "$power_dpms_enabled"
 			printf 'dpms_timeout=%s\n' "$power_dpms_timeout"
 			printf 'lock_enabled=%s\n' "$power_lock_enabled"

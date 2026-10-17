@@ -17,11 +17,11 @@ All issues have been resolved cleanly in [`tests/test-quickshell-settings-xvfb.s
 
 ### A. Primary Failure: Defaults & Autostart Settings (Line 1440)
 - **Mechanism**:
-  - The fixture copies repository TOMLs into the test environment: `cp "$repo/config/"*.toml "$config_home/dwm-titus/"`.
+  - The fixture copies repository TOMLs into the test environment: `cp "$repo/config/"*.toml "$config_home/dwm-oomaya/"`.
   - In `config/hotkeys.toml`, `[vars]` defines `terminal = "ghostty"`.
   - At line 1431, the test executed:
     ```bash
-    sed -i 's/terminal = "alacritty"/terminal = "kitty"/' "$config_home/dwm-titus/hotkeys.toml"
+    sed -i 's/terminal = "alacritty"/terminal = "kitty"/' "$config_home/dwm-oomaya/hotkeys.toml"
     ```
   - Because `terminal = "alacritty"` was absent, `sed -i` silently made 0 replacements.
   - The test then polled for `quickshell ipc ... call settings defaultsRoleDesktopId terminal` to transition to `kitty.desktop`. Because `hotkeys.toml` still had `terminal = "ghostty"` (and `ghostty` is neither candidate nor mapped in `dwm-default-apps`), the call returned `""`.
@@ -57,14 +57,14 @@ index 2f957e0..72b1d65 100755
 @@ -341,7 +341,12 @@ cp "$repo/config/quickshell/assets/ctt_logo.png" "$home/Pictures/backgrounds/tes
  sed -i 's/readonly property var nativeBattery: UPower.displayDevice/readonly property var nativeBattery: null/' \
  	"$config_home/quickshell/power/PowerModel.qml"
- cp "$repo/config/"*.toml "$config_home/dwm-titus/"
+ cp "$repo/config/"*.toml "$config_home/dwm-oomaya/"
 +sed -i 's/^[[:space:]]*terminal[[:space:]]*=.*/terminal = "alacritty"/' \
-+	"$config_home/dwm-titus/hotkeys.toml"
- cp "$repo/config/themes.toml" "$data_home/dwm-titus/config/themes.toml"
++	"$config_home/dwm-oomaya/hotkeys.toml"
+ cp "$repo/config/themes.toml" "$data_home/dwm-oomaya/config/themes.toml"
 +sed -i '0,/^[[:space:]]*theme[[:space:]]*=.*/s//theme = "nord"/' \
-+	"$config_home/dwm-titus/themes.toml" \
-+	"$data_home/dwm-titus/config/themes.toml"
- printf '# inactive integration watch fixture\n' >"$config_home/dwm-titus/theme-env.sh"
++	"$config_home/dwm-oomaya/themes.toml" \
++	"$data_home/dwm-oomaya/config/themes.toml"
+ printf '# inactive integration watch fixture\n' >"$config_home/dwm-oomaya/theme-env.sh"
  cat >"$data_home/applications/kitty.desktop" <<'EOF'
  [Desktop Entry]
 @@ -2822,7 +2827,7 @@ while [ "$i" -lt 200 ]; do

@@ -203,7 +203,7 @@ def publish_locked(role, outputs, fingerprint, dimensions):
         stream = io.StringIO()
         parser.write(stream)
         settings_content = stream.getvalue()
-    backup_root = ROOT.parent / "dwm-titus" / "display-profile-backups"
+    backup_root = ROOT.parent / "dwm-oomaya" / "display-profile-backups"
     backup_root.mkdir(mode=0o700, parents=True, exist_ok=True)
     backup = Path(tempfile.mkdtemp(prefix=f"{ROLES[role]}-{time.time_ns()}-", dir=backup_root))
     if previous_settings is not None:

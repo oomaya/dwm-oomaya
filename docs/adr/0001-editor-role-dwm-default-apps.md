@@ -7,7 +7,7 @@
 
 ## Context
 
-`dwm-default-apps` (forked from dwm-titus) supported three roles:
+`dwm-default-apps` (forked from dwm-oomaya) supported three roles:
 `browser`, `terminal`, `file-manager`. There was no way to set a default
 **text editor** through the settings UI.
 
@@ -42,7 +42,7 @@ intentionally out of scope for v1.
 - `dwm-settings-hub` "Defaults" menu can now offer Change Default Editor.
 - `seed-default-apps.sh` (parity item) should seed a sane editor default on
   first run.
-- Deviates from upstream dwm-titus (which has no editor role) — this is an
+- Deviates from upstream dwm-oomaya (which has no editor role) — this is an
   intentional oomaya-only improvement, documented here.
 
 ## Verification

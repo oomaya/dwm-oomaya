@@ -18,7 +18,7 @@
   "-drive",
   "file=/home/titus/tmp/dwm-p7-finish/staging/finalnvidia.qcow2,if=virtio,format=qcow2",
   "-cdrom",
-  "/home/titus/tmp/dwm-p7-finish/dwm-titus-nvidia-ui6.iso",
+  "/home/titus/tmp/dwm-p7-finish/dwm-oomaya-nvidia-ui6.iso",
   "-boot",
   "d",
   "-nic",

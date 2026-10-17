@@ -2,7 +2,7 @@
 
 ## Executive Summary
 The GitHub Actions `validate` workflow on `oomaya/dwm-oomaya` failed during `make check-appearance` at `tests/test-dwm-settings-font.sh:127`.
-Investigation revealed that recent repository refactorings introduced dynamic resolution between `dwm-oomaya` and `dwm-titus` paths, while appearance and theme test suites contained stale expectations and fixture structures that did not account for this convention or the updated theme baseline.
+Investigation revealed that recent repository refactorings introduced dynamic resolution between `dwm-oomaya` and `dwm-oomaya` paths, while appearance and theme test suites contained stale expectations and fixture structures that did not account for this convention or the updated theme baseline.
 
 All affected test suites have been surgically fixed, validated locally via `make check-appearance`, `make check-shell`, `shfmt`, and `make clean all`, and committed to `main` as `8aab665`.
 
@@ -13,32 +13,32 @@ All affected test suites have been surgically fixed, validated locally via `make
 ### A. `tests/test-dwm-settings-font.sh`
 - **Symptom:** CI failed with:
   ```text
-  grep: /var/tmp/dwm-titus-tests/.../fixture/home/.config/dwm-titus/font.conf: No such file or directory
+  grep: /var/tmp/dwm-oomaya-tests/.../fixture/home/.config/dwm-oomaya/font.conf: No such file or directory
   make[1]: *** [Makefile:580: check-appearance] Error 2
   ```
 - **Cause:** Helper `scripts/dwm-settings-font` determines `dwm_cfg_name` dynamically:
   ```bash
-  if [[ -d $dir/dwm-oomaya || ! -d $dir/dwm-titus ]]; then
+  if [[ -d $dir/dwm-oomaya || ! -d $dir/dwm-oomaya ]]; then
       name="dwm-oomaya"
   else
-      name="dwm-titus"
+      name="dwm-oomaya"
   fi
   ```
-  In uninitialized fixtures where neither directory exists, the helper defaults to sovereign `dwm-oomaya`. The test fixture created only generic parent directories without creating `$home/.config/dwm-titus`, causing the script to create `$home/.config/dwm-oomaya/font.conf`, while test assertions specifically verified `dwm-titus/font.conf`.
-- **Fix:** Initialized `$home/.config/dwm-titus`, `$config/dwm-titus`, and `$state/dwm-titus` during fixture setup.
+  In uninitialized fixtures where neither directory exists, the helper defaults to sovereign `dwm-oomaya`. The test fixture created only generic parent directories without creating `$home/.config/dwm-oomaya`, causing the script to create `$home/.config/dwm-oomaya/font.conf`, while test assertions specifically verified `dwm-oomaya/font.conf`.
+- **Fix:** Initialized `$home/.config/dwm-oomaya`, `$config/dwm-oomaya`, and `$state/dwm-oomaya` during fixture setup.
 
 ### B. `tests/test-dwm-settings-wallpaper.sh`
 - **Symptom:** Test failures when run against sovereign defaults.
-- **Cause:** `scripts/dwm-settings-wallpaper` defaults to `dwm-oomaya` when neither directory exists. The test suite had extensive hardcoded checks expecting state and config files in `dwm-titus/appearance/wallpaper/`.
-- **Fix:** Systematically migrated fixture path expectations in `test-dwm-settings-wallpaper.sh` from `dwm-titus` to `dwm-oomaya`.
+- **Cause:** `scripts/dwm-settings-wallpaper` defaults to `dwm-oomaya` when neither directory exists. The test suite had extensive hardcoded checks expecting state and config files in `dwm-oomaya/appearance/wallpaper/`.
+- **Fix:** Systematically migrated fixture path expectations in `test-dwm-settings-wallpaper.sh` from `dwm-oomaya` to `dwm-oomaya`.
 
 ### C. `tests/test-dwm-settings-theme.sh`
 - **Symptom:** Assertion failures on theme transitions and header comments.
 - **Cause:**
   1. Default theme shifted from `nord` to `tokyonight` in commit `9874a29`. Tests expecting a transition from baseline `nord` received `tokyonight`.
   2. Comment format in `config/themes.toml` was updated to `# ← default Omarchy-oomaya sovereign theme` (was `# ← change only this line to switch themes`).
-  3. Helper wrote state to `$state_home/dwm-oomaya` because `$state_home/dwm-titus` was not pre-created.
-- **Fix:** Pinned `themes_fixture` to `nord` baseline (following the pattern established in commit `b1c74ee`), updated the comment assertion, and initialized `$state_home/dwm-titus`.
+  3. Helper wrote state to `$state_home/dwm-oomaya` because `$state_home/dwm-oomaya` was not pre-created.
+- **Fix:** Pinned `themes_fixture` to `nord` baseline (following the pattern established in commit `b1c74ee`), updated the comment assertion, and initialized `$state_home/dwm-oomaya`.
 
 ### D. `tests/test-dwm-xsettings.sh`
 - **Symptom:** Failures at lines 336, 350, and 357.

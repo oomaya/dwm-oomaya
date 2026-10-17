@@ -117,17 +117,17 @@ runtime=$work/runtime
 config_home=$home/.config
 data_home=$home/.local/share
 fixture=$work/fixture
-mkdir -p "$config_home/quickshell" "$config_home/dwm-titus" \
-	"$data_home/dwm-titus/scripts" "$runtime" "$fixture"
+mkdir -p "$config_home/quickshell" "$config_home/dwm-oomaya" \
+	"$data_home/dwm-oomaya/scripts" "$runtime" "$fixture"
 chmod 700 "$runtime"
 cp -a "$repo/config/quickshell/." "$config_home/quickshell/"
-cp "$repo/config/"*.toml "$config_home/dwm-titus/"
+cp "$repo/config/"*.toml "$config_home/dwm-oomaya/"
 cp "$repo/scripts/dwm-settings-provider" "$repo/scripts/dwm-quickshell-controlcenter" \
 	"$repo/scripts/dwm-quickshell-controls" "$repo/scripts/dwm-quickshell-launcher" \
 	"$repo/scripts/dwm-quickshell-network" "$repo/scripts/dwm-quickshell-pointer" \
-	"$data_home/dwm-titus/scripts/"
+	"$data_home/dwm-oomaya/scripts/"
 
-helper=$data_home/dwm-titus/scripts/dwm-system-management
+helper=$data_home/dwm-oomaya/scripts/dwm-system-management
 cat >"$helper" <<'HELPER'
 #!/bin/sh
 set -eu
@@ -415,10 +415,10 @@ for checked_scenario in success helper-fail first-fail second-fail first-term se
 done
 
 # Exercise pane-scoped events and atomic dirty-cycle handoffs on a private bus.
-mkdir -p "$work/discovery" "$work/discovery-data/dwm-titus/scripts" "$work/discovery-state"
+mkdir -p "$work/discovery" "$work/discovery-data/dwm-oomaya/scripts" "$work/discovery-state"
 cp -a "$repo/config/quickshell/core" "$repo/config/quickshell/systemmanagement" "$work/discovery/"
 cp "$repo/tests/qml/SystemDiscovery.qml" "$work/discovery/shell.qml"
-discovery_helper=$work/discovery-data/dwm-titus/scripts/dwm-system-management
+discovery_helper=$work/discovery-data/dwm-oomaya/scripts/dwm-system-management
 cp "$repo/tests/fixtures/system-discovery-provider.py" "$discovery_helper"
 chmod +x "$discovery_helper"
 for pipe_case in absent regular no-reader; do
@@ -456,10 +456,10 @@ if [ "$discovery_status" -ne 0 ] || ! grep -F 'Discovery native tests: PASS' "$w
 fi
 
 # Exercise each fixed subscription stream without activating Settings origins.
-mkdir -p "$work/provider-discovery" "$work/provider-discovery-data/dwm-titus/scripts" "$work/provider-discovery-state"
+mkdir -p "$work/provider-discovery" "$work/provider-discovery-data/dwm-oomaya/scripts" "$work/provider-discovery-state"
 cp -a "$repo/config/quickshell/core" "$repo/config/quickshell/systemmanagement" "$work/provider-discovery/"
 cp "$repo/tests/qml/SystemProviderDiscovery.qml" "$work/provider-discovery/shell.qml"
-provider_discovery_helper=$work/provider-discovery-data/dwm-titus/scripts/dwm-system-management
+provider_discovery_helper=$work/provider-discovery-data/dwm-oomaya/scripts/dwm-system-management
 cp "$repo/tests/fixtures/system-provider-discovery.py" "$provider_discovery_helper"
 chmod +x "$provider_discovery_helper"
 for pipe_case in absent regular no-reader; do
@@ -530,10 +530,10 @@ if [ "$provider_generation_status" -ne 0 ] || ! grep -F 'Provider generation tes
 fi
 
 # Qualify all subscriptions sharing one cumulative snapshot owner.
-mkdir -p "$work/native-discovery" "$work/native-discovery-data/dwm-titus/scripts" "$work/native-discovery-state"
+mkdir -p "$work/native-discovery" "$work/native-discovery-data/dwm-oomaya/scripts" "$work/native-discovery-state"
 cp -a "$repo/config/quickshell/core" "$repo/config/quickshell/systemmanagement" "$work/native-discovery/"
 cp "$repo/tests/qml/SystemNativeDiscovery.qml" "$work/native-discovery/shell.qml"
-native_discovery_helper=$work/native-discovery-data/dwm-titus/scripts/dwm-system-management
+native_discovery_helper=$work/native-discovery-data/dwm-oomaya/scripts/dwm-system-management
 cp "$repo/tests/fixtures/system-native-discovery-provider.py" "$native_discovery_helper"
 chmod +x "$native_discovery_helper"
 for lock_domain in updates time locale accounts printers; do
@@ -591,11 +591,11 @@ done
 
 # Run the isolated operation parser on the same nested display before loading
 # the managed shell. This fixture never connects to host PackageKit.
-mkdir -p "$work/update-ui" "$work/update-ui-data/dwm-titus/scripts" "$work/update-ui-state"
+mkdir -p "$work/update-ui" "$work/update-ui-data/dwm-oomaya/scripts" "$work/update-ui-state"
 cp -a "$repo/config/quickshell/core" "$repo/config/quickshell/settings" \
 	"$repo/config/quickshell/systemmanagement" "$repo/config/quickshell/network" "$work/update-ui/"
 cp "$repo/tests/qml/SystemUpdateUi.qml" "$work/update-ui/shell.qml"
-update_ui_helper=$work/update-ui-data/dwm-titus/scripts/dwm-system-management
+update_ui_helper=$work/update-ui-data/dwm-oomaya/scripts/dwm-system-management
 cp "$repo/tests/fixtures/system-update-ui-provider.py" "$update_ui_helper"
 chmod +x "$update_ui_helper"
 timeout --foreground --kill-after=2s 35s env DISPLAY="$display" HOME="$home" XDG_CONFIG_HOME="$config_home" \
@@ -646,12 +646,12 @@ if [ "$parser_status" -ne 0 ] || ! grep -F 'Regional preflight parser tests: PAS
 	exit 1
 fi
 
-mkdir -p "$work/regional-preflight-owner" "$work/preflight-data/dwm-titus/scripts" "$work/preflight-empty-path"
+mkdir -p "$work/regional-preflight-owner" "$work/preflight-data/dwm-oomaya/scripts" "$work/preflight-empty-path"
 mkdir -p "$work/preflight-shell-path" "$work/preflight-missing-data"
 ln -s "$(command -v sh)" "$work/preflight-shell-path/sh"
 cp -a "$repo/config/quickshell/core" "$repo/config/quickshell/systemmanagement" "$work/regional-preflight-owner/"
 cp "$repo/tests/qml/SystemRegionalPreflightOwner.qml" "$work/regional-preflight-owner/shell.qml"
-preflight_helper="$work/preflight-data/dwm-titus/scripts/dwm-system-management"
+preflight_helper="$work/preflight-data/dwm-oomaya/scripts/dwm-system-management"
 cp "$repo/tests/fixtures/system-regional-preflight-provider.py" "$preflight_helper"
 chmod +x "$preflight_helper"
 preflight_quickshell=$(command -v quickshell)
@@ -769,10 +769,10 @@ if [ "$health_navigation_status" -ne 0 ] || ! grep -F 'Health navigation tests: 
 	exit 1
 fi
 
-mkdir -p "$work/regional-settings" "$work/regional-settings-data/dwm-titus/scripts"
+mkdir -p "$work/regional-settings" "$work/regional-settings-data/dwm-oomaya/scripts"
 cp -a "$repo/config/quickshell/core" "$repo/config/quickshell/systemmanagement" "$work/regional-settings/"
 cp "$repo/tests/qml/SystemRegionalSettings.qml" "$work/regional-settings/shell.qml"
-regional_settings_helper=$work/regional-settings-data/dwm-titus/scripts/dwm-system-management
+regional_settings_helper=$work/regional-settings-data/dwm-oomaya/scripts/dwm-system-management
 cp "$repo/tests/fixtures/system-regional-settings-provider.py" "$regional_settings_helper"
 cp "$repo/tests/fixtures/system-native-discovery-provider.py" "$repo/tests/fixtures/system-native-action-provider.py" "$(dirname "$regional_settings_helper")/"
 chmod +x "$regional_settings_helper"
@@ -880,10 +880,10 @@ for sample_scenario in sample-success sample-error sample-capability sample-arri
 	fi
 done
 
-mkdir -p "$work/delegate-confirmation" "$work/delegate-data/dwm-titus/scripts"
+mkdir -p "$work/delegate-confirmation" "$work/delegate-data/dwm-oomaya/scripts"
 cp -a "$repo/config/quickshell/core" "$repo/config/quickshell/systemmanagement" "$work/delegate-confirmation/"
 cp "$repo/tests/qml/SystemDelegateConfirmation.qml" "$work/delegate-confirmation/shell.qml"
-delegate_helper=$work/delegate-data/dwm-titus/scripts/dwm-system-management
+delegate_helper=$work/delegate-data/dwm-oomaya/scripts/dwm-system-management
 cp "$repo/tests/fixtures/system-delegate-confirmation-provider.py" "$delegate_helper"
 cp "$repo/tests/fixtures/system-native-discovery-provider.py" "$repo/tests/fixtures/system-native-action-provider.py" "$(dirname "$delegate_helper")/"
 chmod +x "$delegate_helper"
@@ -993,10 +993,10 @@ for delegate_size in 640x480 780x580 1000x740; do
 	done
 done
 
-mkdir -p "$work/native-action" "$work/native-action-data/dwm-titus/scripts"
+mkdir -p "$work/native-action" "$work/native-action-data/dwm-oomaya/scripts"
 cp -a "$repo/config/quickshell/core" "$repo/config/quickshell/systemmanagement" "$work/native-action/"
 cp "$repo/tests/qml/SystemNativeActionOwner.qml" "$work/native-action/shell.qml"
-native_action_helper=$work/native-action-data/dwm-titus/scripts/dwm-system-management
+native_action_helper=$work/native-action-data/dwm-oomaya/scripts/dwm-system-management
 cp "$repo/tests/fixtures/system-native-action-provider.py" "$native_action_helper"
 chmod +x "$native_action_helper"
 for native_action in timezone-set ntp-set locale-set accounts-open password-open printers-open sources-open; do
@@ -1026,10 +1026,10 @@ for native_action in timezone-set ntp-set locale-set accounts-open password-open
 	done
 done
 
-mkdir -p "$work/update-action" "$work/update-action-data/dwm-titus/scripts"
+mkdir -p "$work/update-action" "$work/update-action-data/dwm-oomaya/scripts"
 cp -a "$repo/config/quickshell/core" "$repo/config/quickshell/systemmanagement" "$work/update-action/"
 cp "$repo/tests/qml/SystemUpdateActionOwner.qml" "$work/update-action/shell.qml"
-update_action_helper=$work/update-action-data/dwm-titus/scripts/dwm-system-management
+update_action_helper=$work/update-action-data/dwm-oomaya/scripts/dwm-system-management
 cp "$repo/tests/fixtures/system-update-action-provider.py" "$update_action_helper"
 chmod +x "$update_action_helper"
 quickshell_binary=$(command -v quickshell)
@@ -1102,11 +1102,11 @@ for action_scenario in refresh install rejected denied uncertain wrong-exit revo
 	esac
 done
 
-mkdir -p "$work/operation-owner" "$work/owner-data/dwm-titus/scripts" "$work/owner-state"
+mkdir -p "$work/operation-owner" "$work/owner-data/dwm-oomaya/scripts" "$work/owner-state"
 cp -a "$repo/config/quickshell/core" "$repo/config/quickshell/systemmanagement" "$work/operation-owner/"
 cp "$repo/tests/qml/SystemOperationOwner.qml" "$work/operation-owner/shell.qml"
-cp "$repo/tests/fixtures/system-operation-provider.py" "$work/owner-data/dwm-titus/scripts/dwm-system-management"
-chmod +x "$work/owner-data/dwm-titus/scripts/dwm-system-management"
+cp "$repo/tests/fixtures/system-operation-provider.py" "$work/owner-data/dwm-oomaya/scripts/dwm-system-management"
+chmod +x "$work/owner-data/dwm-oomaya/scripts/dwm-system-management"
 timeout --foreground --kill-after=2s 60s env DISPLAY="$display" HOME="$home" XDG_CONFIG_HOME="$config_home" \
 	XDG_DATA_HOME="$work/owner-data" XDG_RUNTIME_DIR="$runtime" QT_QPA_PLATFORMTHEME= \
 	DWM_OPERATION_FIXTURE="$work/owner-state" \
@@ -1227,7 +1227,7 @@ dwm_pid=$!
 env DISPLAY="$display" HOME="$home" XDG_CONFIG_HOME="$config_home" \
 	XDG_DATA_HOME="$data_home" XDG_RUNTIME_DIR="$runtime" \
 	DWM_SYSTEM_MANAGEMENT_TEST_FIXTURE="$fixture" QT_QPA_PLATFORMTHEME= \
-	PATH="$data_home/dwm-titus/scripts:$PATH" \
+	PATH="$data_home/dwm-oomaya/scripts:$PATH" \
 	quickshell --no-duplicate >"$work/quickshell.log" 2>&1 &
 quickshell_pid=$!
 config=$config_home/quickshell/shell.qml

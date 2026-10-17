@@ -209,13 +209,13 @@ work=$(mktemp -d)
 trap 'set +e; [ -n "${swallow_client_pid:-}" ] && kill "$swallow_client_pid" 2>/dev/null; [ -n "${many_state_client_pid:-}" ] && kill "$many_state_client_pid" 2>/dev/null; [ -n "${fullscreen_client_pid:-}" ] && kill "$fullscreen_client_pid" 2>/dev/null; [ -n "${panel_pid:-}" ] && kill "$panel_pid" 2>/dev/null; [ -n "${popup_client_pid:-}" ] && kill "$popup_client_pid" 2>/dev/null; [ -n "${second_above_client_pid:-}" ] && kill "$second_above_client_pid" 2>/dev/null; [ -n "${stack_client_pid:-}" ] && kill "$stack_client_pid" 2>/dev/null; [ -n "${above_client_pid:-}" ] && kill "$above_client_pid" 2>/dev/null; [ -n "${floating_peer_pid:-}" ] && kill "$floating_peer_pid" 2>/dev/null; [ -n "${second_client_pid:-}" ] && kill "$second_client_pid" 2>/dev/null; [ -n "${client_pid:-}" ] && kill "$client_pid" 2>/dev/null; [ -n "${dwm_pid:-}" ] && kill "$dwm_pid" 2>/dev/null; [ -n "${xvfb_pid:-}" ] && kill "$xvfb_pid" 2>/dev/null; rm -rf "$work"' EXIT HUP INT TERM
 
 home="$work/home"
-mkdir -p "$home/.config/dwm-titus" "$home/.local/share/dwm-titus/config"
-cp "$repo_dir/config/hotkeys.toml" "$home/.config/dwm-titus/hotkeys.toml"
-cp "$repo_dir/config/themes.toml" "$home/.config/dwm-titus/themes.toml"
-cp "$repo_dir/config/window-rules.toml" "$home/.config/dwm-titus/window-rules.toml"
-cp "$repo_dir/config/"*.toml "$home/.local/share/dwm-titus/config/"
+mkdir -p "$home/.config/dwm-oomaya" "$home/.local/share/dwm-oomaya/config"
+cp "$repo_dir/config/hotkeys.toml" "$home/.config/dwm-oomaya/hotkeys.toml"
+cp "$repo_dir/config/themes.toml" "$home/.config/dwm-oomaya/themes.toml"
+cp "$repo_dir/config/window-rules.toml" "$home/.config/dwm-oomaya/window-rules.toml"
+cp "$repo_dir/config/"*.toml "$home/.local/share/dwm-oomaya/config/"
 sed -i '/^rules = \[/a\  { class="DwmXvfbTerminal", isterminal=1 },' \
-	"$home/.config/dwm-titus/window-rules.toml"
+	"$home/.config/dwm-oomaya/window-rules.toml"
 
 cat >"$work/xclient.c" <<'EOF'
 #include <X11/Xlib.h>
@@ -657,7 +657,7 @@ printf '%s\n' \
 	'  { mod="SUPER", key="v", desc="Xvfb mouse resize", func="resizemouse" },' \
 	'  { mod="SUPER", key="u", desc="Xvfb reload tag", func="view", ui=16 },' \
 	'  { mod="SUPER SHIFT", key="y", desc="Xvfb fake fullscreen", func="togglefakefullscreen" },' \
-	']' >"$home/.config/dwm-titus/hotkeys.toml"
+	']' >"$home/.config/dwm-oomaya/hotkeys.toml"
 kill -USR1 "$dwm_pid"
 sleep 0.2
 DISPLAY=$display xdotool key Super+u
@@ -666,7 +666,7 @@ wait_for_current_desktop 4
 DISPLAY=$display xdotool key Super+1
 wait_for_current_desktop 0
 
-printf '%s\n' '=' >"$home/.config/dwm-titus/hotkeys.toml"
+printf '%s\n' '=' >"$home/.config/dwm-oomaya/hotkeys.toml"
 kill -USR1 "$dwm_pid"
 sleep 0.2
 DISPLAY=$display xdotool key Super+u
@@ -1123,14 +1123,14 @@ stack_client_pid=
 # Restore the normal key map and verify that Super+Shift+Q exits cleanly and
 # launches the session-stop hook. Use an isolated marker instead of touching
 # the host's real graphical-session targets from the nested X11 test.
-mkdir -p "$home/.local/share/dwm-titus/scripts"
-cat >"$home/.local/share/dwm-titus/scripts/autostop.sh" <<EOF
+mkdir -p "$home/.local/share/dwm-oomaya/scripts"
+cat >"$home/.local/share/dwm-oomaya/scripts/autostop.sh" <<EOF
 #!/bin/sh
 sleep 0.2
 : >"$work/autostop.called"
 EOF
-chmod +x "$home/.local/share/dwm-titus/scripts/autostop.sh"
-cp "$repo_dir/config/hotkeys.toml" "$home/.config/dwm-titus/hotkeys.toml"
+chmod +x "$home/.local/share/dwm-oomaya/scripts/autostop.sh"
+cp "$repo_dir/config/hotkeys.toml" "$home/.config/dwm-oomaya/hotkeys.toml"
 kill -USR1 "$dwm_pid"
 sleep 0.2
 DISPLAY=$display xdotool key Super+Shift+q

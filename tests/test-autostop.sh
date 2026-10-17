@@ -187,7 +187,7 @@ loginctl terminate-session 42
 EOF
 cmp "$work/normal.expected" "$work/normal.log"
 
-mkdir -p "$work/status-runtime/dwm-titus"
+mkdir -p "$work/status-runtime/dwm-oomaya"
 chmod 700 "$work/status-runtime"
 DISPLAY=:0 XDG_RUNTIME_DIR="$work/status-runtime" \
 	TEST_STATUS_READY="$work/status.ready" "$work/bin/dwm-status" &
@@ -199,7 +199,7 @@ for _ in 1 2 3 4 5 6 7 8 9 10; do
 done
 status_starttime=$(awk '{ line = $0; sub(/^.*\) /, "", line); split(line, fields, " "); print fields[20] }' "/proc/$status_pid/stat")
 status_key=$(printf '%s' :0 | sha256sum | awk '{ print $1 }')
-status_identity=$work/status-runtime/dwm-titus/dwm-status.$status_key.identity
+status_identity=$work/status-runtime/dwm-oomaya/dwm-status.$status_key.identity
 printf '%s:%s\n' "$status_pid" "$status_starttime" >"$status_identity"
 
 run_case startx env XDG_SESSION_ID=43 TEST_SESSION_TYPE=tty TEST_SESSION_DISPLAY= \
@@ -327,7 +327,7 @@ for _ in 1 2 3 4 5 6 7 8 9 10; do
 done
 nested_status_starttime=$(awk '{ line = $0; sub(/^.*\) /, "", line); split(line, fields, " "); print fields[20] }' "/proc/$nested_status_pid/stat")
 nested_status_key=$(printf '%s' :150 | sha256sum | awk '{ print $1 }')
-nested_status_identity_file=$work/status-runtime/dwm-titus/dwm-status.$nested_status_key.identity
+nested_status_identity_file=$work/status-runtime/dwm-oomaya/dwm-status.$nested_status_key.identity
 printf '%s:%s\n' "$nested_status_pid" "$nested_status_starttime" >"$nested_status_identity_file"
 
 run_case mismatched_display env XDG_SESSION_ID=48 DISPLAY=:150 \

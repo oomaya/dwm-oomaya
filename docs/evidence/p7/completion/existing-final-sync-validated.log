@@ -1,30 +1,30 @@
 [sudo] password for p7tester: ==> Building current checkout
-make: Entering directory '/home/p7tester/dwm-titus-restored.NECaxi'
-make: Leaving directory '/home/p7tester/dwm-titus-restored.NECaxi'
-make: Entering directory '/home/p7tester/dwm-titus-restored.NECaxi'
-make: Leaving directory '/home/p7tester/dwm-titus-restored.NECaxi'
-MISMATCH TREE: managed data config (/home/p7tester/.local/share/dwm-titus/config)
-  Files /home/p7tester/dwm-titus-restored.NECaxi/config/quickshell/shell.qml and /home/p7tester/.local/share/dwm-titus/config/quickshell/shell.qml differ
-MISMATCH TREE: managed data scripts (/home/p7tester/.local/share/dwm-titus/scripts)
-  Files /home/p7tester/dwm-titus-restored.NECaxi/scripts/autostart.sh and /home/p7tester/.local/share/dwm-titus/scripts/autostart.sh differ
+make: Entering directory '/home/p7tester/dwm-oomaya-restored.NECaxi'
+make: Leaving directory '/home/p7tester/dwm-oomaya-restored.NECaxi'
+make: Entering directory '/home/p7tester/dwm-oomaya-restored.NECaxi'
+make: Leaving directory '/home/p7tester/dwm-oomaya-restored.NECaxi'
+MISMATCH TREE: managed data config (/home/p7tester/.local/share/dwm-oomaya/config)
+  Files /home/p7tester/dwm-oomaya-restored.NECaxi/config/quickshell/shell.qml and /home/p7tester/.local/share/dwm-oomaya/config/quickshell/shell.qml differ
+MISMATCH TREE: managed data scripts (/home/p7tester/.local/share/dwm-oomaya/scripts)
+  Files /home/p7tester/dwm-oomaya-restored.NECaxi/scripts/autostart.sh and /home/p7tester/.local/share/dwm-oomaya/scripts/autostart.sh differ
 MISMATCH TREE: managed Quickshell (/home/p7tester/.config/quickshell)
-  Files /home/p7tester/dwm-titus-restored.NECaxi/config/quickshell/shell.qml and /home/p7tester/.config/quickshell/shell.qml differ
+  Files /home/p7tester/dwm-oomaya-restored.NECaxi/config/quickshell/shell.qml and /home/p7tester/.config/quickshell/shell.qml differ
 ==> Backing up current live installation
-Backup created: /home/p7tester/.local/state/dwm-titus/live-update-backups/20260911T015209Z-34473
+Backup created: /home/p7tester/.local/state/dwm-oomaya/live-update-backups/20260911T015209Z-34473
 ==> Installing complete system and user state
-make: Entering directory '/home/p7tester/dwm-titus-restored.NECaxi'
-make[1]: Entering directory '/home/p7tester/dwm-titus-restored.NECaxi'
-make[1]: Leaving directory '/home/p7tester/dwm-titus-restored.NECaxi'
-make[1]: Entering directory '/home/p7tester/dwm-titus-restored.NECaxi'
-make[2]: Entering directory '/home/p7tester/dwm-titus-restored.NECaxi'
+make: Entering directory '/home/p7tester/dwm-oomaya-restored.NECaxi'
+make[1]: Entering directory '/home/p7tester/dwm-oomaya-restored.NECaxi'
+make[1]: Leaving directory '/home/p7tester/dwm-oomaya-restored.NECaxi'
+make[1]: Entering directory '/home/p7tester/dwm-oomaya-restored.NECaxi'
+make[2]: Entering directory '/home/p7tester/dwm-oomaya-restored.NECaxi'
 ==> Installing Capitaine cursor themes...
-make[2]: Leaving directory '/home/p7tester/dwm-titus-restored.NECaxi'
+make[2]: Leaving directory '/home/p7tester/dwm-oomaya-restored.NECaxi'
 
 ==> Installing system files...
 ==> Installing scripts to PATH...
 ==> Installing privileged helpers...
-make[1]: Leaving directory '/home/p7tester/dwm-titus-restored.NECaxi'
-make[1]: Entering directory '/home/p7tester/dwm-titus-restored.NECaxi'
+make[1]: Leaving directory '/home/p7tester/dwm-oomaya-restored.NECaxi'
+make[1]: Entering directory '/home/p7tester/dwm-oomaya-restored.NECaxi'
 ==> Installing user files for p7tester...
   Preserving existing /home/p7tester/.xinitrc
 ==> Syncing local repo to data dir...
@@ -43,8 +43,8 @@ make[1]: Entering directory '/home/p7tester/dwm-titus-restored.NECaxi'
   dwm installed successfully.
   Log out and select 'dwm', or start with: startx
 
-make[1]: Leaving directory '/home/p7tester/dwm-titus-restored.NECaxi'
-make: Leaving directory '/home/p7tester/dwm-titus-restored.NECaxi'
+make[1]: Leaving directory '/home/p7tester/dwm-oomaya-restored.NECaxi'
+make: Leaving directory '/home/p7tester/dwm-oomaya-restored.NECaxi'
 ==> Verifying installed state
 All managed files match the checkout.
 Runtime validation deferred: DISPLAY is unavailable.

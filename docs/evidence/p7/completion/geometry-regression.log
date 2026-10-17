@@ -1,4 +1,4 @@
-==> Test workspace: /home/titus/tmp/dwm-titus-tests.ncMnCX
+==> Test workspace: /home/titus/tmp/dwm-oomaya-tests.ncMnCX
 Warning: Schema “apps.light-locker” has path “/apps/light-locker/”.  Paths starting with “/apps/”, “/desktop/” or “/system/” are deprecated.
 dbus-daemon[2465096]: [session uid=1000 pid=2465096 pidfd=5] Activating service name='org.gtk.vfs.Daemon' requested by ':1.0' (uid=1000 pid=2465721 comm="gsettings set apps.light-locker lock-after-screens")
 dbus-daemon[2465096]: [session uid=1000 pid=2465096 pidfd=5] Successfully activated service 'org.gtk.vfs.Daemon'

@@ -176,7 +176,7 @@ check_path_optional() {
 
 main() {
 	if [[ $format == human ]]; then
-		printf 'dwm-titus diagnostics\n'
+		printf 'dwm-oomaya diagnostics\n'
 		printf '\nRequired\n'
 	fi
 
@@ -216,7 +216,7 @@ main() {
 
 	if ((required_fail > 0)); then
 		if [[ $format == human ]]; then
-			printf '\nRequired failures must be fixed before dwm-titus is fully usable.\n' >&2
+			printf '\nRequired failures must be fixed before dwm-oomaya is fully usable.\n' >&2
 		fi
 		return 1
 	fi

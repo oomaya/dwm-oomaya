@@ -1,7 +1,7 @@
 #!/bin/bash
 # shellcheck disable=SC2059
 # ─────────────────────────────────────────────────────────
-# dwm-titus dependency checker
+# dwm-oomaya dependency checker
 # Run before building to verify all required packages
 # are installed. Exit code 0 = all good, 1 = missing deps.
 # ─────────────────────────────────────────────────────────

@@ -33,5 +33,3 @@ install:
 	install -Dm644 slick-greeter.conf                $(LIGHTDM_DIR)/slick-greeter.conf
 	install -Dm644 wallpaper.jpg                     $(PIXMAPS_DIR)/dwm-oomaya.jpg
 	install -Dm644 ../dwm-oomaya.png                 $(PIXMAPS_DIR)/dwm-oomaya-logo.png
-	ln -sf dwm-oomaya.jpg                            $(PIXMAPS_DIR)/dwm-titus.jpg
-	ln -sf dwm-oomaya-logo.png                       $(PIXMAPS_DIR)/dwm-titus-logo.png

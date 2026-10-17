@@ -3,7 +3,7 @@
 set -eu
 
 repo_dir=$(CDPATH='' cd -- "$(dirname "$0")/.." && pwd)
-helper=$repo_dir/scripts/dwm-titus-release
+helper=$repo_dir/scripts/dwm-oomaya-release
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT HUP INT TERM
 
@@ -13,14 +13,14 @@ cat >"$work/bin/gh" <<'EOF'
 exit 0
 EOF
 chmod +x "$work/bin/gh"
-: >"$work/dwm-titus.iso"
+: >"$work/dwm-oomaya.iso"
 
 output=$(
 	PATH="$work/bin:$PATH" "$helper" \
 		--dry-run \
 		--skip-checks \
 		--no-bump \
-		--iso "$work/dwm-titus.iso"
+		--iso "$work/dwm-oomaya.iso"
 )
 
 printf '%s\n' "$output" | grep -Fq '+ make release'
@@ -34,7 +34,7 @@ if [ "$build_line" -ge "$tag_line" ]; then
 fi
 
 if PATH="$work/bin:$PATH" "$helper" \
-	--dry-run --skip-checks --no-bump --iso "$work/dwm-titus.iso" \
+	--dry-run --skip-checks --no-bump --iso "$work/dwm-oomaya.iso" \
 	--version 99.0.0 >"$work/mismatch.out" 2>"$work/mismatch.err"; then
 	printf '%s\n' 'release helper accepted a version not committed in config.mk' >&2
 	exit 1

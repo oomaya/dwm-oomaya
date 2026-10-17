@@ -15,7 +15,7 @@ use `make native` for published binaries.
 7. Run `npm --prefix docs ci` and `npm --prefix docs run build` when published
    documentation changed.
 8. Run `scripts/run-tests make release-check` and confirm the artifact is named
-   `release/dwm-titus-VERSION.tar.gz`.
+   `release/dwm-oomaya-VERSION.tar.gz`.
 9. Record the tested Fedora release, architectures, X11 environments, known
    limitations, and SHA-256 checksum in the release notes.
 10. Tag the release only after all applicable `SPEC.md` acceptance criteria
@@ -31,7 +31,7 @@ use `/tmp` for ISO or VM qualification.
 To create the GitHub release and bump to the next minor development version:
 
 ```sh
-scripts/dwm-titus-release --version v0.6.1 --iso ~/Downloads/dwm-titus.iso --notes RELEASE_NOTES.md
+scripts/dwm-oomaya-release --version v0.6.1 --iso ~/Downloads/dwm-oomaya.iso --notes RELEASE_NOTES.md
 ```
 
 After publishing `v0.6.1`, the script updates `config.mk` to `VERSION = 0.7.0`
@@ -117,7 +117,7 @@ Build the regular Fedora installer ISO from a Fedora netinst ISO:
 ```sh
 scripts/build-dwm-fedora-installer-iso.sh \
   --input ~/Downloads/Fedora-Server-netinst-x86_64-44-1.7.iso \
-  --output release/dwm-titus.iso
+  --output release/dwm-oomaya.iso
 ```
 
 Build the NVIDIA installer ISO:
@@ -125,7 +125,7 @@ Build the NVIDIA installer ISO:
 ```sh
 scripts/build-dwm-fedora-installer-iso.sh \
   --input ~/Downloads/Fedora-Server-netinst-x86_64-44-1.7.iso \
-  --output release/dwm-titus-nvidia.iso \
+  --output release/dwm-oomaya-nvidia.iso \
   --variant nvidia
 ```
 

@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping improve dwm-titus. Changes should preserve the small X11
+Thanks for helping improve dwm-oomaya. Changes should preserve the small X11
 window-manager core, existing user workflows, and the Fedora-only desktop
 target. Fedora Linux is the sole supported distribution.
 

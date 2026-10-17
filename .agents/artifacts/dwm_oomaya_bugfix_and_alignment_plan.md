@@ -7,7 +7,7 @@ This plan addresses all seven issues raised in the user review of `dwm_settings_
 3. **Requisite Packages in `install.sh`**: `feh`, `blueman`, `maim`, `slop`, `dunst`, and `xsettingsd` were missing because desktop packages were not installed or lacked `slop`.
 4. **Screenshot Tools Inoperative**: `maim` was missing, and `dmenu-scrot` / `dwm-screenshot` lacked fallback to `xfce4-screenshooter`.
 5. **Notification System**: `dunst` was missing, causing fallback to un-themed `xfce4-notifyd`.
-6. **Theme Switcher Topbar Incomplete**: `dwm.c`'s `load_themes_toml()` only recomputed `SchemeNorm` and `SchemeSel`, completely omitting `SchemeTitle` (index 2). Furthermore, `dwm-settings-appearance` hardcoded `dwm-titus` paths.
+6. **Theme Switcher Topbar Incomplete**: `dwm.c`'s `load_themes_toml()` only recomputed `SchemeNorm` and `SchemeSel`, completely omitting `SchemeTitle` (index 2). Furthermore, `dwm-settings-appearance` hardcoded `dwm-oomaya` paths.
 7. **MIME Type Status Clarification**: `inode/directory` mapping confusion in default apps.
 
 ---
@@ -40,7 +40,7 @@ This plan addresses all seven issues raised in the user review of `dwm_settings_
 | **Missing packages in `install.sh`** | `debian:screenshot-optional` lacked `slop`; `desktop` profile was not reconciled during update; no explicit runtime pre-flight audit | `scripts/dwm-packages.sh`, `install.sh` | Add `slop` to `screenshot-optional` across distros; add pre-flight & verification checks for `feh`, `blueman`, `maim`, `slop`, `dunst`, `xsettingsd`. |
 | **Screenshots broken** | `dmenu-scrot` & `dwm-screenshot` invoked `maim` unconditionally with no fallback | `dmenu-oomaya/scripts/dmenu-scrot`, `dwm-oomaya/scripts/dwm-screenshot`, `config.def.h` | Add graceful fallback to `xfce4-screenshooter` / `scrot`. Map `Print` key (with & without Super) in dwm. |
 | **Notifications** | `dunst` not installed, falling back to `xfce4-notifyd` | `scripts/dwm-packages.sh`, `install.sh` | Ensure `dunst` is installed and started by `autostart.sh` using Tokyo Night theme. |
-| **Theme title portion stays Tokyo Night** | `dwm.c` line 4073: `for (i = 0; i < 2; i++)` only rebuilt `SchemeNorm` & `SchemeSel`, never `SchemeTitle`; `dwm-settings-appearance` had hardcoded `dwm-titus` paths | `dwm.c`, `scripts/dwm-settings-appearance` | Rebuild `SchemeTitle` in `load_themes_toml()`; patch `dwm-settings-appearance` to dynamically resolve `dwm-oomaya`. |
+| **Theme title portion stays Tokyo Night** | `dwm.c` line 4073: `for (i = 0; i < 2; i++)` only rebuilt `SchemeNorm` & `SchemeSel`, never `SchemeTitle`; `dwm-settings-appearance` had hardcoded `dwm-oomaya` paths | `dwm.c`, `scripts/dwm-settings-appearance` | Rebuild `SchemeTitle` in `load_themes_toml()`; patch `dwm-settings-appearance` to dynamically resolve `dwm-oomaya`. |
 | **MIME type display** | `dwm-default-apps status` displays raw `inode/directory=pcmanfm.desktop` | `scripts/dwm-settings-hub`, user manual | Add human-readable label "Default File Manager (inode/directory)" in status viewer. |
 
 ---
@@ -66,7 +66,7 @@ This plan addresses all seven issues raised in the user review of `dwm_settings_
 
 ### Phase 2: Dwm Settings Hub & Appearance Path Resolution
 1. **`scripts/dwm-settings-appearance`**:
-   - Resolve `$dwm_cfg_name` and `$dwm_data_name` preferring `dwm-oomaya` over `dwm-titus`.
+   - Resolve `$dwm_cfg_name` and `$dwm_data_name` preferring `dwm-oomaya` over `dwm-oomaya`.
    - Validate `dwm-settings-appearance snapshot` returns code 0 and valid theme table.
 2. **`scripts/dwm-settings-hub`**:
    - Ensure `$HOME/Pictures/backgrounds` is created and seeded if missing.

@@ -89,17 +89,11 @@ config_home=${XDG_CONFIG_HOME:-$user_home/.config}
 xdg_data_home=${XDG_DATA_HOME:-$user_home/.local/share}
 state_home=${XDG_STATE_HOME:-$user_home/.local/state}
 data_dir=$xdg_data_home/dwm-oomaya
-if [ ! -d "$data_dir" ] && [ -d "$xdg_data_home/dwm-titus" ]; then
-	data_dir=$xdg_data_home/dwm-titus
-fi
 quickshell_dir=$config_home/quickshell
 binary_target=$prefix/bin/dwm
 man_target=$manprefix/man1/dwm.1
 xsession_target=$xsessions_dir/dwm.desktop
 display_root_helper_target=$prefix/libexec/dwm-oomaya/dwm-settings-display-root
-if [ ! -e "$display_root_helper_target" ] && [ -e "$prefix/libexec/dwm-titus/dwm-settings-display-root" ]; then
-	display_root_helper_target=$prefix/libexec/dwm-titus/dwm-settings-display-root
-fi
 make_command=${MAKE:-make}
 os_release_file=/etc/os-release
 if [ "${DWM_DEV_SYNC_TEST_MODE:-0}" = 1 ] &&
@@ -304,9 +298,6 @@ verify_install() {
 			"cursor theme $cursor_name"
 	done
 	cursor_license="$data_root/licenses/dwm-oomaya/capitaine-cursors/COPYING"
-	if [ ! -f "$cursor_license" ] && [ -f "$data_root/licenses/dwm-titus/capitaine-cursors/COPYING" ]; then
-		cursor_license="$data_root/licenses/dwm-titus/capitaine-cursors/COPYING"
-	fi
 	verify_file "$repo_dir/assets/cursors/COPYING" \
 		"$cursor_license" \
 		"cursor license"

@@ -22,7 +22,7 @@ cleanup() {
 }
 trap cleanup EXIT HUP INT TERM
 
-mkdir -p "$work/bin" "$work/config/dwm-titus" "$work/home" "$work/state"
+mkdir -p "$work/bin" "$work/config/dwm-oomaya" "$work/home" "$work/state"
 : >"$work/actions.log"
 
 cat >"$work/bin/xset" <<'SH'
@@ -291,7 +291,7 @@ SH
 chmod +x "$work/bin/dbus-monitor"
 
 write_initial_config() {
-	cat >"$work/config/dwm-titus/power.conf" <<'EOF'
+	cat >"$work/config/dwm-oomaya/power.conf" <<'EOF'
 # user power preferences
 custom_key=keep
 dpms_enabled=0
@@ -301,7 +301,7 @@ lock_managed=1
 lock_timeout=600
 lock_after=5
 EOF
-	chmod 600 "$work/config/dwm-titus/power.conf"
+	chmod 600 "$work/config/dwm-oomaya/power.conf"
 	printf '0\n' >"$work/state/dpms_enabled"
 	printf '600\n' >"$work/state/dpms_timeout"
 	printf '0\n' >"$work/state/saver_timeout"
@@ -419,13 +419,13 @@ printf '%s\n' "$exponent_rate_snapshot" |
 export DWM_POWER_TEST_ENERGY_RATE=12.5
 
 write_initial_config
-before=$(sha256sum "$work/config/dwm-titus/power.conf")
+before=$(sha256sum "$work/config/dwm-oomaya/power.conf")
 export DWM_POWER_TEST_XSET_NO_DPMS=1
 no_dpms_snapshot=$(run_helper power-snapshot)
 printf '%s\n' "$no_dpms_snapshot" |
 	grep -Fqx 'power-dpms	unavailable	no	600	user-session	X11 display power management'
 expect_status 1 run_helper power-dpms on
-[ "$(sha256sum "$work/config/dwm-titus/power.conf")" = "$before" ]
+[ "$(sha256sum "$work/config/dwm-oomaya/power.conf")" = "$before" ]
 if grep -Fq 'power-dpms' "$work/status.out"; then
 	printf 'Unavailable DPMS action reported success\n' >&2
 	exit 1
@@ -485,44 +485,44 @@ fi
 unset DWM_POWER_TEST_PROFILE_SET_FAIL
 
 write_initial_config
-before=$(sha256sum "$work/config/dwm-titus/power.conf")
+before=$(sha256sum "$work/config/dwm-oomaya/power.conf")
 for invalid in '' 59 86401 abc 999999999999999999999999; do
 	expect_status 2 run_helper power-dpms-timeout "$invalid"
-	[ "$(sha256sum "$work/config/dwm-titus/power.conf")" = "$before" ]
+	[ "$(sha256sum "$work/config/dwm-oomaya/power.conf")" = "$before" ]
 	expect_status 2 run_helper power-lock-timeout "$invalid"
-	[ "$(sha256sum "$work/config/dwm-titus/power.conf")" = "$before" ]
+	[ "$(sha256sum "$work/config/dwm-oomaya/power.conf")" = "$before" ]
 done
 
 run_helper power-dpms-timeout 900 >/dev/null
-grep -Fqx '# user power preferences' "$work/config/dwm-titus/power.conf"
-grep -Fqx 'custom_key=keep' "$work/config/dwm-titus/power.conf"
-grep -Fqx 'dpms_enabled=1' "$work/config/dwm-titus/power.conf"
-grep -Fqx 'dpms_timeout=900' "$work/config/dwm-titus/power.conf"
-[ "$(stat -c %a "$work/config/dwm-titus/power.conf")" = 600 ]
-if find "$work/config/dwm-titus" -maxdepth 1 -name '.power.conf.*' -print -quit | grep -q .; then
+grep -Fqx '# user power preferences' "$work/config/dwm-oomaya/power.conf"
+grep -Fqx 'custom_key=keep' "$work/config/dwm-oomaya/power.conf"
+grep -Fqx 'dpms_enabled=1' "$work/config/dwm-oomaya/power.conf"
+grep -Fqx 'dpms_timeout=900' "$work/config/dwm-oomaya/power.conf"
+[ "$(stat -c %a "$work/config/dwm-oomaya/power.conf")" = 600 ]
+if find "$work/config/dwm-oomaya" -maxdepth 1 -name '.power.conf.*' -print -quit | grep -q .; then
 	printf 'Power configuration temporary file was not cleaned up\n' >&2
 	exit 1
 fi
 
 write_initial_config
-before=$(sha256sum "$work/config/dwm-titus/power.conf")
+before=$(sha256sum "$work/config/dwm-oomaya/power.conf")
 export DWM_POWER_TEST_XSET_FAIL=+dpms
 expect_status 1 run_helper power-dpms on
-[ "$(sha256sum "$work/config/dwm-titus/power.conf")" = "$before" ]
+[ "$(sha256sum "$work/config/dwm-oomaya/power.conf")" = "$before" ]
 unset DWM_POWER_TEST_XSET_FAIL
 
 write_initial_config
-before=$(sha256sum "$work/config/dwm-titus/power.conf")
+before=$(sha256sum "$work/config/dwm-oomaya/power.conf")
 export DWM_POWER_TEST_XSET_NO_CONVERGE=1
 expect_status 1 run_helper power-dpms on
-[ "$(sha256sum "$work/config/dwm-titus/power.conf")" = "$before" ]
+[ "$(sha256sum "$work/config/dwm-oomaya/power.conf")" = "$before" ]
 unset DWM_POWER_TEST_XSET_NO_CONVERGE
 
 write_initial_config
-before=$(sha256sum "$work/config/dwm-titus/power.conf")
+before=$(sha256sum "$work/config/dwm-oomaya/power.conf")
 export DWM_POWER_TEST_MV_FAIL=1
 expect_status 1 run_helper power-dpms on
-[ "$(sha256sum "$work/config/dwm-titus/power.conf")" = "$before" ]
+[ "$(sha256sum "$work/config/dwm-oomaya/power.conf")" = "$before" ]
 [ "$(cat "$work/state/dpms_enabled")" = 0 ]
 if grep -Fq 'power-dpms' "$work/status.out"; then
 	printf 'Persistence failure reported display power success\n' >&2
@@ -531,11 +531,11 @@ fi
 unset DWM_POWER_TEST_MV_FAIL
 
 write_initial_config
-before=$(sha256sum "$work/config/dwm-titus/power.conf")
+before=$(sha256sum "$work/config/dwm-oomaya/power.conf")
 export DWM_POWER_TEST_MV_FAIL=1
 export DWM_POWER_TEST_XSET_FAIL=-dpms
 expect_status 1 run_helper power-dpms on
-[ "$(sha256sum "$work/config/dwm-titus/power.conf")" = "$before" ]
+[ "$(sha256sum "$work/config/dwm-oomaya/power.conf")" = "$before" ]
 grep -Fq 'rollback also failed and live state may differ' "$work/status.err"
 if grep -Fq 'power-dpms' "$work/status.out"; then
 	printf 'Rollback failure reported display power success\n' >&2
@@ -544,11 +544,11 @@ fi
 unset DWM_POWER_TEST_MV_FAIL DWM_POWER_TEST_XSET_FAIL
 
 write_initial_config
-before=$(sha256sum "$work/config/dwm-titus/power.conf")
+before=$(sha256sum "$work/config/dwm-oomaya/power.conf")
 : >"$work/actions.log"
 export DWM_POWER_TEST_XSET_Q_FAIL=1
 expect_status 1 run_helper power-dpms on
-[ "$(sha256sum "$work/config/dwm-titus/power.conf")" = "$before" ]
+[ "$(sha256sum "$work/config/dwm-oomaya/power.conf")" = "$before" ]
 if grep -Eq '^xset (\+dpms|-dpms|dpms )' "$work/actions.log"; then
 	printf 'Unavailable DPMS provider was mutated before rejection\n' >&2
 	exit 1
@@ -556,7 +556,7 @@ fi
 
 : >"$work/actions.log"
 expect_status 1 run_helper power-lock on
-[ "$(sha256sum "$work/config/dwm-titus/power.conf")" = "$before" ]
+[ "$(sha256sum "$work/config/dwm-oomaya/power.conf")" = "$before" ]
 [ "$(cat "$work/state/lock_after")" = 0 ]
 [ ! -e "$work/state/light-locker.running" ]
 if grep -Eq '^gsettings set |^light-locker ' "$work/actions.log"; then
@@ -566,29 +566,29 @@ fi
 unset DWM_POWER_TEST_XSET_Q_FAIL
 
 write_initial_config
-before=$(sha256sum "$work/config/dwm-titus/power.conf")
+before=$(sha256sum "$work/config/dwm-oomaya/power.conf")
 export DWM_POWER_TEST_GSETTINGS_FAIL=lock-on-suspend
 expect_status 1 run_helper power-lock on
-[ "$(sha256sum "$work/config/dwm-titus/power.conf")" = "$before" ]
+[ "$(sha256sum "$work/config/dwm-oomaya/power.conf")" = "$before" ]
 [ "$(cat "$work/state/lock_after")" = 0 ]
 unset DWM_POWER_TEST_GSETTINGS_FAIL
 
 write_initial_config
-before=$(sha256sum "$work/config/dwm-titus/power.conf")
+before=$(sha256sum "$work/config/dwm-oomaya/power.conf")
 export DWM_POWER_TEST_LOCKER_NO_CONVERGE=1
 expect_status 1 run_helper power-lock on
-[ "$(sha256sum "$work/config/dwm-titus/power.conf")" = "$before" ]
+[ "$(sha256sum "$work/config/dwm-oomaya/power.conf")" = "$before" ]
 unset DWM_POWER_TEST_LOCKER_NO_CONVERGE
 
 write_initial_config
-sed -i 's/^lock_enabled=0$/lock_enabled=1/' "$work/config/dwm-titus/power.conf"
+sed -i 's/^lock_enabled=0$/lock_enabled=1/' "$work/config/dwm-oomaya/power.conf"
 export DWM_POWER_TEST_LOCKER_NO_CONVERGE=1
 expect_status 1 run_helper power-apply
 [ ! -e "$work/state/light-locker.running" ]
 unset DWM_POWER_TEST_LOCKER_NO_CONVERGE
 
 write_initial_config
-sed -i 's/^lock_enabled=0$/lock_enabled=1/' "$work/config/dwm-titus/power.conf"
+sed -i 's/^lock_enabled=0$/lock_enabled=1/' "$work/config/dwm-oomaya/power.conf"
 printf '600\n' >"$work/state/saver_timeout"
 printf '5\n' >"$work/state/lock_after"
 printf 'true\n' >"$work/state/lock_on_suspend"
@@ -598,8 +598,8 @@ export DWM_POWER_TEST_LOCKER_EXIT_DELAY=1
 unset DWM_POWER_TEST_LOCKER_EXIT_DELAY
 
 write_initial_config
-mv "$work/config/dwm-titus/power.conf" "$work/power-target.conf"
-ln -s "$work/power-target.conf" "$work/config/dwm-titus/power.conf"
+mv "$work/config/dwm-oomaya/power.conf" "$work/power-target.conf"
+ln -s "$work/power-target.conf" "$work/config/dwm-oomaya/power.conf"
 before=$(sha256sum "$work/power-target.conf")
 : >"$work/actions.log"
 expect_status 1 run_helper power-dpms on
@@ -608,8 +608,8 @@ if grep -Eq '^xset (\+dpms|-dpms|dpms )' "$work/actions.log"; then
 	printf 'Symlinked configuration changed live DPMS before rejection\n' >&2
 	exit 1
 fi
-rm "$work/config/dwm-titus/power.conf"
-mv "$work/power-target.conf" "$work/config/dwm-titus/power.conf"
+rm "$work/config/dwm-oomaya/power.conf"
+mv "$work/power-target.conf" "$work/config/dwm-oomaya/power.conf"
 
 (
 	HOME="$work/home" \

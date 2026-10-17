@@ -26,7 +26,7 @@ fixes: 682 backend tests, the complete System Management Xvfb lifecycle,
 84 regional and 48 delegated UI cases, build/lint, staged and repeated
 installation, preservation, and release-archive validation. The run exited zero;
 its terminal result is also recorded in
-[the completion PR](https://github.com/ChrisTitusTech/dwm-titus/pull/288).
+[the completion PR](https://github.com/ChrisTitusTech/dwm-oomaya/pull/288).
 Documentation-only follow-ups do not change that tested implementation. The preceding full attempt passed all
 682 backend tests but exposed a regional UI fixture race: it treated the UI as
 settled while a routine NTP sample still owned the shared read slot. The control

@@ -29,25 +29,25 @@ home=$work/home
 runtime=$work/runtime
 config_home=$home/.config
 data_home=$home/.local/share
-mkdir -p "$config_home/quickshell" "$config_home/dwm-titus" "$data_home/dwm-titus/scripts" "$runtime"
+mkdir -p "$config_home/quickshell" "$config_home/dwm-oomaya" "$data_home/dwm-oomaya/scripts" "$runtime"
 chmod 700 "$runtime"
 cp -a "$repo/config/quickshell/." "$config_home/quickshell/"
-cp "$repo/tests/fixtures/system-operation-provider.py" "$data_home/dwm-titus/scripts/dwm-system-management"
-chmod +x "$data_home/dwm-titus/scripts/dwm-system-management"
-cp "$repo/config/"*.toml "$config_home/dwm-titus/"
+cp "$repo/tests/fixtures/system-operation-provider.py" "$data_home/dwm-oomaya/scripts/dwm-system-management"
+chmod +x "$data_home/dwm-oomaya/scripts/dwm-system-management"
+cp "$repo/config/"*.toml "$config_home/dwm-oomaya/"
 # Simulate an existing preserved rule file. The generic control-center title
 # rule must also cover the newly added utility window.
-sed -i '/title="dwm control center utility"/d' "$config_home/dwm-titus/window-rules.toml"
+sed -i '/title="dwm control center utility"/d' "$config_home/dwm-oomaya/window-rules.toml"
 sed -i '/title="dwm network password"/a\
   { title="dwm control center",         isfloating=1, alwaysontop=1 },' \
-	"$config_home/dwm-titus/window-rules.toml"
+	"$config_home/dwm-oomaya/window-rules.toml"
 grep -Fqx '  { title="dwm control center",         isfloating=1, alwaysontop=1 },' \
-	"$config_home/dwm-titus/window-rules.toml"
+	"$config_home/dwm-oomaya/window-rules.toml"
 cp "$repo/scripts/dwm-system-health" "$repo/scripts/dwm-diagnostics" \
 	"$repo/scripts/dwm-quickshell-controlcenter" "$repo/scripts/dwm-quickshell-controls" \
 	"$repo/scripts/dwm-quickshell-launcher" "$repo/scripts/dwm-quickshell-network" \
 	"$repo/scripts/dwm-quickshell-pointer" \
-	"$data_home/dwm-titus/scripts/"
+	"$data_home/dwm-oomaya/scripts/"
 
 Xvfb "$display" -screen 0 1024x768x24 -nolisten tcp -extension GLX >"$work/xvfb.log" 2>&1 &
 xvfb_pid=$!
@@ -68,7 +68,7 @@ dwm_pid=$!
 
 env DISPLAY="$display" HOME="$home" XDG_CONFIG_HOME="$config_home" \
 	XDG_DATA_HOME="$data_home" XDG_RUNTIME_DIR="$runtime" \
-	PATH="$data_home/dwm-titus/scripts:$PATH" \
+	PATH="$data_home/dwm-oomaya/scripts:$PATH" \
 	quickshell --no-duplicate >"$work/quickshell.log" 2>&1 &
 quickshell_pid=$!
 
@@ -124,14 +124,14 @@ fi
 i=0
 while [ "$i" -lt 200 ]; do
 	scan_processes=$(pgrep -af '[d]wm-system-health (scan-user|scan-system)' || true)
-	if ! printf '%s\n' "$scan_processes" | grep -F "$data_home/dwm-titus/scripts/dwm-system-health" >/dev/null; then
+	if ! printf '%s\n' "$scan_processes" | grep -F "$data_home/dwm-oomaya/scripts/dwm-system-health" >/dev/null; then
 		break
 	fi
 	i=$((i + 1))
 	sleep 0.05
 done
 scan_processes=$(pgrep -af '[d]wm-system-health (scan-user|scan-system)' || true)
-if printf '%s\n' "$scan_processes" | grep -F "$data_home/dwm-titus/scripts/dwm-system-health" >/dev/null; then
+if printf '%s\n' "$scan_processes" | grep -F "$data_home/dwm-oomaya/scripts/dwm-system-health" >/dev/null; then
 	printf 'System Health scan remained active after close\n' >&2
 	exit 1
 fi

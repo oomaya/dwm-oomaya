@@ -23,13 +23,13 @@ data_home=$work/data
 state_home=$work/state
 runtime_dir=$work/runtime
 home_dir=$work/home
-themes_file=$config_home/dwm-titus/themes.toml
-managed_file=$data_home/dwm-titus/config/themes.toml
+themes_file=$config_home/dwm-oomaya/themes.toml
+managed_file=$data_home/dwm-oomaya/config/themes.toml
 apply_stub=$work/apply-theme
 reload_stub=$work/reload-theme
 xsettings_stub=$work/reload-xsettings
 
-mkdir -p "$config_home/dwm-titus" "$data_home/dwm-titus/config" "$state_home/dwm-titus" \
+mkdir -p "$config_home/dwm-oomaya" "$data_home/dwm-oomaya/config" "$state_home/dwm-oomaya" \
 	"$runtime_dir" "$home_dir"
 themes_fixture=$work/themes-fixture-baseline.toml
 cp "$repo/config/themes.toml" "$themes_fixture"
@@ -190,7 +190,7 @@ run_theme_apply_direct() {
 integration_snapshot() {
 	local path
 	for path in \
-		"$config_home/dwm-titus/personalization.conf" \
+		"$config_home/dwm-oomaya/personalization.conf" \
 		"$config_home/alacritty/active-theme.toml" \
 		"$config_home/alacritty/alacritty.toml" \
 		"$config_home/kitty/active-theme.conf" \
@@ -198,9 +198,9 @@ integration_snapshot() {
 		"$config_home/gtk-3.0/settings.ini" \
 		"$config_home/gtk-4.0/settings.ini" \
 		"$home_dir/.gtkrc-2.0" \
-		"$config_home/dwm-titus/cursor.Xresources" \
-		"$config_home/dwm-titus/theme-env.sh" \
-		"$config_home/dwm-titus/xsettingsd.conf" \
+		"$config_home/dwm-oomaya/cursor.Xresources" \
+		"$config_home/dwm-oomaya/theme-env.sh" \
+		"$config_home/dwm-oomaya/xsettingsd.conf" \
 		"$config_home/qt5ct/qt5ct.conf" \
 		"$config_home/qt6ct/qt6ct.conf"; do
 		if [[ -f $path ]]; then
@@ -383,7 +383,7 @@ grep -Fqx 'dwm-settings-theme: XDG_RUNTIME_DIR must be an absolute path' \
 
 reset_fixture() {
 	rm -rf "$config_home" "$state_home" "$runtime_dir" "$work/dconf" "$work/xfconf"
-	mkdir -p "$config_home/dwm-titus" "$state_home/dwm-titus" "$runtime_dir" "$work/dconf" "$work/xfconf"
+	mkdir -p "$config_home/dwm-oomaya" "$state_home/dwm-oomaya" "$runtime_dir" "$work/dconf" "$work/xfconf"
 	cp "$themes_fixture" "$themes_file"
 	chmod 640 "$themes_file"
 	: >"$work/apply.log"
@@ -445,10 +445,10 @@ grep -Fqx dracula "$work/apply.log"
 
 relative_home=$work/relative-home
 relative_runtime=$work/relative-xdg-runtime
-mkdir -p "$relative_home/.config/dwm-titus" \
-	"$relative_home/.local/share/dwm-titus/config" "$relative_runtime"
-cp "$themes_fixture" "$relative_home/.config/dwm-titus/themes.toml"
-cp "$themes_fixture" "$relative_home/.local/share/dwm-titus/config/themes.toml"
+mkdir -p "$relative_home/.config/dwm-oomaya" \
+	"$relative_home/.local/share/dwm-oomaya/config" "$relative_runtime"
+cp "$themes_fixture" "$relative_home/.config/dwm-oomaya/themes.toml"
+cp "$themes_fixture" "$relative_home/.local/share/dwm-oomaya/config/themes.toml"
 (
 	cd "$work"
 	HOME=$relative_home XDG_CONFIG_HOME=relative-config XDG_DATA_HOME=relative-data \
@@ -458,7 +458,7 @@ cp "$themes_fixture" "$relative_home/.local/share/dwm-titus/config/themes.toml"
 		DWM_TEST_EXPECT_DATA_HOME=$relative_home/.local/share \
 		"$helper" apply dracula >"$work/relative-apply.out" 2>"$work/relative-apply.err"
 )
-grep -Fq 'theme = "dracula"' "$relative_home/.config/dwm-titus/themes.toml"
+grep -Fq 'theme = "dracula"' "$relative_home/.config/dwm-oomaya/themes.toml"
 [[ ! -e $work/relative-config && ! -e $work/relative-data && ! -e $work/relative-state ]]
 
 before_hash=$(sha256sum "$themes_file")
@@ -510,7 +510,7 @@ set -e
 grep -Fq 'changed while preparing the transaction' "$work/race.err"
 grep -Fqx '# late external edit' "$themes_file"
 [[ $(active_theme) == nord ]]
-[[ ! -e $state_home/dwm-titus/appearance/transaction.meta ]]
+[[ ! -e $state_home/dwm-oomaya/appearance/transaction.meta ]]
 
 reset_fixture
 rm -f "$race_ready" "$race_release"
@@ -555,7 +555,7 @@ for attempt in {1..100}; do
 done
 [[ -e $same_source_exchange_ready ]]
 same_exchange_name=$(awk -F= '$1 == "exchange_file" { print $2; exit }' \
-	"$state_home/dwm-titus/appearance/transaction.meta")
+	"$state_home/dwm-oomaya/appearance/transaction.meta")
 [[ $same_exchange_name =~ ^\.themes\.toml\.[A-Za-z0-9]+$ ]]
 same_exchange_path=${themes_file%/*}/$same_exchange_name
 [[ -f $same_exchange_path ]]
@@ -567,7 +567,7 @@ run_theme recover >"$work/same-source-exchange-recover.out" \
 grep -Fqx $'result\trecovered' "$work/same-source-exchange-recover.out"
 [[ ! -e $same_exchange_path ]]
 grep -Fqx "$same_source_hash" \
-	"$state_home/dwm-titus/appearance/integration-suppress"
+	"$state_home/dwm-oomaya/appearance/integration-suppress"
 [[ $(active_theme) == nord ]]
 
 reset_fixture
@@ -587,7 +587,7 @@ for attempt in {1..100}; do
 done
 [[ -e $source_exchange_ready ]]
 exchange_name=$(awk -F= '$1 == "exchange_file" { print $2; exit }' \
-	"$state_home/dwm-titus/appearance/transaction.meta")
+	"$state_home/dwm-oomaya/appearance/transaction.meta")
 [[ $exchange_name =~ ^\.themes\.toml\.[A-Za-z0-9]+$ ]]
 exchange_path=${themes_file%/*}/$exchange_name
 printf '\n# retained external source edit\n' >>"$exchange_path"
@@ -700,7 +700,7 @@ reset_fixture
 slow_started=$(date +%s)
 DWM_TEST_APPLY_DELAY=2 run_theme preview slow-preview 1 dracula >/dev/null \
 	2>"$work/slow-preview.err"
-slow_prefix=$state_home/dwm-titus/appearance/slow-preview.preview
+slow_prefix=$state_home/dwm-oomaya/appearance/slow-preview.preview
 slow_deadline=$(awk -F= '$1 == "deadline" { print $2 }' "$slow_prefix.meta")
 ((slow_deadline >= slow_started + 3 && slow_deadline <= slow_started + 5))
 wait_for_theme nord
@@ -708,7 +708,7 @@ grep -Fqx $'result\tnone' < <(run_theme preview-status)
 
 reset_fixture
 run_theme preview cancelled-watchdog 99 dracula >/dev/null 2>"$work/cancelled-watchdog.err"
-cancel_prefix=$state_home/dwm-titus/appearance/cancelled-watchdog.preview
+cancel_prefix=$state_home/dwm-oomaya/appearance/cancelled-watchdog.preview
 cancel_pid=$(awk -F= '$1 == "watchdog_pid" { print $2 }' "$cancel_prefix.meta")
 process_is_running "$cancel_pid"
 run_theme keep cancelled-watchdog >/dev/null
@@ -725,7 +725,7 @@ fi
 
 reset_fixture
 run_theme preview orphaned-claim 1 dracula >/dev/null 2>"$work/orphaned-claim.err"
-mkdir -p "$state_home/dwm-titus/appearance/orphaned-claim.preview.claim"
+mkdir -p "$state_home/dwm-oomaya/appearance/orphaned-claim.preview.claim"
 wait_for_theme nord
 grep -Fqx $'result\tnone' < <(run_theme preview-status)
 
@@ -744,12 +744,12 @@ printf '%s\n' 'import = [' '  "~/.config/alacritty/custom-theme.toml",' ']' \
 printf '# custom kitty configuration\n' >"$config_home/kitty/kitty.conf"
 printf '[Settings]\ngtk-theme-name=Custom\n' >"$config_home/gtk-3.0/settings.ini"
 printf 'gtk-theme-name="Custom"\n' >"$home_dir/.gtkrc-2.0"
-printf 'Xcursor.theme: Custom\n' >"$config_home/dwm-titus/cursor.Xresources"
-printf 'export QT_QPA_PLATFORMTHEME=custom\n' >"$config_home/dwm-titus/theme-env.sh"
+printf 'Xcursor.theme: Custom\n' >"$config_home/dwm-oomaya/cursor.Xresources"
+printf 'export QT_QPA_PLATFORMTHEME=custom\n' >"$config_home/dwm-oomaya/theme-env.sh"
 printf '[Appearance]\ncolor_scheme_path=/custom\n' >"$config_home/qt6ct/qt6ct.conf"
 chmod 640 "$config_home/alacritty/alacritty.toml" "$config_home/kitty/kitty.conf" \
 	"$config_home/gtk-3.0/settings.ini" "$home_dir/.gtkrc-2.0" \
-	"$config_home/dwm-titus/cursor.Xresources" "$config_home/dwm-titus/theme-env.sh" \
+	"$config_home/dwm-oomaya/cursor.Xresources" "$config_home/dwm-oomaya/theme-env.sh" \
 	"$config_home/qt6ct/qt6ct.conf"
 integration_before=$(integration_snapshot)
 : >"$work/live.log"
@@ -758,7 +758,7 @@ run_theme_real_apply preview integration-files 10 dracula >/dev/null 2>"$work/in
 [[ -f $config_home/alacritty/active-theme.toml ]]
 [[ -f $config_home/kitty/active-theme.conf ]]
 [[ -f $config_home/gtk-4.0/settings.ini ]]
-integration_transaction=$state_home/dwm-titus/appearance/integration-transaction
+integration_transaction=$state_home/dwm-oomaya/appearance/integration-transaction
 integration_preview=$(integration_snapshot)
 printf '%s pending\n' "$(sha256sum "$themes_file" | awk '{print $1}')" >"$integration_transaction"
 chmod 600 "$integration_transaction"
@@ -796,7 +796,7 @@ HOME=$home_dir XDG_CONFIG_HOME=$config_home XDG_DATA_HOME=$data_home \
 [[ ! -s $work/live.log ]]
 run_theme_real_apply revert integration-files >/dev/null 2>"$work/integration-revert.err"
 [[ $(integration_snapshot) == "$integration_before" ]]
-suppression_file=$state_home/dwm-titus/appearance/integration-suppress
+suppression_file=$state_home/dwm-oomaya/appearance/integration-suppress
 suppression_hash=$(sha256sum "$themes_file" | awk '{print $1}')
 cmp -s <(printf '%s\n' "$suppression_hash") "$suppression_file"
 HOME=$home_dir XDG_CONFIG_HOME=$config_home XDG_DATA_HOME=$data_home \
@@ -919,7 +919,7 @@ set -e
 grep -Fq 'changed while publishing the transaction' "$work/integration-publish-race.err"
 grep -Fqx '# external integration edit before publish' \
 	"$config_home/alacritty/alacritty.toml"
-[[ -f $state_home/dwm-titus/appearance/integration-publish-race.preview.meta ]]
+[[ -f $state_home/dwm-oomaya/appearance/integration-publish-race.preview.meta ]]
 
 reset_fixture
 mkdir -p "$config_home/alacritty"
@@ -1039,7 +1039,7 @@ run_theme revert reused-token >/dev/null
 
 reset_fixture
 run_theme preview durable-preview 10 dracula >/dev/null 2>"$work/durable-preview.err"
-durable_prefix=$state_home/dwm-titus/appearance/durable-preview.preview
+durable_prefix=$state_home/dwm-oomaya/appearance/durable-preview.preview
 [[ -f $durable_prefix.meta ]]
 sed -i 's/^deadline=.*/deadline=0/' "$durable_prefix.meta"
 # A reboot removes the runtime directory only after terminating session
@@ -1070,10 +1070,10 @@ run_theme _resume-preview
 grep -Fqx $'result\tnone' < <(run_theme preview-status)
 
 reset_fixture
-mkdir -p "$state_home/dwm-titus/appearance"
-printf 'orphan-preview\n' >"$state_home/dwm-titus/appearance/preview.current"
+mkdir -p "$state_home/dwm-oomaya/appearance"
+printf 'orphan-preview\n' >"$state_home/dwm-oomaya/appearance/preview.current"
 grep -Fqx $'result\tnone' < <(run_theme preview-status)
-[[ ! -e $state_home/dwm-titus/appearance/preview.current ]]
+[[ ! -e $state_home/dwm-oomaya/appearance/preview.current ]]
 
 reset_fixture
 run_theme preview stale-keep 10 dracula >/dev/null 2>"$work/stale-keep-preview.err"
@@ -1084,13 +1084,13 @@ if run_theme keep stale-keep 2>"$work/stale-keep.err"; then
 	exit 1
 fi
 grep -Fq 'refusing to confirm stale state' "$work/stale-keep.err"
-[[ ! -d $state_home/dwm-titus/appearance/stale-keep.preview.claim ]]
+[[ ! -d $state_home/dwm-oomaya/appearance/stale-keep.preview.claim ]]
 if run_theme revert stale-keep 2>"$work/stale-keep-revert.err"; then
 	printf 'stale preview rollback overwrote an external change\n' >&2
 	exit 1
 fi
 grep -Fq 'refusing to overwrite it' "$work/stale-keep-revert.err"
-[[ ! -d $state_home/dwm-titus/appearance/stale-keep.preview.claim ]]
+[[ ! -d $state_home/dwm-oomaya/appearance/stale-keep.preview.claim ]]
 run_theme abandon stale-keep >"$work/stale-keep-abandon.out"
 grep -Fqx $'result\tabandon\tstale-keep\tnord' "$work/stale-keep-abandon.out"
 if ! grep -Fqx nord "$work/live-only.log"; then
@@ -1143,14 +1143,14 @@ if DWM_TEST_APPLY_FAIL=1 run_theme apply dracula >"$work/fail.out" 2>"$work/fail
 fi
 grep -Fq 'did not converge; restoring the previous theme' "$work/fail.err"
 [[ $(sha256sum "$themes_file") == "$failure_hash" ]]
-[[ -e $state_home/dwm-titus/appearance/transaction.meta ]]
+[[ -e $state_home/dwm-oomaya/appearance/transaction.meta ]]
 if [[ -s $work/fail.out ]]; then
 	printf 'failed apply emitted a success protocol\n' >&2
 	exit 1
 fi
 recover_output=$(run_theme recover 2>"$work/fail-recover.err")
 grep -Fqx $'result\trecovered' <<<"$recover_output"
-[[ ! -e $state_home/dwm-titus/appearance/transaction.meta ]]
+[[ ! -e $state_home/dwm-oomaya/appearance/transaction.meta ]]
 
 reset_fixture
 signal_ready=$work/signal.ready
@@ -1183,7 +1183,7 @@ set -e
 wait "$recovery_status_pid"
 grep -Fqx $'recovery\tnone' "$work/concurrent-recovery-status.out"
 [[ $(active_theme) == nord ]]
-[[ ! -e $state_home/dwm-titus/appearance/transaction.meta ]]
+[[ ! -e $state_home/dwm-oomaya/appearance/transaction.meta ]]
 if [[ -s $work/signal.out ]]; then
 	printf 'interrupted apply emitted a success protocol\n' >&2
 	exit 1
@@ -1211,17 +1211,17 @@ wait "$finish_pid"
 finish_status=$?
 set -e
 [[ $finish_status -eq 143 ]]
-[[ ! -e $state_home/dwm-titus/appearance/integration-transaction ]]
+[[ ! -e $state_home/dwm-oomaya/appearance/integration-transaction ]]
 grep -Fqx $'recovery\tavailable\tapply\tdracula' < <(run_theme recovery-status)
 # Emulate recovery metadata left by the previous release, whose integration
 # list had the same first eleven paths and no personalization or XSETTINGS entry.
-rm -f -- "$state_home/dwm-titus/appearance/transaction.integration.11.before" \
-	"$state_home/dwm-titus/appearance/transaction.integration.11.after" \
-	"$state_home/dwm-titus/appearance/transaction.integration.11.meta" \
-	"$state_home/dwm-titus/appearance/transaction.integration.12.before" \
-	"$state_home/dwm-titus/appearance/transaction.integration.12.after" \
-	"$state_home/dwm-titus/appearance/transaction.integration.12.meta"
-printf '11\n' >"$state_home/dwm-titus/appearance/transaction.integration.count"
+rm -f -- "$state_home/dwm-oomaya/appearance/transaction.integration.11.before" \
+	"$state_home/dwm-oomaya/appearance/transaction.integration.11.after" \
+	"$state_home/dwm-oomaya/appearance/transaction.integration.11.meta" \
+	"$state_home/dwm-oomaya/appearance/transaction.integration.12.before" \
+	"$state_home/dwm-oomaya/appearance/transaction.integration.12.after" \
+	"$state_home/dwm-oomaya/appearance/transaction.integration.12.meta"
+printf '11\n' >"$state_home/dwm-oomaya/appearance/transaction.integration.count"
 run_theme recover >/dev/null
 [[ $(active_theme) == nord ]]
 grep -Fqx $'recovery\tnone' < <(run_theme recovery-status)
@@ -1235,7 +1235,7 @@ run_theme revert preview-absent >/dev/null
 [[ ! -e $themes_file ]]
 suppression_hash=$(sha256sum "$managed_file" | awk '{print $1}')
 cmp -s <(printf '%s\n' "$suppression_hash") \
-	"$state_home/dwm-titus/appearance/integration-suppress"
+	"$state_home/dwm-oomaya/appearance/integration-suppress"
 grep -Fqx nord "$work/live-only.log"
 [[ $(grep -Fxc reload "$work/reload.log") == 2 ]]
 
@@ -1277,13 +1277,13 @@ grep -Fqx $'recovery\tnone' < <(run_theme recovery-status)
 reset_fixture
 run_theme mutation-ready
 run_theme personalization-ready
-printf 'broken-protocol\n' >"$config_home/dwm-titus/personalization.conf"
+printf 'broken-protocol\n' >"$config_home/dwm-oomaya/personalization.conf"
 if run_theme personalization-ready; then
 	printf 'malformed personalization state was reported ready\n' >&2
 	exit 1
 fi
 run_theme personalization-repair-ready
-cp "$config_home/dwm-titus/personalization.conf" "$work/personalization-malformed.before"
+cp "$config_home/dwm-oomaya/personalization.conf" "$work/personalization-malformed.before"
 mkdir -p "$config_home/gtk-3.0"
 printf '[Settings]\nkeep-repair=yes\n' >"$config_home/gtk-3.0/settings.ini"
 chmod 444 "$config_home/gtk-3.0/settings.ini"
@@ -1298,8 +1298,8 @@ repair_output=$(run_theme personalize-repair 2>"$work/personalization-repair.err
 grep -Fqx $'personalization-action-protocol\t1\t0' <<<"$repair_output"
 grep -Fqx $'result\trepair\tall\tfollow-sources' <<<"$repair_output"
 grep -Fqx $'personalization-protocol\t1\t0' \
-	"$config_home/dwm-titus/personalization.conf"
-[[ $(wc -l <"$config_home/dwm-titus/personalization.conf") == 1 ]]
+	"$config_home/dwm-oomaya/personalization.conf"
+[[ $(wc -l <"$config_home/dwm-oomaya/personalization.conf") == 1 ]]
 cmp -s "$work/personalization-repair-gtk.before" \
 	"$config_home/gtk-3.0/settings.ini"
 [[ $(stat -c %a "$config_home/gtk-3.0/settings.ini") == 444 ]]
@@ -1323,7 +1323,7 @@ fi
 grep -Fq 'personalization configuration does not need repair' \
 	"$work/personalization-repair-valid.err"
 printf 'personalization-protocol\t2\t0' \
-	>"$config_home/dwm-titus/personalization.conf"
+	>"$config_home/dwm-oomaya/personalization.conf"
 if run_theme personalization-repair-ready; then
 	printf 'unsupported personalization protocol was reported repairable\n' >&2
 	exit 1
@@ -1336,9 +1336,9 @@ fi
 grep -Fq 'personalization protocol is unsupported; refusing destructive repair' \
 	"$work/personalization-repair-unsupported.err"
 grep -Fqx $'personalization-protocol\t2\t0' \
-	"$config_home/dwm-titus/personalization.conf"
+	"$config_home/dwm-oomaya/personalization.conf"
 grep -Fqx $'recovery\tnone' < <(run_theme recovery-status)
-printf 'broken-protocol\n' >"$config_home/dwm-titus/personalization.conf"
+printf 'broken-protocol\n' >"$config_home/dwm-oomaya/personalization.conf"
 repair_ready=$work/personalization-repair-race.ready
 repair_release=$work/personalization-repair-race.release
 DWM_TEST_PERSONALIZATION_REPAIR_READY=$repair_ready \
@@ -1352,16 +1352,16 @@ for attempt in {1..100}; do
 done
 [[ -e $repair_ready ]]
 printf 'personalization-protocol\t1\t0\nqt\tgtk3\n' \
-	>"$config_home/dwm-titus/personalization.conf"
+	>"$config_home/dwm-oomaya/personalization.conf"
 : >"$repair_release"
 if wait "$repair_pid"; then
 	printf 'personalization repair overwrote a concurrent valid edit\n' >&2
 	exit 1
 fi
-grep -Fqx $'qt\tgtk3' "$config_home/dwm-titus/personalization.conf"
+grep -Fqx $'qt\tgtk3' "$config_home/dwm-oomaya/personalization.conf"
 grep -Fqx $'recovery\tnone' < <(run_theme recovery-status)
 
-printf 'broken-protocol\n' >"$config_home/dwm-titus/personalization.conf"
+printf 'broken-protocol\n' >"$config_home/dwm-oomaya/personalization.conf"
 repair_recovery_theme_identity=$(stat -c '%d:%i' "$themes_file")
 repair_recovery_gtk_identity=$(stat -c '%d:%i' "$config_home/gtk-3.0/settings.ini")
 repair_finish_ready=$work/personalization-repair-finish.ready
@@ -1386,7 +1386,7 @@ printf '# unrelated edit after interrupted repair\n' \
 	>"$config_home/alacritty/active-theme.toml"
 run_theme recover >/dev/null 2>"$work/personalization-repair-recover.err"
 cmp -s "$work/personalization-malformed.before" \
-	"$config_home/dwm-titus/personalization.conf"
+	"$config_home/dwm-oomaya/personalization.conf"
 cmp -s "$work/personalization-repair-gtk.before" \
 	"$config_home/gtk-3.0/settings.ini"
 [[ $(stat -c '%d:%i' "$themes_file") == "$repair_recovery_theme_identity" ]]
@@ -1394,7 +1394,7 @@ cmp -s "$work/personalization-repair-gtk.before" \
 grep -Fqx '# unrelated edit after interrupted repair' \
 	"$config_home/alacritty/active-theme.toml"
 rm "$config_home/alacritty/active-theme.toml"
-[[ ! -e $state_home/dwm-titus/appearance/integration-suppress ]]
+[[ ! -e $state_home/dwm-oomaya/appearance/integration-suppress ]]
 ln "$themes_file" "$work/personalization-repair-hardlink-theme.toml"
 if run_theme personalization-repair-ready; then
 	printf 'repair was reported ready for a hard-linked theme source\n' >&2
@@ -1410,12 +1410,12 @@ fi
 rm "$config_home/qt5ct"
 run_theme personalization-repair-ready
 printf 'personalization-protocol\t1\t0\nqt\tgtk3\nqt\tqt6ct\n' \
-	>"$config_home/dwm-titus/personalization.conf"
+	>"$config_home/dwm-oomaya/personalization.conf"
 if run_theme personalization-ready; then
 	printf 'duplicate personalization state was reported ready\n' >&2
 	exit 1
 fi
-cp "$config_home/dwm-titus/personalization.conf" "$work/personalization-duplicate.before"
+cp "$config_home/dwm-oomaya/personalization.conf" "$work/personalization-duplicate.before"
 if run_theme personalize qt gtk3 >"$work/personalization-duplicate.out" \
 	2>"$work/personalization-duplicate.err"; then
 	printf 'personalization mutation replaced duplicate state\n' >&2
@@ -1424,10 +1424,10 @@ fi
 grep -Fq 'personalization configuration is malformed or unsafe' \
 	"$work/personalization-duplicate.err"
 cmp -s "$work/personalization-duplicate.before" \
-	"$config_home/dwm-titus/personalization.conf"
+	"$config_home/dwm-oomaya/personalization.conf"
 printf 'personalization-protocol\t1\t0\nqt\tgtk3\n' \
-	>"$config_home/dwm-titus/personalization.conf"
-ln "$config_home/dwm-titus/personalization.conf" "$work/personalization-hardlink.conf"
+	>"$config_home/dwm-oomaya/personalization.conf"
+ln "$config_home/dwm-oomaya/personalization.conf" "$work/personalization-hardlink.conf"
 if run_theme personalization-ready; then
 	printf 'hard-linked personalization state was reported ready\n' >&2
 	exit 1
@@ -1447,7 +1447,7 @@ run_theme_apply_direct >/dev/null 2>"$work/personalization-hardlink.err"
 grep -Fq 'ignoring invalid personalization configuration' \
 	"$work/personalization-hardlink.err"
 rm "$work/personalization-hardlink.conf"
-rm "$config_home/dwm-titus/personalization.conf"
+rm "$config_home/dwm-oomaya/personalization.conf"
 run_theme personalization-ready
 sed -i '0,/theme = "nord"/s//theme = "missing-theme"/' "$themes_file"
 run_theme mutation-ready
@@ -1457,16 +1457,16 @@ if run_theme personalization-ready; then
 fi
 
 reset_fixture
-printf 'broken-protocol\n' >"$config_home/dwm-titus/personalization.conf"
+printf 'broken-protocol\n' >"$config_home/dwm-oomaya/personalization.conf"
 run_theme_real_apply apply dracula >/dev/null 2>"$work/personalization-invalid-base.err"
 grep -Fq 'ignoring invalid personalization configuration' \
 	"$work/personalization-invalid-base.err"
-grep -Fqx 'broken-protocol' "$config_home/dwm-titus/personalization.conf"
+grep -Fqx 'broken-protocol' "$config_home/dwm-oomaya/personalization.conf"
 [[ $(active_theme) == dracula ]]
 reset_fixture
 
 printf 'personalization-protocol\t1\t0\nfont\tunknown\n' \
-	>"$config_home/dwm-titus/personalization.conf"
+	>"$config_home/dwm-oomaya/personalization.conf"
 run_theme_real_apply apply dracula >/dev/null \
 	2>"$work/personalization-reserved-name.err"
 grep -Fq 'ignoring invalid font personalization value' \
@@ -1474,7 +1474,7 @@ grep -Fq 'ignoring invalid font personalization value' \
 reset_fixture
 
 printf 'personalization-protocol\t1\t0\nfont\tBad"Font\nicon\tBad=Icons\n' \
-	>"$config_home/dwm-titus/personalization.conf"
+	>"$config_home/dwm-oomaya/personalization.conf"
 printf 'gtk-font-name="Baseline Font 11"\ngtk-icon-theme-name="Baseline Icons"\n' \
 	>"$home_dir/.gtkrc-2.0"
 run_theme_real_apply apply dracula >/dev/null 2>"$work/personalization-unsafe-name.err"
@@ -1488,7 +1488,7 @@ reset_fixture
 
 mkdir -p "$config_home/gtk-3.0" "$config_home/gtk-4.0"
 printf 'personalization-protocol\t1\t0\nfont\tfollow-system\ntext-size\tfollow-system\nicon\tfollow-system\n' \
-	>"$config_home/dwm-titus/personalization.conf"
+	>"$config_home/dwm-oomaya/personalization.conf"
 printf '[Settings]\ngtk-font-name=External Font 12\ngtk-icon-theme-name=External Icons\n' \
 	>"$config_home/gtk-3.0/settings.ini"
 cp "$config_home/gtk-3.0/settings.ini" "$config_home/gtk-4.0/settings.ini"
@@ -1585,12 +1585,12 @@ if run_theme mutation-ready; then
 	exit 1
 fi
 reset_fixture
-chmod 500 "$config_home/dwm-titus"
+chmod 500 "$config_home/dwm-oomaya"
 if run_theme mutation-ready; then
 	printf 'non-writable theme directory was reported mutable\n' >&2
 	exit 1
 fi
-chmod 700 "$config_home/dwm-titus"
+chmod 700 "$config_home/dwm-oomaya"
 rm "$themes_file"
 ln -s "$work/outside-themes.toml" "$themes_file"
 cp "$themes_fixture" "$work/outside-themes.toml"
@@ -1640,7 +1640,7 @@ grep -Fqx 'theme-apply: caller-reported integration lock does not match descript
 fallback_output=$(HOME=$fallback_home XDG_CONFIG_HOME=$fallback_config XDG_DATA_HOME=$data_home \
 	DISPLAY='' DBUS_SESSION_BUS_ADDRESS='' XDG_RUNTIME_DIR=$runtime_dir \
 	DWM_TEST_LIVE_LOG=$work/live.log PATH=$work/integration-bin:$PATH \
-	DWM_APPEARANCE_THEMES_FILE=$fallback_config/dwm-titus/themes.toml \
+	DWM_APPEARANCE_THEMES_FILE=$fallback_config/dwm-oomaya/themes.toml \
 	DWM_APPEARANCE_MANAGED_THEMES_FILE=$managed_file \
 	"$repo/scripts/theme-apply.sh" 2>"$work/fallback.err")
 grep -Fqx "theme-apply: applied theme 'nord'" <<<"$fallback_output"
@@ -1699,7 +1699,7 @@ printf '[Settings]\nunchanged=yes\ngtk-font-name = Keep Font 13\n' \
 	>"$config_home/gtk-3.0/settings.ini"
 printf 'gtk-key-theme-name="Keep"\n' >"$home_dir/.gtkrc-2.0"
 printf 'personalization-protocol\t1\t0\nfont\tKeep Font\n' \
-	>"$config_home/dwm-titus/personalization.conf"
+	>"$config_home/dwm-oomaya/personalization.conf"
 if run_theme personalize cursor follow-system >"$work/personalize-invalid-cursor.out" \
 	2>"$work/personalize-invalid-cursor.err"; then
 	printf 'cursor accepted the font-only follow-system sentinel\n' >&2
@@ -1725,21 +1725,21 @@ if run_theme personalize font unknown >"$work/personalize-unknown-font.out" \
 fi
 grep -Fq 'invalid personalization value for font' \
 	"$work/personalize-unknown-font.err"
-printf 'Keep/Setting "yes"\n' >"$config_home/dwm-titus/xsettingsd.conf"
+printf 'Keep/Setting "yes"\n' >"$config_home/dwm-oomaya/xsettingsd.conf"
 text_scale_output=$(run_theme_real_apply personalize text-size 1.25 \
 	2>"$work/personalize-text-size.err")
 grep -Fqx $'result\tapply\ttext-size\t1.25' <<<"$text_scale_output"
 grep -Fqx '1.25' "$work/dconf/text-scaling-factor"
 grep -Fqx '# Auto-generated by theme-apply.sh - do not edit manually.' \
-	"$config_home/dwm-titus/xsettingsd.conf"
-grep -Fqx 'Keep/Setting "yes"' "$config_home/dwm-titus/xsettingsd.conf"
-grep -Fqx 'Xft/DPI 122880' "$config_home/dwm-titus/xsettingsd.conf"
+	"$config_home/dwm-oomaya/xsettingsd.conf"
+grep -Fqx 'Keep/Setting "yes"' "$config_home/dwm-oomaya/xsettingsd.conf"
+grep -Fqx 'Xft/DPI 122880' "$config_home/dwm-oomaya/xsettingsd.conf"
 grep -Fqx reload "$work/xsettings.log"
 run_theme_real_apply personalize-reset text-size >/dev/null \
 	2>"$work/personalize-reset-text-size.err"
-grep -Fqx $'text-size\tfollow-system' "$config_home/dwm-titus/personalization.conf"
-grep -Fqx 'Keep/Setting "yes"' "$config_home/dwm-titus/xsettingsd.conf"
-if grep -Eq '^Xft/DPI[[:space:]]' "$config_home/dwm-titus/xsettingsd.conf"; then
+grep -Fqx $'text-size\tfollow-system' "$config_home/dwm-oomaya/personalization.conf"
+grep -Fqx 'Keep/Setting "yes"' "$config_home/dwm-oomaya/xsettingsd.conf"
+if grep -Eq '^Xft/DPI[[:space:]]' "$config_home/dwm-oomaya/xsettingsd.conf"; then
 	printf 'system-follow reset retained managed Xft/DPI\n' >&2
 	exit 1
 fi
@@ -1748,18 +1748,18 @@ personalize_output=$(DWM_TEST_GSETTINGS_FAIL_ALL=1 run_theme_real_apply personal
 grep -Fqx $'personalization-action-protocol\t1\t0' <<<"$personalize_output"
 grep -Fqx $'result\tapply\tqt\tgtk3' <<<"$personalize_output"
 grep -Fqx $'personalization-protocol\t1\t0' \
-	"$config_home/dwm-titus/personalization.conf"
-grep -Fqx $'font\tKeep Font' "$config_home/dwm-titus/personalization.conf"
-grep -Fqx $'qt\tgtk3' "$config_home/dwm-titus/personalization.conf"
-grep -Fqx 'export QT_QPA_PLATFORMTHEME=gtk3' "$config_home/dwm-titus/theme-env.sh"
+	"$config_home/dwm-oomaya/personalization.conf"
+grep -Fqx $'font\tKeep Font' "$config_home/dwm-oomaya/personalization.conf"
+grep -Fqx $'qt\tgtk3' "$config_home/dwm-oomaya/personalization.conf"
+grep -Fqx 'export QT_QPA_PLATFORMTHEME=gtk3' "$config_home/dwm-oomaya/theme-env.sh"
 grep -Fqx 'gtk-font-name=Keep Font 11' "$config_home/gtk-3.0/settings.ini"
 [[ $(grep -Fxc 'gtk-font-name=Keep Font 11' "$config_home/gtk-3.0/settings.ini") == 1 ]]
 grep -Fqx 'External XFCE GTK' "$work/xfconf/theme-name"
 grep -Fqx 'External XFCE Cursor' "$work/xfconf/cursor-theme"
 
 run_theme_real_apply apply dracula >/dev/null 2>"$work/personalize-theme-change.err"
-grep -Fqx $'qt\tgtk3' "$config_home/dwm-titus/personalization.conf"
-grep -Fqx 'export QT_QPA_PLATFORMTHEME=gtk3' "$config_home/dwm-titus/theme-env.sh"
+grep -Fqx $'qt\tgtk3' "$config_home/dwm-oomaya/personalization.conf"
+grep -Fqx 'export QT_QPA_PLATFORMTHEME=gtk3' "$config_home/dwm-oomaya/theme-env.sh"
 
 printf 'External XFCE GTK\n' >"$work/xfconf/theme-name"
 printf 'External XFCE Cursor\n' >"$work/xfconf/cursor-theme"
@@ -1780,16 +1780,16 @@ mkdir -p "$custom_gtk_root/themes/CustomXdg/gtk-3.0"
 XDG_DATA_DIRS=$custom_gtk_root \
 	run_theme_real_apply personalize gtk CustomXdg >/dev/null \
 	2>"$work/personalize-custom-gtk.err"
-grep -Fqx $'gtk\tCustomXdg' "$config_home/dwm-titus/personalization.conf"
+grep -Fqx $'gtk\tCustomXdg' "$config_home/dwm-oomaya/personalization.conf"
 grep -Fqx 'gtk-theme-name=CustomXdg' "$config_home/gtk-3.0/settings.ini"
 grep -Fqx 'gtk-theme-name="CustomXdg"' "$home_dir/.gtkrc-2.0"
 
 reset_personalize_output=$(run_theme_real_apply personalize-reset qt \
 	2>"$work/personalize-reset.err")
 grep -Fqx $'result\treset\tqt\tfollow-theme' <<<"$reset_personalize_output"
-grep -Fqx $'qt\tfollow-theme' "$config_home/dwm-titus/personalization.conf"
+grep -Fqx $'qt\tfollow-theme' "$config_home/dwm-oomaya/personalization.conf"
 grep -Eq '^export QT_QPA_PLATFORMTHEME=(qt6ct|qt5ct|gtk3)$' \
-	"$config_home/dwm-titus/theme-env.sh"
+	"$config_home/dwm-oomaya/theme-env.sh"
 
 reset_fixture
 mkdir -p "$config_home/gtk-3.0" "$config_home/gtk-4.0"
@@ -1811,9 +1811,9 @@ grep -Fqx 'gtk-font-name="Font One 10"' "$home_dir/.gtkrc-2.0"
 LC_ALL=C.UTF-8 run_theme_real_apply personalize cursor 'Cursör' >/dev/null \
 	2>"$work/personalize-unicode-cursor.err"
 grep -Fqx $'export XCURSOR_THEME=Curs\\\303\\\266r' \
-	"$config_home/dwm-titus/theme-env.sh"
+	"$config_home/dwm-oomaya/theme-env.sh"
 printf 'personalization-protocol\t1\t0\nfont\tManaged Font\nicon\tManaged Icons\n' \
-	>"$config_home/dwm-titus/personalization.conf"
+	>"$config_home/dwm-oomaya/personalization.conf"
 run_theme_real_apply personalize-reset font >/dev/null 2>"$work/personalize-reset-font.err"
 run_theme_real_apply personalize-reset icon >/dev/null 2>"$work/personalize-reset-icon.err"
 for settings_file in "$config_home/gtk-3.0/settings.ini" "$config_home/gtk-4.0/settings.ini"; do
@@ -1845,7 +1845,7 @@ ln -s "$gtk3_target" "$config_home/gtk-3.0/settings.ini"
 rm -f "$config_home/gtk-4.0/settings.ini"
 ln -s "$gtk3_target" "$config_home/gtk-4.0/settings.ini"
 printf 'personalization-protocol\t1\t0\nfont\tFont One\n' \
-	>"$config_home/dwm-titus/personalization.conf"
+	>"$config_home/dwm-oomaya/personalization.conf"
 run_theme_apply_direct >"$work/theme-apply-symlink-font.out" \
 	2>"$work/theme-apply-symlink-font.err"
 [[ -L $home_dir/.gtkrc-2.0 ]]
@@ -1859,7 +1859,7 @@ grep -Fqx 'gtk-font-name="Font One 11"' "$gtk2_target"
 grep -Fqx 'keep-symlink-target=yes' "$gtk3_target"
 grep -Fqx 'gtk-font-name=Font One 11' "$gtk3_target"
 printf 'personalization-protocol\t1\t0\nfont\tfollow-system\n' \
-	>"$config_home/dwm-titus/personalization.conf"
+	>"$config_home/dwm-oomaya/personalization.conf"
 DWM_APPEARANCE_PERSONALIZATION_CAPABILITY=font \
 	run_theme_apply_direct >"$work/theme-apply-reset-symlink-font.out" \
 	2>"$work/theme-apply-reset-symlink-font.err"
@@ -1914,7 +1914,7 @@ managed_before=$(sha256sum "$managed_file")
 run_theme_real_apply personalize qt gtk3 >/dev/null 2>"$work/personalize-managed.err"
 [[ ! -e $themes_file ]]
 [[ $(sha256sum "$managed_file") == "$managed_before" ]]
-grep -Fqx $'qt\tgtk3' "$config_home/dwm-titus/personalization.conf"
+grep -Fqx $'qt\tgtk3' "$config_home/dwm-oomaya/personalization.conf"
 
 reset_fixture
 rm "$themes_file"
@@ -1948,7 +1948,7 @@ cp "$themes_fixture" "$managed_file"
 reset_fixture
 
 printf 'personalization-protocol\t1\t0\nfont\tFont One\n' \
-	>"$config_home/dwm-titus/personalization.conf"
+	>"$config_home/dwm-oomaya/personalization.conf"
 printf '%s\n' "\"Bob's Font 13\"" >"$work/dconf/font-name"
 run_theme_apply_direct >/dev/null 2>"$work/theme-apply-double-quoted-font.err"
 grep -Fqx 'gtk-font-name=Font One 13' "$config_home/gtk-3.0/settings.ini"
@@ -1973,7 +1973,7 @@ run_theme_real_apply personalize icon "Bob's Icons" >/dev/null \
 	2>"$work/personalize-icon-apostrophe.err"
 grep -Fqx "\"Bob's Icons\"" "$work/dconf/icon-theme"
 grep -Fqx "$(printf 'icon\t%s' "Bob's Icons")" \
-	"$config_home/dwm-titus/personalization.conf"
+	"$config_home/dwm-oomaya/personalization.conf"
 grep -Fqx $'recovery\tnone' < <(run_theme recovery-status)
 
 reset_fixture
@@ -1998,7 +1998,7 @@ fi
 grep -Fq 'font GSettings changed during transaction preparation' \
 	"$work/personalization-baseline.err"
 grep -Fqx "'External Font 12'" "$work/dconf/font-name"
-[[ ! -e $config_home/dwm-titus/personalization.conf ]]
+[[ ! -e $config_home/dwm-oomaya/personalization.conf ]]
 grep -Fqx $'recovery\tnone' < <(run_theme recovery-status)
 
 reset_fixture
@@ -2073,7 +2073,7 @@ if DWM_TEST_GSETTINGS_FAIL_KEY=font-name run_theme_real_apply personalize font '
 fi
 grep -Fq 'personalization font was committed but live convergence failed' \
 	"$work/personalize-font-failure.err"
-[[ ! -e $config_home/dwm-titus/personalization.conf ]]
+[[ ! -e $config_home/dwm-oomaya/personalization.conf ]]
 grep -Fqx $'recovery\tnone' < <(run_theme recovery-status)
 
 reset_fixture
@@ -2093,7 +2093,7 @@ done
 [[ -e $personalization_finish_ready && -s $personalization_finish_pid_file ]]
 [[ -s $work/dconf/font-name ]]
 cmp -s "$work/dconf/font-name" \
-	"$state_home/dwm-titus/appearance/transaction.gsettings.after"
+	"$state_home/dwm-oomaya/appearance/transaction.gsettings.after"
 IFS= read -r personalization_finish_pid <"$personalization_finish_pid_file"
 kill -KILL "$personalization_finish_pid"
 wait "$personalization_finish_job" 2>/dev/null || true
@@ -2118,13 +2118,13 @@ for _ in {1..200}; do
 	sleep 0.02
 done
 [[ -e $text_finish_ready && -s $text_finish_pid_file ]]
-[[ -f $config_home/dwm-titus/xsettingsd.conf ]]
+[[ -f $config_home/dwm-oomaya/xsettingsd.conf ]]
 IFS= read -r text_finish_pid <"$text_finish_pid_file"
 kill -KILL "$text_finish_pid"
 wait "$text_finish_job" 2>/dev/null || true
 : >"$work/xsettings.log"
 run_theme_real_apply recover >/dev/null 2>"$work/text-finish-recover.err"
-[[ ! -e $config_home/dwm-titus/xsettingsd.conf ]]
+[[ ! -e $config_home/dwm-oomaya/xsettingsd.conf ]]
 grep -Fqx reload "$work/xsettings.log"
 grep -Fqx $'recovery\tnone' < <(run_theme recovery-status)
 
@@ -2205,9 +2205,9 @@ kill -KILL "$personalization_pid"
 wait "$personalization_job" 2>/dev/null || true
 grep -Fqx $'recovery\tavailable\tpersonalize-qt\tnord' \
 	< <(run_theme recovery-status)
-[[ ! -e $config_home/dwm-titus/personalization.conf ]]
+[[ ! -e $config_home/dwm-oomaya/personalization.conf ]]
 run_theme recover >/dev/null
 grep -Fqx $'recovery\tnone' < <(run_theme recovery-status)
-[[ ! -e $config_home/dwm-titus/personalization.conf ]]
+[[ ! -e $config_home/dwm-oomaya/personalization.conf ]]
 
 printf 'dwm settings theme tests passed\n'

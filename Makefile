@@ -53,7 +53,7 @@ INSTALL_COMMANDS = \
 	scripts/dwm-system-management \
 	scripts/dwm-polkit \
 	scripts/dwm-packages.sh \
-	scripts/dwm-titus-release \
+	scripts/dwm-oomaya-release \
 	scripts/dwm-scratchpad \
 	scripts/dwm-screenshot \
 	scripts/dwm-settings \
@@ -647,6 +647,9 @@ check-install-manifest: all
 			usr/libexec/dwm-oomaya/dwm-settings-display-root \
 			usr/share/man/man1/dwm.1 \
 			usr/share/xsessions/dwm.desktop; \
+		if [ -f dwm-oomayad ]; then printf 'usr/bin/dwm-oomayad\n'; fi; \
+		if [ -f tools/dwm-msg-compat.sh ]; then printf 'usr/bin/dwm-msg\nusr/bin/dwm-msg-compat\n'; fi; \
+		if [ -f systemd/dwm-oomayad.service ]; then printf 'usr/lib/systemd/user/dwm-oomayad.service\n'; fi; \
 		for name in ${INSTALL_COMMAND_NAMES}; do \
 			printf 'usr/bin/%s\n' "$$name"; \
 		done; \

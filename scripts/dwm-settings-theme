@@ -16,11 +16,8 @@ state_home=${XDG_STATE_HOME:-}
 export XDG_CONFIG_HOME=$config_home XDG_DATA_HOME=$data_home XDG_STATE_HOME=$state_home
 
 dwm_cfg_name="dwm-oomaya"
-[[ -d $config_home/dwm-oomaya || ! -d $config_home/dwm-titus ]] || dwm_cfg_name="dwm-titus"
 dwm_data_name="dwm-oomaya"
-[[ -d $data_home/dwm-oomaya || ! -d $data_home/dwm-titus ]] || dwm_data_name="dwm-titus"
 dwm_state_name="dwm-oomaya"
-[[ -d $state_home/dwm-oomaya || ! -d $state_home/dwm-titus ]] || dwm_state_name="dwm-titus"
 
 themes_file=${DWM_APPEARANCE_THEMES_FILE:-$config_home/$dwm_cfg_name/themes.toml}
 managed_themes_file=${DWM_APPEARANCE_MANAGED_THEMES_FILE:-$data_home/$dwm_data_name/config/themes.toml}
@@ -227,7 +224,7 @@ mutation_ready() {
 	directory_path_ready "$runtime_base" true || return 1
 	directory_path_ready "$runtime_dir" true || return 1
 	directory_path_ready "$state_home" true || return 1
-	directory_path_ready "$state_home/dwm-titus" true || return 1
+	directory_path_ready "$state_home/dwm-oomaya" true || return 1
 	directory_path_ready "$recovery_dir" true || return 1
 	parent=${themes_file%/*}
 	[[ $themes_file == /* && $parent != "$themes_file" ]] || return 1

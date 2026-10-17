@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-profile_dir="${DWM_DISPLAY_PROFILE_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus/display-profiles}"
+profile_dir="${DWM_DISPLAY_PROFILE_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/dwm-oomaya/display-profiles}"
 
 usage() {
 	cat <<EOF
@@ -99,7 +99,7 @@ print_current() {
 
 print_template() {
 	cat <<'EOF'
-# Save as ~/.config/dwm-titus/display-profiles/example.conf
+# Save as ~/.config/dwm-oomaya/display-profiles/example.conf
 # Lines are: <output> <xrandr options for that output>
 HDMI-1 --primary --mode 1920x1080 --rate 60
 DP-1 --off

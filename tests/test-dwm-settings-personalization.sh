@@ -11,7 +11,7 @@ config_home=$home/.config
 data_home=$home/.local/share
 bin_dir=$work/bin
 settings_state=$work/gsettings
-mkdir -p "$config_home/dwm-titus" "$config_home/gtk-3.0" "$config_home/gtk-4.0" \
+mkdir -p "$config_home/dwm-oomaya" "$config_home/gtk-3.0" "$config_home/gtk-4.0" \
 	"$data_home/icons/Cursor One/cursors" "$data_home/icons/Bob's Icons" \
 	"$data_home/themes/Theme One/gtk-3.0" "$bin_dir" "$settings_state"
 printf '[Icon Theme]\nName=Bob\nDirectories=16x16/apps\n' \
@@ -152,9 +152,9 @@ printf '[Settings]\nunchanged=yes\ngtk-theme-name=Old GTK\n\n[Other]\nvalue=keep
 printf '[Other]\nvalue=keep\n' >"$config_home/gtk-4.0/settings.ini"
 printf 'gtk-key-theme-name="Keep"\ngtk-theme-name="Old GTK"\n' >"$home/.gtkrc-2.0"
 printf 'Xcursor.theme: Old Cursor\nXcursor.size: 32\nCustom.value: keep\n' \
-	>"$config_home/dwm-titus/cursor.Xresources"
+	>"$config_home/dwm-oomaya/cursor.Xresources"
 printf 'export QT_QPA_PLATFORMTHEME=qt6ct\nexport XCURSOR_THEME=Old\\ Cursor\nexport XCURSOR_SIZE=32\n' \
-	>"$config_home/dwm-titus/theme-env.sh"
+	>"$config_home/dwm-oomaya/theme-env.sh"
 
 run_helper() {
 	PATH=${DWM_TEST_HELPER_PATH:-$bin_dir:/usr/bin:/bin} \
@@ -190,7 +190,7 @@ printf '%s\n' "$status" | grep -Fqx \
 printf '%s\n' "$status" | grep -Fqx \
 	'delegate	gtk	available	nwg-look	Open nwg-look for advanced GTK settings'
 printf "personalization-protocol\t1\t0\nfont\tfollow-system\ntext-size\t1.25\ncursor\tCursor One\nicon\tBob's Icons\nqt\tfollow-theme\n" \
-	>"$config_home/dwm-titus/personalization.conf"
+	>"$config_home/dwm-oomaya/personalization.conf"
 persisted_status=$(run_helper status)
 expected=$(printf 'selection\ttext-size\tavailable\t1.0\t1.25\tPersistent desktop text scale')
 printf '%s\n' "$persisted_status" | grep -Fqx "$expected"
@@ -205,7 +205,7 @@ expected=$(printf "selection\ticon\tavailable\tOld Icons\tBob's Icons\tPersisten
 printf '%s\n' "$persisted_status" | grep -Fqx "$expected"
 expected=$(printf 'selection\tqt\tavailable\tqt6ct\tfollow-theme\tPersistent environment for newly launched Qt applications')
 printf '%s\n' "$persisted_status" | grep -Fqx "$expected"
-printf 'invalid\n' >"$config_home/dwm-titus/personalization.conf"
+printf 'invalid\n' >"$config_home/dwm-oomaya/personalization.conf"
 malformed_status=$(run_helper status)
 expected=$(printf 'provider\tpersonalization\tpartial\tuser-session\tPersisted personalization choices are unavailable or malformed')
 printf '%s\n' "$malformed_status" | grep -Fqx "$expected"
@@ -215,7 +215,7 @@ run_helper repair | grep -Fqx 'result	repair	all	follow-sources'
 grep -Fqx 'personalize-repair' "$work/theme.calls"
 for malformed_value in unknown follow-theme; do
 	printf 'personalization-protocol\t1\t0\nfont\t%s\n' "$malformed_value" \
-		>"$config_home/dwm-titus/personalization.conf"
+		>"$config_home/dwm-oomaya/personalization.conf"
 	malformed_status=$(run_helper status)
 	expected=$(printf 'provider\tpersonalization\tpartial\tuser-session\tPersisted personalization choices are unavailable or malformed')
 	printf '%s\n' "$malformed_status" | grep -Fqx "$expected"
@@ -226,39 +226,39 @@ restricted_repair_status=$(DWM_TEST_PERSONALIZATION_REPAIR_READY=0 run_helper st
 printf '%s\n' "$restricted_repair_status" | grep -Fqx \
 	'repair	restricted	Malformed state cannot be repaired safely in this session'
 printf 'personalization-protocol\t2\t0' \
-	>"$config_home/dwm-titus/personalization.conf"
+	>"$config_home/dwm-oomaya/personalization.conf"
 unsupported_status=$(run_helper status)
-expected=$(printf 'provider\tpersonalization\tpartial\tuser-session\tPersisted personalization protocol is unsupported; use a compatible dwm-titus version')
+expected=$(printf 'provider\tpersonalization\tpartial\tuser-session\tPersisted personalization protocol is unsupported; use a compatible dwm-oomaya version')
 printf '%s\n' "$unsupported_status" | grep -Fqx "$expected"
 expected=$(printf 'repair\tunavailable\tUnsupported personalization state was preserved')
 printf '%s\n' "$unsupported_status" | grep -Fqx "$expected"
 [ "$(grep -Fxc personalize-repair "$work/theme.calls")" -eq 1 ]
-rm -f "$config_home/dwm-titus/personalization.conf"
+rm -f "$config_home/dwm-oomaya/personalization.conf"
 stale_status=$(DWM_TEST_XSETTINGS_STATE=stale run_helper status)
 expected=$(printf 'selection\ttext-size\tpartial\t1.0\tfollow-system\tManaged X11 text scale is still active; reset remains available')
 printf '%s\n' "$stale_status" | grep -Fqx "$expected"
 expected=$(printf 'watch-readiness\ttext-size\tavailable\tManaged XSETTINGS owner lifecycle is observable')
 printf '%s\n' "$stale_status" | grep -Fqx "$expected"
-head -c 4097 /dev/zero | tr '\0' x >"$config_home/dwm-titus/theme-env.sh"
+head -c 4097 /dev/zero | tr '\0' x >"$config_home/dwm-oomaya/theme-env.sh"
 oversized_status=$(run_helper status)
 printf '%s\n' "$oversized_status" | grep -Fqx \
 	'selection	qt	partial		follow-theme	No supported persistent Qt backend is configured'
 printf 'export QT_QPA_PLATFORMTHEME=qt6ct\nexport XCURSOR_THEME=Old\\ Cursor\nexport XCURSOR_SIZE=32\n' \
-	>"$config_home/dwm-titus/theme-env.sh"
-printf 'export QT_QPA_PLATFORMTHEME=qt6ct\n' >"$config_home/dwm-titus/theme-env.sh"
+	>"$config_home/dwm-oomaya/theme-env.sh"
+printf 'export QT_QPA_PLATFORMTHEME=qt6ct\n' >"$config_home/dwm-oomaya/theme-env.sh"
 incomplete_theme_status=$(run_helper status)
 expected=$(printf 'selection\tqt\tpartial\t\tfollow-theme\tNo supported persistent Qt backend is configured')
 printf '%s\n' "$incomplete_theme_status" | grep -Fqx "$expected"
 printf 'export QT_QPA_PLATFORMTHEME=qt6ct\nexport QT_QPA_PLATFORMTHEME=qt5ct\nexport XCURSOR_THEME=Old\\ Cursor\nexport XCURSOR_SIZE=32\n' \
-	>"$config_home/dwm-titus/theme-env.sh"
+	>"$config_home/dwm-oomaya/theme-env.sh"
 duplicate_theme_status=$(run_helper status)
 printf '%s\n' "$duplicate_theme_status" | grep -Fqx "$expected"
 printf 'export QT_QPA_PLATFORMTHEME=qt6ct\nexport XCURSOR_THEME=Old\\ Cursor\nexport XCURSOR_SIZE=32\nexport CUSTOM_VALUE=yes\n' \
-	>"$config_home/dwm-titus/theme-env.sh"
+	>"$config_home/dwm-oomaya/theme-env.sh"
 unknown_theme_status=$(run_helper status)
 printf '%s\n' "$unknown_theme_status" | grep -Fqx "$expected"
 printf 'export QT_QPA_PLATFORMTHEME=qt6ct\nexport XCURSOR_THEME=Old\\ Cursor\nexport XCURSOR_SIZE=32\n' \
-	>"$config_home/dwm-titus/theme-env.sh"
+	>"$config_home/dwm-oomaya/theme-env.sh"
 restricted_status=$(DWM_TEST_PERSONALIZATION_READY=0 run_helper status)
 no_gsettings_bin=$work/no-gsettings-bin
 mkdir -p "$no_gsettings_bin"
@@ -499,7 +499,7 @@ grep -Fq 'no trusted advanced Qt editor is installed' \
 
 printf '%s\n' 'export QT_QPA_PLATFORMTHEME=qt6ct' \
 	'export XCURSOR_THEME=Cursor-One' 'export XCURSOR_SIZE=32' \
-	>"$config_home/dwm-titus/theme-env.sh"
+	>"$config_home/dwm-oomaya/theme-env.sh"
 delegate_output=$(QT_QPA_PLATFORMTHEME=gtk3 XCURSOR_THEME=Old-Cursor XCURSOR_SIZE=24 \
 	run_helper delegate qt)
 printf '%s\n' "$delegate_output" | grep -Fqx 'personalization-action-protocol	1	0'

@@ -1,9 +1,9 @@
-# LightDM Slick Greeter - dwm-titus
+# LightDM Slick Greeter - dwm-oomaya
 
 A modern Fedora LightDM login screen using Slick Greeter with a Nord colour
 palette, blurred background, and the MesloLGS NF font.
 
-The Fedora installer uses `slick-greeter`. The dwm-titus LightDM install target
+The Fedora installer uses `slick-greeter`. The dwm-oomaya LightDM install target
 renders the matching Fedora `lightdm.conf`.
 
 ## Files
@@ -12,7 +12,7 @@ renders the matching Fedora `lightdm.conf`.
 |------|-------------|
 | `lightdm.conf` | `/etc/lightdm/lightdm.conf` |
 | `slick-greeter.conf` | `/etc/lightdm/slick-greeter.conf` |
-| `wallpaper.jpg` | `/usr/share/pixmaps/dwm-titus.jpg` |
+| `wallpaper.jpg` | `/usr/share/pixmaps/dwm-oomaya.jpg` |
 
 ## Install
 

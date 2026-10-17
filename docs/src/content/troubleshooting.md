@@ -1,6 +1,6 @@
 ---
 title: Troubleshooting
-description: Resolve common dwm-titus startup, panel, application, theme, keybind, multi-monitor, NVIDIA, suspend, and compositor issues.
+description: Resolve common dwm-oomaya startup, panel, application, theme, keybind, multi-monitor, NVIDIA, suspend, and compositor issues.
 navLabel: Troubleshooting
 eyebrow: Get unstuck
 ---
@@ -20,7 +20,7 @@ flatpak run it.mijorus.gearlever
 
 The recommended and full installers include Flatpak, the GTK portal, and a
 user-scoped Gear Lever installation from Flathub by default. To repair only the
-application setup from an installed dwm-titus checkout, run:
+application setup from an installed dwm-oomaya checkout, run:
 
 ```sh
 install-gearlever
@@ -99,7 +99,7 @@ Alacritty. The default `Super`+`X` binding remains plain Alacritty.
 
 ## Themes Not Applying
 
-- Confirm `themes.toml` is at `~/.config/dwm-titus/themes.toml`
+- Confirm `themes.toml` is at `~/.config/dwm-oomaya/themes.toml`
 - Check the `[active]` section has a valid theme name
 - Manually trigger: `kill -USR1 $(pidof dwm)`
 - Run `theme-apply.sh` directly to see any errors
@@ -122,7 +122,7 @@ Alacritty. The default `Super`+`X` binding remains plain Alacritty.
   `dwm-display-setup`. The wizard previews changes before writing Xorg config.
 - Bad persistent layout: run `dwm-display-setup rollback`, then log out and
   back in. From a TTY, remove
-  `/etc/X11/xorg.conf.d/90-dwm-titus-display.conf` if Xorg cannot start.
+  `/etc/X11/xorg.conf.d/90-dwm-oomaya-display.conf` if Xorg cannot start.
 - TearFree is enabled only when the active Xorg driver exposes a compatible
   option or RandR property. Unsupported drivers are left unchanged.
 - NVIDIA Full Composition Pipeline is enabled in generated persistence only
@@ -158,5 +158,5 @@ If artifacts persist, set a different backend in `~/.config/picom.conf` or run w
 
 ## Still Stuck?
 
-- Open an issue: [github.com/ChrisTitusTech/dwm-titus/issues](https://github.com/ChrisTitusTech/dwm-titus/issues)
+- Open an issue: [github.com/ChrisTitusTech/dwm-oomaya/issues](https://github.com/ChrisTitusTech/dwm-oomaya/issues)
 - Run the full check: `bash scripts/check-deps.sh`

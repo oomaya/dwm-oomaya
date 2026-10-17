@@ -60,7 +60,7 @@ debian)
 	;;
 *)
 	err "Unsupported distribution: $DISTRO_NAME"
-	err "dwm-titus supports Fedora only."
+	err "dwm-oomaya supports Fedora only."
 	exit 1
 	;;
 esac

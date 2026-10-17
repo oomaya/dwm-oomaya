@@ -12,9 +12,7 @@ state_home=${XDG_STATE_HOME:-}
 [[ $config_home == /* ]] || config_home=${home_dir:+$home_dir/.config}
 [[ $state_home == /* ]] || state_home=${home_dir:+$home_dir/.local/state}
 dwm_cfg_name="dwm-oomaya"
-[[ -d $config_home/dwm-oomaya || ! -d $config_home/dwm-titus ]] || dwm_cfg_name="dwm-titus"
 dwm_state_name="dwm-oomaya"
-[[ -d $state_home/dwm-oomaya || ! -d $state_home/dwm-titus ]] || dwm_state_name="dwm-titus"
 config_dir=$config_home/$dwm_cfg_name
 config_file=$config_dir/font.conf
 state_base=$state_home/$dwm_state_name
@@ -111,7 +109,7 @@ prepare_state() {
 	require_paths
 	existing_path_chain_is_safe "$state_dir/.font-ready" || die "unsafe font state path: $state_dir"
 	ensure_owned_directory "$state_home" 'state home'
-	ensure_owned_directory "$state_base" 'dwm-titus state'
+	ensure_owned_directory "$state_base" 'dwm-oomaya state'
 	ensure_owned_directory "$appearance_state_dir" 'appearance state'
 	ensure_owned_directory "$state_dir" 'font state'
 	chmod 700 -- "$state_base" "$appearance_state_dir" "$state_dir"
@@ -123,7 +121,7 @@ prepare_config() {
 	require_paths
 	existing_path_chain_is_safe "$config_file" || die "unsafe font configuration path: $config_file"
 	ensure_owned_directory "$config_home" 'configuration home'
-	ensure_owned_directory "$config_dir" 'dwm-titus configuration'
+	ensure_owned_directory "$config_dir" 'dwm-oomaya configuration'
 	validate_file "$config_file" 'font configuration'
 	if [[ $allow_oversized != yes && -e $config_file && $(stat -c %s -- "$config_file") -gt 4096 ]]; then
 		die "font configuration is too large: $config_file"

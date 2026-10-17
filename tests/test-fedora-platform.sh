@@ -56,7 +56,7 @@ if [[ $install_status -ne 1 ]]; then
 	exit 1
 fi
 grep -Fq 'Unsupported distribution: Unsupported Linux' "$work/install-rejection.out"
-grep -Fq 'dwm-titus supports Fedora only.' "$work/install-rejection.out"
+grep -Fq 'dwm-oomaya supports Fedora only.' "$work/install-rejection.out"
 if [[ -e $work/mutations.log ]]; then
 	printf 'Unsupported installer attempted a package or system mutation.\n' >&2
 	exit 1
@@ -117,7 +117,7 @@ if [[ $screensaver_status -ne 1 ]]; then
 		"$screensaver_status" >&2
 	exit 1
 fi
-grep -Fq 'dwm-titus supports Fedora only.' "$work/xscreensaver-rejection.out"
+grep -Fq 'dwm-oomaya supports Fedora only.' "$work/xscreensaver-rejection.out"
 snapshot_tree "$work/unsupported-home" "$work/screensaver-home.after"
 if [[ -e $work/mutations.log ]] ||
 	! cmp "$work/screensaver-home.before" "$work/screensaver-home.after"; then

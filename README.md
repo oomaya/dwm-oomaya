@@ -350,7 +350,7 @@ DWM-Oomaya stands on the shoulders of the suckless and open-source Unix communit
 
 - **[suckless.org](https://suckless.org/)**: The elegant, minimal C core and dynamic window management foundation.
 - **[ChadDWM](https://github.com/siduck/chadwm)**: Vanitygaps architecture, layout matrix, and ergonomic mouse drag resize controls.
-- **[DWM-Titus](https://github.com/ChrisTitusTech/dwm-titus)**: Chris Titus's desktop framework, Quickshell status orchestration, and live TOML parser.
+- **[DWM-Titus](https://github.com/ChrisTitusTech/dwm-oomaya)**: Chris Titus's desktop framework, Quickshell status orchestration, and live TOML parser.
 - **[Omarchy](https://omarchy.org/)**: DHH & 37signals' brutalist visual grammar, sharp-corner discipline, and elegant window-launcher conventions.
 - **[Tony Banters Dmenu](https://github.com/tonybanters/dmenu)**: Centered geometry, crisp border patch, and Tokyo Night aesthetic.
 

@@ -42,7 +42,7 @@ mode, applies only the selected associations, verifies every XDG query, and
 restores the prior file on command failure or non-convergence. A successful
 mutation stores a
 mode-0600 one-level recovery image and the expected post-mutation hash under
-`${XDG_STATE_HOME:-$HOME/.local/state}/dwm-titus/default-apps/`.
+`${XDG_STATE_HOME:-$HOME/.local/state}/dwm-oomaya/default-apps/`.
 
 Reset is allowed only while the current file still matches that post-mutation
 hash. External changes therefore disable stale recovery instead of being

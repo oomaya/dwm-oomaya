@@ -21,7 +21,7 @@ All critical defects from user reviews have been addressed, verified, and harden
    - `install.sh`: Unconditionally creates `$HOME/Pictures`, `$HOME/Pictures/Screenshots`, and `$HOME/Pictures/backgrounds`, auto-seeds `dwm-oomaya.jpg`, and runs `scripts/check-deps.sh` post-install.
    - `scripts/autostop.sh`: Synchronized `dwm-status` identity path with `dwm-oomaya` runtime directory and isolated `dwm-oomayad` cleanup so `tests/test-autostop.sh` passes 100%.
    - `scripts/autostart.sh`: Header updated to `dwm-oomaya`; added fallback in `quickshell_instance_pids()` using `grep -oE` when `jq` is not yet installed on bare systems.
-   - `scripts/dwm-settings`: Prioritized `dwm-oomaya` data fallback before `dwm-titus`.
+   - `scripts/dwm-settings`: Prioritized `dwm-oomaya` data fallback before `dwm-oomaya`.
 
 ---
 
@@ -59,7 +59,7 @@ All critical defects from user reviews have been addressed, verified, and harden
    - The freshly compiled binary (`~/.local/bin/dwm`, 178,976 bytes) is installed on disk.
    - The active X session is running the previously loaded binary in RAM. Press **<kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd>** to restart dwm and load the new binary.
 2. **test-dwm-settings-font.sh Fixture**:
-   - Line 127 checks `$home/.config/dwm-titus/font.conf` in an isolated test harness when neither dir exists initially; `dwm-settings-font` now defaults to `dwm-oomaya`. A small test fixture alignment or fallback will finalize this suite.
+   - Line 127 checks `$home/.config/dwm-oomaya/font.conf` in an isolated test harness when neither dir exists initially; `dwm-settings-font` now defaults to `dwm-oomaya`. A small test fixture alignment or fallback will finalize this suite.
 3. **Documentation Alignment**:
    - `README.md` keybindings table should reflect `Super + E` (File Manager), `Super + Ctrl + E` (Hide Window), and `Print` keys, with a clear section on bare-server prerequisites.
 

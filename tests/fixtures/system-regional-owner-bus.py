@@ -161,7 +161,7 @@ try:
             ("denied", "timezone-set", "Etc/UTC"), ("stale", "timezone-set", "Etc/UTC"),
             ("ambiguous", "timezone-set", "Etc/UTC"), ("lost-output", "timezone-set", "Etc/UTC")):
         with tempfile.TemporaryDirectory() as directory:
-            journal_path = pathlib.Path(directory) / "state/dwm-titus/system-management"
+            journal_path = pathlib.Path(directory) / "state/dwm-oomaya/system-management"
             environment = dict(os.environ, XDG_STATE_HOME=str(pathlib.Path(directory) / "state"))
             zone, ntp, locale = "UTC", False, ["LANG=POSIX", "LC_TIME=POSIX"]
             calls.clear()

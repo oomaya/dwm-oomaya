@@ -30,7 +30,7 @@ else
 	fi
 fi
 
-work=$(mktemp -d "$test_root/dwm-titus-tests.XXXXXX")
+work=$(mktemp -d "$test_root/dwm-oomaya-tests.XXXXXX")
 # shellcheck disable=SC2329
 cleanup() {
 	local status=$?

@@ -324,25 +324,25 @@ if command -v Xvfb >/dev/null 2>&1 && [ -x "$repo/dwm" ]; then
 	runtime_home=$work/runtime-home
 	runtime_data_home=$runtime_home/.local/share
 	runtime_config_home=$runtime_home/.config
-	mkdir -p "$runtime_data_home/dwm-titus/scripts" \
-		"$runtime_data_home/dwm-titus/config"
+	mkdir -p "$runtime_data_home/dwm-oomaya/scripts" \
+		"$runtime_data_home/dwm-oomaya/config"
 	cp "$repo/config/hotkeys.toml" "$repo/config/themes.toml" \
-		"$repo/config/window-rules.toml" "$runtime_data_home/dwm-titus/config/"
-	cat >"$runtime_data_home/dwm-titus/scripts/autostart.sh" <<'SH'
+		"$repo/config/window-rules.toml" "$runtime_data_home/dwm-oomaya/config/"
+	cat >"$runtime_data_home/dwm-oomaya/scripts/autostart.sh" <<'SH'
 #!/bin/sh
 exit 0
 SH
-	cat >"$runtime_data_home/dwm-titus/scripts/autostop.sh" <<'SH'
+	cat >"$runtime_data_home/dwm-oomaya/scripts/autostop.sh" <<'SH'
 #!/bin/sh
 : >"${DWM_SESSION_TEST_AUTOSTOP_MARKER:?}"
 SH
-	cat >"$runtime_data_home/dwm-titus/scripts/theme-apply.sh" <<'SH'
+	cat >"$runtime_data_home/dwm-oomaya/scripts/theme-apply.sh" <<'SH'
 #!/bin/sh
 printf x >>"${DWM_SESSION_TEST_THEME_APPLY_MARKER:?}"
 printf '%s\n%s\n' "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" \
 	>"${DWM_SESSION_TEST_THEME_ENV_MARKER:?}"
 SH
-	chmod +x "$runtime_data_home/dwm-titus/scripts/"*.sh
+	chmod +x "$runtime_data_home/dwm-oomaya/scripts/"*.sh
 
 	Xvfb "$runtime_display" -screen 0 800x600x24 -nolisten tcp \
 		>"$work/xvfb.log" 2>&1 &
@@ -393,8 +393,8 @@ SH
 	grep -Fqx "$runtime_config_home" "$work/theme-env.marker"
 	grep -Fqx "$runtime_data_home" "$work/theme-env.marker"
 	initial_theme_applies=$(wc -c <"$work/theme-apply.marker")
-	mkdir -p "$runtime_config_home/dwm-titus"
-	cp "$repo/config/themes.toml" "$runtime_config_home/dwm-titus/themes.toml"
+	mkdir -p "$runtime_config_home/dwm-oomaya"
+	cp "$repo/config/themes.toml" "$runtime_config_home/dwm-oomaya/themes.toml"
 	kill -USR1 "$real_dwm_pid"
 	i=0
 	while [ "$(grep -Fc 'dwm: loaded theme from config' "$work/dwm.log" || true)" \
@@ -417,7 +417,7 @@ SH
 	done
 	first_user_theme_loads=$(grep -Fc 'dwm: loaded theme from config' "$work/dwm.log" || true)
 	first_user_theme_applies=$(wc -c <"$work/theme-apply.marker")
-	printf '\n' >>"$runtime_config_home/dwm-titus/themes.toml"
+	printf '\n' >>"$runtime_config_home/dwm-oomaya/themes.toml"
 	i=0
 	while [ "$(grep -Fc 'dwm: loaded theme from config' "$work/dwm.log" || true)" \
 		-le "$first_user_theme_loads" ]; do

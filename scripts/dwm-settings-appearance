@@ -26,11 +26,8 @@ state_home=${XDG_STATE_HOME:-}
 [[ $data_home == /* ]] || data_home=${HOME:?HOME is required for XDG_DATA_HOME fallback}/.local/share
 [[ $state_home == /* ]] || state_home=${HOME:?HOME is required for XDG_STATE_HOME fallback}/.local/state
 dwm_cfg_name="dwm-oomaya"
-[[ -d $config_home/dwm-oomaya || ! -d $config_home/dwm-titus ]] || dwm_cfg_name="dwm-titus"
 dwm_data_name="dwm-oomaya"
-[[ -d $data_home/dwm-oomaya || ! -d $data_home/dwm-titus ]] || dwm_data_name="dwm-titus"
 dwm_state_name="dwm-oomaya"
-[[ -d $state_home/dwm-oomaya || ! -d $state_home/dwm-titus ]] || dwm_state_name="dwm-titus"
 
 config_dir=$config_home/$dwm_cfg_name
 themes_file=${DWM_APPEARANCE_THEMES_FILE:-$config_home/$dwm_cfg_name/themes.toml}
@@ -1360,7 +1357,6 @@ watch_inventory() {
 	add_inventory_watch_target "$config_home/gtk-3.0"
 	add_inventory_watch_target "$config_home/gtk-4.0"
 	add_inventory_watch_target "$config_home/$dwm_cfg_name"
-	[[ $dwm_cfg_name == "dwm-titus" ]] || add_inventory_watch_target "$config_home/dwm-titus"
 	add_inventory_watch_target "$state_home/$dwm_state_name/appearance/wallpaper"
 	while IFS= read -r root; do
 		inventory_icon_roots+=("$root/icons")
@@ -1606,7 +1602,7 @@ decode_theme_environment_value() {
 }
 
 parse_theme_environment() {
-	local env_file=$config_home/dwm-titus/theme-env.sh line value
+	local env_file=$config_home/$dwm_cfg_name/theme-env.sh line value
 	local seen_qt=false seen_cursor=false seen_size=false
 	[[ -f $env_file && ! -L $env_file && -r $env_file &&
 		$(stat -c %u -- "$env_file") == "$UID" &&
@@ -1660,7 +1656,7 @@ theme_env_value() {
 }
 
 personalization_value() {
-	local key=$1 file=$config_home/dwm-titus/personalization.conf value
+	local key=$1 file=$config_home/$dwm_cfg_name/personalization.conf value
 	[[ -f $file && ! -L $file && -r $file && $(stat -c %u -- "$file") == "$UID" &&
 	$(stat -c %h -- "$file") == 1 &&
 	$(stat -c %s -- "$file") -le 4096 ]] || return 1
@@ -1711,7 +1707,7 @@ cursor_theme_applied() {
 	[[ -n $effective ]] || effective=${XCURSOR_THEME:-}
 	[[ -n $effective ]] || return 1
 	[[ $effective == "$expected" ]] || return 1
-	[[ -f $config_home/dwm-titus/cursor.Xresources ]] || return 1
+	[[ -f $config_home/$dwm_cfg_name/cursor.Xresources ]] || return 1
 	awk -F: -v expected="$expected" '
 		$1 == "Xcursor.theme" {
 			value = substr($0, index($0, ":") + 1)
@@ -1720,7 +1716,7 @@ cursor_theme_applied() {
 			exit
 		}
 		END { exit(found ? 0 : 1) }
-	' "$config_home/dwm-titus/cursor.Xresources" || return 1
+	' "$config_home/$dwm_cfg_name/cursor.Xresources" || return 1
 	for version in 3.0 4.0; do
 		file=$config_home/gtk-$version/settings.ini
 		[[ -f $file ]] &&

@@ -8,11 +8,11 @@ legacy_wants="$systemd_user_dir/default.target.wants/dwm-graphical-session.servi
 renamed_wants="$systemd_user_dir/default.target.wants/wm-graphical-session.service"
 
 info() {
-	printf '%s\n' "dwm-titus: $*"
+	printf '%s\n' "dwm-oomaya: $*"
 }
 
 warn() {
-	printf '%s\n' "dwm-titus: warning: $*" >&2
+	printf '%s\n' "dwm-oomaya: warning: $*" >&2
 }
 
 legacy_unit_is_managed() {

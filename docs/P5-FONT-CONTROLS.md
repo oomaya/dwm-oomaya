@@ -10,7 +10,7 @@ external application configuration.
 ## Contract
 
 `dwm-settings-font` owns only
-`${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus/font.conf`. The version 1.0 file
+`${XDG_CONFIG_HOME:-$HOME/.config}/dwm-oomaya/font.conf`. The version 1.0 file
 contains one exact Fontconfig family and one of `0.80`, `0.90`, `1.00`, `1.10`,
 `1.25`, or `1.50`. Missing or malformed state keeps the previous shell
 contract: MesloLGS Nerd Font Mono at 100 percent.

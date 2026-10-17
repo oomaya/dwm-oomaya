@@ -7,7 +7,7 @@ if [ ! -f "$config" ]; then
 	config=${XDG_DATA_HOME:-$HOME/.local/share}/dwm-oomaya/config/quickshell/shell.qml
 fi
 if [ ! -f "$config" ]; then
-	config=${XDG_DATA_HOME:-$HOME/.local/share}/dwm-titus/config/quickshell/shell.qml
+	config=${XDG_DATA_HOME:-$HOME/.local/share}/dwm-oomaya/config/quickshell/shell.qml
 fi
 
 action=${1:-}

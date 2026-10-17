@@ -11,7 +11,7 @@ owner of delivery, popup state, history, and the existing
 ## Ownership and State
 
 The user-owned policy file is
-`${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus/notification-settings.json`.
+`${XDG_CONFIG_HOME:-$HOME/.config}/dwm-oomaya/notification-settings.json`.
 Version 1 stores only a boolean Do Not Disturb value and a duration of 4,000,
 6,000, or 10,000 milliseconds. Missing state creates the prior defaults: Do
 Not Disturb off and an ordinary duration of 6,000 milliseconds.

@@ -8,10 +8,10 @@ I have investigated all four identified issues across the `dwm-oomaya` source co
 
 Address four specific operational and visual issues in the `dwm-oomaya` environment:
 1. **Keybinding Conflict (`Super + H`)**: `Super + H` currently spawns `dmenu-hub`, overshadowing `setmfact` (`-0.05`), preventing the user from shrinking the master column width. Resolve by remapping `dmenu-hub` to `Super + Shift + H` and adjusting conflicting `cfact` bindings.
-2. **Topbar Logo**: The Quickshell topbar (`LogoButton.qml`) still displays the `dwm-titus` logo (`ctt_logo.png` / "CTT"). Replace it with the official `dwm-oomaya` logo and badge.
+2. **Topbar Logo**: The Quickshell topbar (`LogoButton.qml`) still displays the `dwm-oomaya` logo (`ctt_logo.png` / "CTT"). Replace it with the official `dwm-oomaya` logo and badge.
 3. **Tab Mode (`Super + Ctrl + W`)**: `tabmode` in `dwm.c` is currently an empty stub that increments `selmon->showtab`, but lacks the underlying window creation, tab rendering (`drawtab`), geometry adjustment (`updatebarpos`), and mouse event routing. Fully implement the native suckless tab bar engine.
 4. **GTK / Qt Theming**: GTK and Qt apps ignore the system theme due to:
-   - Configuration path mismatch (`theme-apply.sh` reading `~/.config/dwm-titus/themes.toml` instead of `~/.config/dwm-oomaya/themes.toml`).
+   - Configuration path mismatch (`theme-apply.sh` reading `~/.config/dwm-oomaya/themes.toml` instead of `~/.config/dwm-oomaya/themes.toml`).
    - Invalid GTK fallback (`Adwaita-dark` instead of the installed `adw-gtk3-dark`), causing GTK3 to fall back to a bright white background.
    - Stopped `xsettingsd` daemon and missing `Net/ThemeName` in `xsettingsd.conf`.
    - Missing `qt6ct.conf` / `qt5ct.conf` files, causing Qt apps to render with unthemed light defaults.
@@ -203,16 +203,16 @@ flowchart TD
 
 #### [MODIFY] [`scripts/theme-apply.sh`](file:///home/rand/.local/src/dwm-oomaya/scripts/theme-apply.sh)
 1. **Dynamic Config Path Resolution**:
-   Support `$config_home/dwm-oomaya` first before `$config_home/dwm-titus`:
+   Support `$config_home/dwm-oomaya` first before `$config_home/dwm-oomaya`:
    ```bash
    config_home=${XDG_CONFIG_HOME:-$HOME/.config}
    data_home=${XDG_DATA_HOME:-$HOME/.local/share}
    state_home=${XDG_STATE_HOME:-$HOME/.local/state}
 
    dwm_config_dir=$config_home/dwm-oomaya
-   [ -d "$dwm_config_dir" ] || dwm_config_dir=$config_home/dwm-titus
+   [ -d "$dwm_config_dir" ] || dwm_config_dir=$config_home/dwm-oomaya
    managed_config_dir=$data_home/dwm-oomaya/config
-   [ -d "$managed_config_dir" ] || managed_config_dir=$data_home/dwm-titus/config
+   [ -d "$managed_config_dir" ] || managed_config_dir=$data_home/dwm-oomaya/config
 
    THEMES_FILE="${DWM_APPEARANCE_THEMES_FILE:-$dwm_config_dir/themes.toml}"
    MANAGED_THEMES_FILE="${DWM_APPEARANCE_MANAGED_THEMES_FILE:-$managed_config_dir/themes.toml}"

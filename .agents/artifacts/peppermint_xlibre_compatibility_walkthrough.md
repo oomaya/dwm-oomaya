@@ -2,7 +2,7 @@
 
 ## Summary of Accomplishments
 
-We have achieved complete, zero-friction support for **Peppermint OS** and **Xlibre X11**, eliminated hard dependencies on Quickshell, established an uncrowded native topbar status indicator, delivered a unified native `dwm-settings-hub` that directly reuses mature `dwm-titus` backend tools, and resolved the window switcher and settings hub issues.
+We have achieved complete, zero-friction support for **Peppermint OS** and **Xlibre X11**, eliminated hard dependencies on Quickshell, established an uncrowded native topbar status indicator, delivered a unified native `dwm-settings-hub` that directly reuses mature `dwm-oomaya` backend tools, and resolved the window switcher and settings hub issues.
 
 ---
 

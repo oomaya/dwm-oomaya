@@ -1,4 +1,4 @@
-# dwm-titus Patch Ownership and Invariants
+# dwm-oomaya Patch Ownership and Invariants
 
 This document records the major patched subsystems in `dwm.c` before Phase 4
 refactoring. "Owner" means the source area that owns the behavior and must stay
@@ -139,7 +139,7 @@ and rule state in `dwm.c` plus `tomlparser.c`.
 Invariants:
 
 - User runtime files live under
-  `${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus/`.
+  `${XDG_CONFIG_HOME:-$HOME/.config}/dwm-oomaya/`.
 - `hotkeys.toml`, `themes.toml`, and `window-rules.toml` reload independently
   when changed.
 - A failed reload must report the invalid file and keep the last valid runtime

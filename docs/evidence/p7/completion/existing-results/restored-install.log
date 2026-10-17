@@ -1,6 +1,6 @@
 
 ╔═══════════════════════════════════════════╗
-║             dwm-titus Installer           ║
+║             dwm-oomaya Installer           ║
 ╚═══════════════════════════════════════════╝
 
 [0;36m[INFO][0m Distribution: Fedora Linux 44 (Server Edition)
@@ -21,7 +21,7 @@ Installation summary:
   Terminal candidates: alacritty kitty
   Herdr workspace: skipped (optional; use --install-herdr to enable)
 
-Preserving existing /home/p7tester/dwm-titus-restored.NECaxi/config.h
+Preserving existing /home/p7tester/dwm-oomaya-restored.NECaxi/config.h
 [0;36m[INFO][0m Installing required build and runtime dependencies...
 Updating and loading repositories:
 Repositories loaded.
@@ -177,22 +177,22 @@ Nothing to do.
 [0;32m[OK][0m Preferred terminal already installed: alacritty
 [0;32m[OK][0m Display manager already installed: lightdm
 [0;36m[INFO][0m Deploying LightDM Slick Greeter config...
-make: Entering directory '/home/p7tester/dwm-titus-restored.NECaxi/lightdm'
+make: Entering directory '/home/p7tester/dwm-oomaya-restored.NECaxi/lightdm'
 tmp=$(mktemp); \
 trap 'rm -f "$tmp"' EXIT; \
 make --no-print-directory print-config >"$tmp"; \
 if [ -f /etc/lightdm/lightdm.conf ] && ! cmp -s "$tmp" /etc/lightdm/lightdm.conf; then \
-	cp -a /etc/lightdm/lightdm.conf /etc/lightdm/lightdm.conf.dwm-titus.$(date +%Y%m%d%H%M%S).bak; \
+	cp -a /etc/lightdm/lightdm.conf /etc/lightdm/lightdm.conf.dwm-oomaya.$(date +%Y%m%d%H%M%S).bak; \
 fi; \
 install -Dm644 "$tmp"                           /etc/lightdm/lightdm.conf
 install -Dm644 slick-greeter.conf                /etc/lightdm/slick-greeter.conf
-install -Dm644 wallpaper.jpg                     /usr/share/pixmaps/dwm-titus.jpg
-install -Dm644 ../dwm-titus.png                  /usr/share/pixmaps/dwm-titus-logo.png
-make: Leaving directory '/home/p7tester/dwm-titus-restored.NECaxi/lightdm'
+install -Dm644 wallpaper.jpg                     /usr/share/pixmaps/dwm-oomaya.jpg
+install -Dm644 ../dwm-oomaya.png                  /usr/share/pixmaps/dwm-oomaya-logo.png
+make: Leaving directory '/home/p7tester/dwm-oomaya-restored.NECaxi/lightdm'
 [0;32m[OK][0m LightDM config deployed.
-make[1]: Entering directory '/home/p7tester/dwm-titus-restored.NECaxi'
+make[1]: Entering directory '/home/p7tester/dwm-oomaya-restored.NECaxi'
 ==> Installing Capitaine cursor themes...
-make[1]: Leaving directory '/home/p7tester/dwm-titus-restored.NECaxi'
+make[1]: Leaving directory '/home/p7tester/dwm-oomaya-restored.NECaxi'
 
 ==> Installing system files...
 ==> Installing scripts to PATH...
@@ -223,7 +223,7 @@ make[1]: Leaving directory '/home/p7tester/dwm-titus-restored.NECaxi'
 ╚═══════════════════════════════════════════╝
 
 [0;36m[INFO][0m Detected: Fedora Linux 44 (Server Edition)
-  • Build configuration: /home/p7tester/dwm-titus-restored.NECaxi/config.h
+  • Build configuration: /home/p7tester/dwm-oomaya-restored.NECaxi/config.h
   • Reconfigure by removing config.h and running the installer again
   • Display setup: dwm-display-setup
   • Log out and select 'dwm', or start with: startx

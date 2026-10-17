@@ -25,7 +25,7 @@ Below is the refined technical diagnosis, answers to your questions on `sudo mak
   Icon=dwm
   Type=Application
   ```
-- When installed to `/usr/share/xsessions/dwm.desktop`, LightDM's session menu and greeter will display **"Dynamic window manager (dwm-oomaya)"** instead of `"dwm-titus"`.
+- When installed to `/usr/share/xsessions/dwm.desktop`, LightDM's session menu and greeter will display **"Dynamic window manager (dwm-oomaya)"** instead of `"dwm-oomaya"`.
 
 ---
 

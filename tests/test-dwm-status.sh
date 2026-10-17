@@ -142,10 +142,6 @@ display_key=$(printf '%s' :199 | sha256sum | awk '{ print $1 }')
 identity_file=$work/runtime/dwm-oomaya/dwm-status.$display_key.identity
 for _ in 1 2 3 4 5 6 7 8 9 10; do
 	[ -s "$identity_file" ] && break
-	if [ -s "$work/runtime/dwm-titus/dwm-status.$display_key.identity" ]; then
-		identity_file=$work/runtime/dwm-titus/dwm-status.$display_key.identity
-		break
-	fi
 	sleep 0.02
 done
 [ "$(cat "$identity_file")" = "$status_runner:$(awk '{ line = $0; sub(/^.*\) /, "", line); split(line, fields, " "); print fields[20] }' "/proc/$status_runner/stat")" ]

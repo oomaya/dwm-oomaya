@@ -3,7 +3,7 @@ set -euo pipefail
 
 usage() {
 	cat <<'EOF'
-Usage: scripts/dwm-titus-release [options]
+Usage: scripts/dwm-oomaya-release [options]
 
 Create a GitHub release for the current config.mk VERSION, then bump config.mk
 to the next minor version.
@@ -21,7 +21,7 @@ EOF
 }
 
 err() {
-	printf 'dwm-titus-release: %s\n' "$*" >&2
+	printf 'dwm-oomaya-release: %s\n' "$*" >&2
 }
 
 run() {
@@ -59,7 +59,7 @@ expand_user_path() {
 prompt_for_iso() {
 	local fallback answer
 
-	fallback="$HOME/Downloads/dwm-titus.iso"
+	fallback="$HOME/Downloads/dwm-oomaya.iso"
 	if [[ ! -t 0 ]]; then
 		err "ISO not found at $default_iso_path; continuing without ISO upload. Use --iso PATH to upload one."
 		return 0
@@ -67,10 +67,10 @@ prompt_for_iso() {
 
 	if [[ -f $fallback ]]; then
 		printf 'ISO not found at %s.\n' "$default_iso_path" >&2
-		printf 'Path to dwm-titus.iso [%s]: ' "$fallback" >&2
+		printf 'Path to dwm-oomaya.iso [%s]: ' "$fallback" >&2
 	else
 		printf 'ISO not found at %s.\n' "$default_iso_path" >&2
-		printf 'Path to dwm-titus.iso (leave blank to skip ISO upload): ' >&2
+		printf 'Path to dwm-oomaya.iso (leave blank to skip ISO upload): ' >&2
 	fi
 	IFS= read -r answer
 
@@ -83,7 +83,7 @@ prompt_for_iso() {
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 config_mk="$repo_root/config.mk"
-default_iso_path="$repo_root/dwm-titus.iso"
+default_iso_path="$repo_root/dwm-oomaya.iso"
 release_version=
 iso_path=
 notes_file=
@@ -176,18 +176,23 @@ fi
 release_version=${release_version:-$current_version}
 release_version=${release_version#v}
 
-if [[ ! $release_version =~ ^[0-9]+(\.[0-9]+){1,2}$ ]]; then
+if [[ ! $release_version =~ ^[0-9]+(\.[0-9]+){1,2}(-[a-zA-Z0-9.]+)?$ ]]; then
 	err "version must look like MAJOR.MINOR or MAJOR.MINOR.PATCH: $release_version"
 	exit 1
 fi
 
-IFS=. read -r major minor patch <<<"$release_version"
+suffix=
+if [[ $release_version =~ -.* ]]; then
+	suffix="-${release_version#*-}"
+fi
+clean_version=${release_version%%-*}
+IFS=. read -r major minor patch <<<"$clean_version"
 patch=${patch:-0}
-release_version="$major.$minor.$patch"
+release_version="$major.$minor.$patch$suffix"
 tag="v$release_version"
 next_version="$major.$((minor + 1)).0"
-release_archive="$repo_root/release/dwm-titus-$release_version.tar.gz"
-checksums="$repo_root/release/dwm-titus-$release_version-SHA256SUMS"
+release_archive="$repo_root/release/dwm-oomaya-$release_version.tar.gz"
+checksums="$repo_root/release/dwm-oomaya-$release_version-SHA256SUMS"
 
 if [[ $release_version != "$current_version" ]]; then
 	err "requested version $release_version does not match committed config.mk VERSION $current_version"
@@ -283,11 +288,11 @@ fi
 if [[ $release_exists == true ]]; then
 	run gh release upload "$tag" "${assets[@]}" --clobber
 else
-	gh_args=(release create "$tag" "${assets[@]}" --title "dwm-titus $tag" --verify-tag)
+	gh_args=(release create "$tag" "${assets[@]}" --title "dwm-oomaya $tag" --verify-tag)
 	if [[ -n $notes_file ]]; then
 		gh_args+=(--notes-file "$notes_file")
 	else
-		gh_args+=(--notes "dwm-titus $tag release.")
+		gh_args+=(--notes "dwm-oomaya $tag release.")
 	fi
 	run gh "${gh_args[@]}"
 fi

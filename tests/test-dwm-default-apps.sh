@@ -20,7 +20,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-mkdir -p "$work/bin" "$work/fail-bin" "$work/data/applications/vendor" "$work/home/.config/dwm-titus" \
+mkdir -p "$work/bin" "$work/fail-bin" "$work/data/applications/vendor" "$work/home/.config/dwm-oomaya" \
 	"$work/home/.local/state" "$work/empty"
 
 cat >"$work/fail-bin/mv" <<'SCRIPT'
@@ -338,7 +338,7 @@ application/x-unrelated=other.desktop;
 EOF
 chmod 640 "$work/home/.config/mimeapps.list"
 
-cat >"$work/home/.config/dwm-titus/hotkeys.toml" <<'EOF'
+cat >"$work/home/.config/dwm-oomaya/hotkeys.toml" <<'EOF'
 [vars]
 terminal = "alacritty"
 webapp = "webapp-launch"
@@ -349,7 +349,7 @@ keys = [
   { mod="SUPER", key="e", desc="File manager", func="spawn", cmd="xdg-open ." },
 ]
 EOF
-chmod 640 "$work/home/.config/dwm-titus/hotkeys.toml"
+chmod 640 "$work/home/.config/dwm-oomaya/hotkeys.toml"
 
 env_common=(
 	DWM_TEST_STATE="$work"
@@ -367,7 +367,7 @@ run_helper() {
 
 recovery_backup_path() {
 	local scope=$1
-	local state_dir=$work/home/.local/state/dwm-titus/default-apps
+	local state_dir=$work/home/.local/state/dwm-oomaya/default-apps
 	local name
 	name=$(awk -F= '$1 == "before_file" { print substr($0, 13); exit }' \
 		"$state_dir/$scope.meta")
@@ -491,7 +491,7 @@ if grep -Fq 'xdg-settings set' "$work/settings-log"; then
 fi
 grep -Fqx 'application/x-unrelated=keep.desktop' "$work/home/.config/mimeapps.list"
 
-defaults_state=$work/home/.local/state/dwm-titus/default-apps
+defaults_state=$work/home/.local/state/dwm-oomaya/default-apps
 browser_meta=$defaults_state/role-browser.meta
 browser_before=$(recovery_backup_path role-browser)
 browser_post=$(sha256sum "$work/home/.config/mimeapps.list")
@@ -637,102 +637,102 @@ expect_status 1 env "${env_common[@]}" XDG_STATE_HOME="$work/state-parent-link" 
 [[ ! -s $work/log ]]
 rm "$work/state-parent-link"
 
-hotkeys_before=$(sha256sum "$work/home/.config/dwm-titus/hotkeys.toml")
+hotkeys_before=$(sha256sum "$work/home/.config/dwm-oomaya/hotkeys.toml")
 hotkeys_without_terminal_before=$(sed '/^[[:space:]]*terminal[[:space:]]*=/d' \
-	"$work/home/.config/dwm-titus/hotkeys.toml" | sha256sum)
+	"$work/home/.config/dwm-oomaya/hotkeys.toml" | sha256sum)
 result=$(run_helper set-role terminal kitty.desktop)
 [[ $result == $'defaults-result\t1\t0\tset-role\tterminal\tkitty.desktop\tok' ]]
-grep -Fqx 'terminal = "kitty"' "$work/home/.config/dwm-titus/hotkeys.toml"
-[[ $(stat -c %a "$work/home/.config/dwm-titus/hotkeys.toml") == 640 ]]
-[[ $(sed '/^[[:space:]]*terminal[[:space:]]*=/d' "$work/home/.config/dwm-titus/hotkeys.toml" | sha256sum) == "$hotkeys_without_terminal_before" ]]
+grep -Fqx 'terminal = "kitty"' "$work/home/.config/dwm-oomaya/hotkeys.toml"
+[[ $(stat -c %a "$work/home/.config/dwm-oomaya/hotkeys.toml") == 640 ]]
+[[ $(sed '/^[[:space:]]*terminal[[:space:]]*=/d' "$work/home/.config/dwm-oomaya/hotkeys.toml" | sha256sum) == "$hotkeys_without_terminal_before" ]]
 result=$(run_helper reset-role terminal)
 [[ $result == $'defaults-result\t1\t0\treset-role\tterminal\t\tok' ]]
-[[ $(sha256sum "$work/home/.config/dwm-titus/hotkeys.toml") == "$hotkeys_before" ]]
+[[ $(sha256sum "$work/home/.config/dwm-oomaya/hotkeys.toml") == "$hotkeys_before" ]]
 
 sed -i 's/terminal = "alacritty"/  terminal = "alacritty"  # preserve terminal choice/' \
-	"$work/home/.config/dwm-titus/hotkeys.toml"
-commented_hotkeys_before=$(sha256sum "$work/home/.config/dwm-titus/hotkeys.toml")
+	"$work/home/.config/dwm-oomaya/hotkeys.toml"
+commented_hotkeys_before=$(sha256sum "$work/home/.config/dwm-oomaya/hotkeys.toml")
 snapshot=$(run_helper snapshot)
 grep -Fqx $'role\tterminal\tavailable\tAlacritty.desktop\tAlacritty\thotkeys.toml\tTerminal hotkey selection is readable' <<<"$snapshot"
 result=$(run_helper set-role terminal kitty.desktop)
 [[ $result == $'defaults-result\t1\t0\tset-role\tterminal\tkitty.desktop\tok' ]]
 grep -Fqx '  terminal = "kitty"  # preserve terminal choice' \
-	"$work/home/.config/dwm-titus/hotkeys.toml"
+	"$work/home/.config/dwm-oomaya/hotkeys.toml"
 result=$(run_helper reset-role terminal)
 [[ $result == $'defaults-result\t1\t0\treset-role\tterminal\t\tok' ]]
-[[ $(sha256sum "$work/home/.config/dwm-titus/hotkeys.toml") == "$commented_hotkeys_before" ]]
+[[ $(sha256sum "$work/home/.config/dwm-oomaya/hotkeys.toml") == "$commented_hotkeys_before" ]]
 
-cp "$work/home/.config/dwm-titus/hotkeys.toml" "$work/hotkeys.valid-comment"
+cp "$work/home/.config/dwm-oomaya/hotkeys.toml" "$work/hotkeys.valid-comment"
 sed -i 's/  terminal = .*/terminal = "alacritty" trailing = "injection" # invalid/' \
-	"$work/home/.config/dwm-titus/hotkeys.toml"
-malformed_hotkeys_before=$(sha256sum "$work/home/.config/dwm-titus/hotkeys.toml")
+	"$work/home/.config/dwm-oomaya/hotkeys.toml"
+malformed_hotkeys_before=$(sha256sum "$work/home/.config/dwm-oomaya/hotkeys.toml")
 snapshot=$(run_helper snapshot)
 grep -Fq $'role\tterminal\trestricted\t\t\thotkeys.toml\t' <<<"$snapshot"
 expect_status 1 run_helper set-role terminal kitty.desktop
-[[ $(sha256sum "$work/home/.config/dwm-titus/hotkeys.toml") == "$malformed_hotkeys_before" ]]
-cp "$work/hotkeys.valid-comment" "$work/home/.config/dwm-titus/hotkeys.toml"
+[[ $(sha256sum "$work/home/.config/dwm-oomaya/hotkeys.toml") == "$malformed_hotkeys_before" ]]
+cp "$work/hotkeys.valid-comment" "$work/home/.config/dwm-oomaya/hotkeys.toml"
 sed -i 's/  terminal = .*/terminal = "alacritty # unterminated/' \
-	"$work/home/.config/dwm-titus/hotkeys.toml"
-unterminated_hotkeys_before=$(sha256sum "$work/home/.config/dwm-titus/hotkeys.toml")
+	"$work/home/.config/dwm-oomaya/hotkeys.toml"
+unterminated_hotkeys_before=$(sha256sum "$work/home/.config/dwm-oomaya/hotkeys.toml")
 snapshot=$(run_helper snapshot)
 grep -Fq $'role\tterminal\trestricted\t\t\thotkeys.toml\t' <<<"$snapshot"
 expect_status 1 run_helper set-role terminal kitty.desktop
-[[ $(sha256sum "$work/home/.config/dwm-titus/hotkeys.toml") == "$unterminated_hotkeys_before" ]]
-cp "$work/hotkeys.valid-comment" "$work/home/.config/dwm-titus/hotkeys.toml"
+[[ $(sha256sum "$work/home/.config/dwm-oomaya/hotkeys.toml") == "$unterminated_hotkeys_before" ]]
+cp "$work/hotkeys.valid-comment" "$work/home/.config/dwm-oomaya/hotkeys.toml"
 sed -i '/terminal = /a terminal = "kitty" # duplicate' \
-	"$work/home/.config/dwm-titus/hotkeys.toml"
-duplicate_hotkeys_before=$(sha256sum "$work/home/.config/dwm-titus/hotkeys.toml")
+	"$work/home/.config/dwm-oomaya/hotkeys.toml"
+duplicate_hotkeys_before=$(sha256sum "$work/home/.config/dwm-oomaya/hotkeys.toml")
 snapshot=$(run_helper snapshot)
 grep -Fq $'role\tterminal\trestricted\t\t\thotkeys.toml\t' <<<"$snapshot"
 expect_status 1 run_helper set-role terminal kitty.desktop
-[[ $(sha256sum "$work/home/.config/dwm-titus/hotkeys.toml") == "$duplicate_hotkeys_before" ]]
-mv "$work/hotkeys.valid-comment" "$work/home/.config/dwm-titus/hotkeys.toml"
+[[ $(sha256sum "$work/home/.config/dwm-oomaya/hotkeys.toml") == "$duplicate_hotkeys_before" ]]
+mv "$work/hotkeys.valid-comment" "$work/home/.config/dwm-oomaya/hotkeys.toml"
 
 sed -i 's/terminal = "alacritty"/terminal = "st"/' \
-	"$work/home/.config/dwm-titus/hotkeys.toml"
+	"$work/home/.config/dwm-oomaya/hotkeys.toml"
 snapshot=$(run_helper snapshot)
 grep -Fqx $'role\tterminal\trestricted\t\t\thotkeys.toml\tCustom terminal command: st' <<<"$snapshot"
 sed -i 's/terminal = "st"/terminal = "alacritty"/' \
-	"$work/home/.config/dwm-titus/hotkeys.toml"
+	"$work/home/.config/dwm-oomaya/hotkeys.toml"
 
-cp "$work/home/.config/dwm-titus/hotkeys.toml" "$work/hotkeys.target"
-rm "$work/home/.config/dwm-titus/hotkeys.toml"
-ln -s "$work/hotkeys.target" "$work/home/.config/dwm-titus/hotkeys.toml"
+cp "$work/home/.config/dwm-oomaya/hotkeys.toml" "$work/hotkeys.target"
+rm "$work/home/.config/dwm-oomaya/hotkeys.toml"
+ln -s "$work/hotkeys.target" "$work/home/.config/dwm-oomaya/hotkeys.toml"
 snapshot=$(run_helper snapshot)
 grep -Fqx $'role\tterminal\trestricted\t\t\thotkeys.toml\tTerminal mutation is disabled because user hotkeys.toml is a symlink' <<<"$snapshot"
 grep -Fqx $'candidate\tterminal\tkitty.desktop\tkitty\trestricted\tkitty\tTerminal hotkeys target is not safely writable' <<<"$snapshot"
 expect_status 1 run_helper set-role terminal kitty.desktop
-rm "$work/home/.config/dwm-titus/hotkeys.toml"
-mv "$work/hotkeys.target" "$work/home/.config/dwm-titus/hotkeys.toml"
+rm "$work/home/.config/dwm-oomaya/hotkeys.toml"
+mv "$work/hotkeys.target" "$work/home/.config/dwm-oomaya/hotkeys.toml"
 
-mv "$work/home/.config/dwm-titus" "$work/hotkeys-parent-target"
-ln -s "$work/hotkeys-parent-target" "$work/home/.config/dwm-titus"
+mv "$work/home/.config/dwm-oomaya" "$work/hotkeys-parent-target"
+ln -s "$work/hotkeys-parent-target" "$work/home/.config/dwm-oomaya"
 hotkeys_parent_before=$(sha256sum "$work/hotkeys-parent-target/hotkeys.toml")
 snapshot=$(run_helper snapshot)
 grep -Fqx $'role\tterminal\trestricted\t\t\thotkeys.toml\tTerminal mutation is disabled because the hotkeys path contains a symlink' <<<"$snapshot"
 grep -Fqx $'candidate\tterminal\tkitty.desktop\tkitty\trestricted\tkitty\tTerminal hotkeys target is not safely writable' <<<"$snapshot"
 expect_status 1 run_helper set-role terminal kitty.desktop
 [[ $(sha256sum "$work/hotkeys-parent-target/hotkeys.toml") == "$hotkeys_parent_before" ]]
-rm "$work/home/.config/dwm-titus"
-mv "$work/hotkeys-parent-target" "$work/home/.config/dwm-titus"
+rm "$work/home/.config/dwm-oomaya"
+mv "$work/hotkeys-parent-target" "$work/home/.config/dwm-oomaya"
 
-mkdir -p "$work/home/.local/state/dwm-titus/default-apps/.lock"
+mkdir -p "$work/home/.local/state/dwm-oomaya/default-apps/.lock"
 expect_status 75 run_helper set-role terminal kitty.desktop
-rmdir "$work/home/.local/state/dwm-titus/default-apps/.lock"
+rmdir "$work/home/.local/state/dwm-oomaya/default-apps/.lock"
 
-mkdir -p "$work/home/.local/state/dwm-titus/default-apps/.lock"
-printf '999999 1\n' >"$work/home/.local/state/dwm-titus/default-apps/.lock/owner"
+mkdir -p "$work/home/.local/state/dwm-oomaya/default-apps/.lock"
+printf '999999 1\n' >"$work/home/.local/state/dwm-oomaya/default-apps/.lock/owner"
 result=$(run_helper set-role terminal kitty.desktop)
 [[ $result == $'defaults-result\t1\t0\tset-role\tterminal\tkitty.desktop\tok' ]]
 run_helper reset-role terminal >/dev/null
 
-mkdir -p "$work/home/.local/state/dwm-titus/default-apps/.lock"
+mkdir -p "$work/home/.local/state/dwm-oomaya/default-apps/.lock"
 shell_starttime=$(awk '{ print $22 }' "/proc/$$/stat")
 printf '%s %s\n' "$$" "$shell_starttime" \
-	>"$work/home/.local/state/dwm-titus/default-apps/.lock/owner"
+	>"$work/home/.local/state/dwm-oomaya/default-apps/.lock/owner"
 expect_status 75 run_helper set-role terminal kitty.desktop
-rm "$work/home/.local/state/dwm-titus/default-apps/.lock/owner"
-rmdir "$work/home/.local/state/dwm-titus/default-apps/.lock"
+rm "$work/home/.local/state/dwm-oomaya/default-apps/.lock/owner"
+rmdir "$work/home/.local/state/dwm-oomaya/default-apps/.lock"
 
 run_helper set-browser firefox.desktop >"$work/legacy-browser"
 grep -Fqx 'Default browser set to firefox.desktop' "$work/legacy-browser"
@@ -958,13 +958,13 @@ if command -v inotifywait >/dev/null 2>&1; then
 		sleep 0.02
 	done
 	grep -Fq mimeapps.list "$work/watch-absent.out"
-	mkdir "$absent_config/dwm-titus"
+	mkdir "$absent_config/dwm-oomaya"
 	config_root_child=
 	config_managed_child=
 	for _ in {1..100}; do
 		config_root_child=$(watch_child_for_path "$watch_pid" "$absent_config" 2>/dev/null || true)
 		config_managed_child=$(watch_child_for_path "$watch_pid" \
-			"$absent_config/dwm-titus" 2>/dev/null || true)
+			"$absent_config/dwm-oomaya" 2>/dev/null || true)
 		[[ -n $config_root_child && -n $config_managed_child &&
 			$config_root_child != "$third_child" ]] && break
 		sleep 0.02
@@ -981,7 +981,7 @@ if command -v inotifywait >/dev/null 2>&1; then
 	printf 'unrelated\n' >"$absent_config/browser/deep/file"
 	sleep 0.1
 	[[ $(stat -c %s "$work/watch-absent.out") -eq $steady_output_size ]]
-	printf '[vars]\nterminal = "alacritty"\n' >"$absent_config/dwm-titus/hotkeys.toml"
+	printf '[vars]\nterminal = "alacritty"\n' >"$absent_config/dwm-oomaya/hotkeys.toml"
 	for _ in {1..100}; do
 		grep -Fq hotkeys.toml "$work/watch-absent.out" 2>/dev/null && break
 		sleep 0.02
@@ -1007,15 +1007,15 @@ if command -v inotifywait >/dev/null 2>&1; then
 	done
 
 	raced_config=$work/watch-setup-race
-	mkdir -p "$raced_config/dwm-titus"
-	printf '[vars]\nterminal = "alacritty"\n' >"$raced_config/dwm-titus/hotkeys.toml"
+	mkdir -p "$raced_config/dwm-oomaya"
+	printf '[vars]\nterminal = "alacritty"\n' >"$raced_config/dwm-oomaya/hotkeys.toml"
 	setup_marker=$work/watch-setup-race.marker
 	setup_root_pid_file=$work/watch-setup-root.pid
 	env "${env_common[@]}" XDG_CONFIG_HOME="$raced_config" \
 		PATH="$work/fail-bin:$work/bin:/usr/bin:/bin" \
 		DWM_TEST_REAL_MV="$REAL_MV" \
 		DWM_TEST_REAL_INOTIFYWAIT="$REAL_INOTIFYWAIT" \
-		DWM_TEST_WATCH_SETUP_TARGET="$raced_config/dwm-titus" \
+		DWM_TEST_WATCH_SETUP_TARGET="$raced_config/dwm-oomaya" \
 		DWM_TEST_WATCH_SETUP_ROOT="$raced_config" \
 		DWM_TEST_WATCH_SETUP_ROOT_PID="$setup_root_pid_file" \
 		DWM_TEST_WATCH_SETUP_MARKER="$setup_marker" \
@@ -1042,16 +1042,16 @@ if command -v inotifywait >/dev/null 2>&1; then
 		printf 'Setup-race recovery watch was recursive\n' >&2
 		exit 1
 	fi
-	mkdir "$raced_config/dwm-titus"
+	mkdir "$raced_config/dwm-oomaya"
 	setup_managed_child=
 	for _ in {1..100}; do
 		setup_managed_child=$(watch_child_for_path "$watch_pid" \
-			"$raced_config/dwm-titus" 2>/dev/null || true)
+			"$raced_config/dwm-oomaya" 2>/dev/null || true)
 		[[ -n $setup_managed_child ]] && break
 		sleep 0.02
 	done
 	[[ -n $setup_managed_child ]]
-	printf '[vars]\nterminal = "kitty"\n' >"$raced_config/dwm-titus/hotkeys.toml"
+	printf '[vars]\nterminal = "kitty"\n' >"$raced_config/dwm-oomaya/hotkeys.toml"
 	for _ in {1..100}; do
 		grep -Fq hotkeys.toml "$work/watch-setup-race.out" 2>/dev/null && break
 		sleep 0.02

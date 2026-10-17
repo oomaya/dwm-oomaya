@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-config_path="${DWM_XORG_CONFIG:-/etc/X11/xorg.conf.d/90-dwm-titus-display.conf}"
+config_path="${DWM_XORG_CONFIG:-/etc/X11/xorg.conf.d/90-dwm-oomaya-display.conf}"
 main_config="${DWM_XORG_MAIN_CONFIG:-/etc/X11/xorg.conf}"
 drm_root="${DWM_DRM_SYSFS_ROOT:-/sys/class/drm}"
 tearfree_policy=auto
@@ -781,13 +781,13 @@ generate_config() {
 			xorg_driver=$(xorg_driver_for_kernel "$driver")
 			match_driver=$(xorg_match_driver_for_kernel "$driver")
 			printf '\nSection "OutputClass"\n'
-			printf '\tIdentifier "dwm-titus-display-map-%s"\n' "$driver"
+			printf '\tIdentifier "dwm-oomaya-display-map-%s"\n' "$driver"
 			printf '\tMatchDriver "%s"\n' "$match_driver"
 			printf '\tDriver "%s"\n' "$xorg_driver"
 			for index in "${!cfg_outputs[@]}"; do
 				[[ ${cfg_kernel_drivers[$index]} == "$driver" ]] || continue
 				output=${cfg_outputs[$index]}
-				identifier="dwm-titus-$output"
+				identifier="dwm-oomaya-$output"
 				printf '\tOption "Monitor-%s" "%s"\n' "$output" "$identifier"
 			done
 			if [[ $full_composition_pipeline_enabled == 1 ]] &&
@@ -808,13 +808,13 @@ generate_config() {
 			done
 			if ((${#tearfree_drivers[@]} == 0)); then
 				printf '\nSection "OutputClass"\n'
-				printf '\tIdentifier "dwm-titus-tearfree"\n'
+				printf '\tIdentifier "dwm-oomaya-tearfree"\n'
 				printf '\tOption "TearFree" "true"\n'
 				printf 'EndSection\n'
 			else
 				for driver in "${!tearfree_drivers[@]}"; do
 					printf '\nSection "OutputClass"\n'
-					printf '\tIdentifier "dwm-titus-tearfree-%s"\n' "$driver"
+					printf '\tIdentifier "dwm-oomaya-tearfree-%s"\n' "$driver"
 					printf '\tMatchDriver "%s"\n' "$driver"
 					printf '\tOption "TearFree" "true"\n'
 					printf 'EndSection\n'
@@ -824,7 +824,7 @@ generate_config() {
 
 		for index in "${!cfg_outputs[@]}"; do
 			output=${cfg_outputs[$index]}
-			identifier="dwm-titus-$output"
+			identifier="dwm-oomaya-$output"
 			printf '\nSection "Monitor"\n'
 			printf '\tIdentifier "%s"\n' "$identifier"
 			if [[ ${cfg_enabled[$index]} == 0 ]]; then
@@ -1445,17 +1445,17 @@ main() {
 			apply_loaded_profile false
 			;;
 		generate)
-			generated="$work/90-dwm-titus-display.conf"
+			generated="$work/90-dwm-oomaya-display.conf"
 			generate_config "$generated"
 			cat "$generated"
 			;;
 		preview)
-			generated="$work/90-dwm-titus-display.conf"
+			generated="$work/90-dwm-oomaya-display.conf"
 			generate_config "$generated"
 			preview_profile "$profile" "$generated"
 			;;
 		install)
-			generated="$work/90-dwm-titus-display.conf"
+			generated="$work/90-dwm-oomaya-display.conf"
 			generate_config "$generated"
 			if [[ $preview == true ]]; then
 				preview_profile "$profile" "$generated" || die "display preview was not accepted"
@@ -1469,7 +1469,7 @@ main() {
 		load_display_data
 		wizard_file="$work/wizard-profile.conf"
 		wizard_profile "$wizard_file"
-		generated="$work/90-dwm-titus-display.conf"
+		generated="$work/90-dwm-oomaya-display.conf"
 		generate_config "$generated"
 		if [[ $preview == true ]]; then
 			preview_profile "$wizard_file" "$generated" || die "display preview was not accepted"

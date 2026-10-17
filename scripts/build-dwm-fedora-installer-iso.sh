@@ -5,8 +5,8 @@ usage() {
 	cat <<'EOF'
 Usage: scripts/build-dwm-fedora-installer-iso.sh --input ISO --output ISO [--variant standard|nvidia] [--version X.Y.Z]
 
-Embed this checkout and a dwm-titus Kickstart into a Fedora installer ISO.
-The resulting ISO exposes the checkout at /run/install/repo/dwm-titus.
+Embed this checkout and a dwm-oomaya Kickstart into a Fedora installer ISO.
+The resulting ISO exposes the checkout at /run/install/repo/dwm-oomaya.
 EOF
 }
 
@@ -134,7 +134,7 @@ if [[ ! -f $ks_file ]]; then
 fi
 
 work_dir="$(mktemp -d)"
-payload_dir="$work_dir/dwm-titus"
+payload_dir="$work_dir/dwm-oomaya"
 output_dir="$(dirname "$output_iso")"
 output_base="$(basename "$output_iso")"
 tmp_output="$(mktemp "$output_dir/.$output_base.tmp.XXXXXX")"
@@ -211,7 +211,7 @@ xorriso -indev "$input_iso" -outdev "$tmp_output" \
 	-boot_image any replay \
 	-map "$ks_file" /dwm-fedora.ks \
 	"${grub_xorriso_args[@]}" \
-	-map "$payload_dir" /dwm-titus \
+	-map "$payload_dir" /dwm-oomaya \
 	"${extra_xorriso_args[@]}"
 
 # Rewriting the ISO drops the upstream media checksum. The default Fedora

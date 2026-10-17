@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # dwm-settings-hub — Unified native Suckless settings hub for dwm-oomaya
-# Reuses dwm-titus backend engines with pure dmenu / POSIX execution.
+# Reuses dwm-oomaya backend engines with pure dmenu / POSIX execution.
 set -euo pipefail
 
 PROMPT="⚙ Settings >"

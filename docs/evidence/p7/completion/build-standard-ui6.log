@@ -13,7 +13,7 @@ Media status : is written , is appendable
 Boot record  : El Torito , MBR protective-msdos-label grub2-mbr cyl-align-off GPT
 Media summary: 1 session, 599797 data blocks, 1171m data,  566g free
 Volume id    : 'Fedora-S-dvd-x86_64-44'
-Drive current: -outdev '/home/titus/tmp/dwm-p7-finish/.dwm-titus-standard-ui6.iso.tmp.YGIomL'
+Drive current: -outdev '/home/titus/tmp/dwm-p7-finish/.dwm-oomaya-standard-ui6.iso.tmp.YGIomL'
 Media current: stdio file, overwriteable
 Media status : is blank
 Media summary: 0 sessions, 0 data blocks, 0 data,  566g free
@@ -26,7 +26,7 @@ Added to ISO image: file '/EFI/BOOT/grub.cfg'='/home/titus/tmp/dwm-p7-finish/sta
 xorriso : UPDATE :       1 files added in 1 seconds
 Added to ISO image: file '/boot/grub2/grub.cfg'='/home/titus/tmp/dwm-p7-finish/staging/tmp.iEJ6jW2A3S/_boot_grub2_grub.cfg.patched'
 xorriso : UPDATE :     799 files added in 1 seconds
-Added to ISO image: directory '/dwm-titus'='/home/titus/tmp/dwm-p7-finish/staging/tmp.iEJ6jW2A3S/dwm-titus'
+Added to ISO image: directory '/dwm-oomaya'='/home/titus/tmp/dwm-p7-finish/staging/tmp.iEJ6jW2A3S/dwm-oomaya'
 xorriso : UPDATE :       1 files added in 1 seconds
 Added to ISO image: file '/images/product.img'='/home/titus/tmp/dwm-p7-finish/staging/tmp.iEJ6jW2A3S/product.img'
 xorriso : NOTE : Copying to System Area: 32768 bytes from file '--interval:imported_iso:0s-15s:zero_mbrpt,zero_gpt:/home/titus/tmp/dwm-p7-20260910/media/Fedora-Server-netinst-x86_64-44-1.7.iso'
@@ -37,7 +37,7 @@ xorriso : UPDATE : Writing:     415535s   67.9%   fifo   0%  buf  50%  216.0xD
 xorriso : UPDATE : Writing:     581632s   95.1%   fifo  21%  buf  50%  245.4xD
 ISO image produced: 611675 sectors
 Written to medium : 611856 sectors at LBA 48
-Writing to '/home/titus/tmp/dwm-p7-finish/.dwm-titus-standard-ui6.iso.tmp.YGIomL' completed successfully.
+Writing to '/home/titus/tmp/dwm-p7-finish/.dwm-oomaya-standard-ui6.iso.tmp.YGIomL' completed successfully.
 
 Inserting md5sum into iso image...
 md5 = 5ae82a7f3fa85416d49a3404b47c1a68
@@ -50,4 +50,4 @@ The media check is complete, the result is: PASS.
 
 It is OK to use this media.
 Press [Esc] to abort check.
-Created /home/titus/tmp/dwm-p7-finish/dwm-titus-standard-ui6.iso (standard)
+Created /home/titus/tmp/dwm-p7-finish/dwm-oomaya-standard-ui6.iso (standard)

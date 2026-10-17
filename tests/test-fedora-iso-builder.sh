@@ -66,7 +66,7 @@ while (($# > 0)); do
 		/dwm-fedora.ks) ks_map=${2:-} ;;
 		/EFI/BOOT/grub.cfg) grub_map=${2:-} ;;
 		/boot/grub2/grub.cfg) bios_grub_map=${2:-} ;;
-		/dwm-titus) payload_map=${2:-} ;;
+		/dwm-oomaya) payload_map=${2:-} ;;
 		/images/product.img) product_map=${2:-} ;;
 		esac
 		shift 3
@@ -128,8 +128,8 @@ SH
 chmod +x "$work/bin/implantisomd5" "$work/bin/checkisomd5"
 
 input_iso="$work/Fedora-Server-netinst.iso"
-standard_iso="$work/dwm-titus.iso"
-nvidia_iso="$work/dwm-titus-nvidia.iso"
+standard_iso="$work/dwm-oomaya.iso"
+nvidia_iso="$work/dwm-oomaya-nvidia.iso"
 touch "$input_iso"
 
 run_builder() {
@@ -241,7 +241,7 @@ for failure in implant check; do
 	[[ $failure != check ]] || expected_status=42
 	[[ $status == "$expected_status" ]]
 	[[ $(cat "$standard_iso") == 'previous image' ]]
-	if compgen -G "$work/.dwm-titus.iso.tmp.*" >/dev/null; then
+	if compgen -G "$work/.dwm-oomaya.iso.tmp.*" >/dev/null; then
 		printf 'failed media check left a temporary output\n' >&2
 		exit 1
 	fi

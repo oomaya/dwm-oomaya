@@ -1,6 +1,6 @@
 
 ╔═══════════════════════════════════════════╗
-║             dwm-titus Installer           ║
+║             dwm-oomaya Installer           ║
 ╚═══════════════════════════════════════════╝
 
 [0;36m[INFO][0m Distribution: Fedora Linux 44 (Server Edition)
@@ -1411,12 +1411,12 @@ tmp=$(mktemp); \
 trap 'rm -f "$tmp"' EXIT; \
 make --no-print-directory print-config >"$tmp"; \
 if [ -f /etc/lightdm/lightdm.conf ] && ! cmp -s "$tmp" /etc/lightdm/lightdm.conf; then \
-	cp -a /etc/lightdm/lightdm.conf /etc/lightdm/lightdm.conf.dwm-titus.$(date +%Y%m%d%H%M%S).bak; \
+	cp -a /etc/lightdm/lightdm.conf /etc/lightdm/lightdm.conf.dwm-oomaya.$(date +%Y%m%d%H%M%S).bak; \
 fi; \
 install -Dm644 "$tmp"                           /etc/lightdm/lightdm.conf
 install -Dm644 slick-greeter.conf                /etc/lightdm/slick-greeter.conf
-install -Dm644 wallpaper.jpg                     /usr/share/pixmaps/dwm-titus.jpg
-install -Dm644 ../dwm-titus.png                  /usr/share/pixmaps/dwm-titus-logo.png
+install -Dm644 wallpaper.jpg                     /usr/share/pixmaps/dwm-oomaya.jpg
+install -Dm644 ../dwm-oomaya.png                  /usr/share/pixmaps/dwm-oomaya-logo.png
 make: Leaving directory '/home/p7tester/baseline/lightdm'
 [0;32m[OK][0m LightDM config deployed.
 make[1]: Entering directory '/home/p7tester/baseline'

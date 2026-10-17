@@ -338,7 +338,7 @@ grep -Eq '^--output HDMI-1( |$)' "$work/xrandr.log"
 
 env "${env_common[@]}" "$BASH_BIN" "$HELPER" generate \
 	"$work/profile-60.conf" >"$work/generated-60.conf"
-grep -Fq 'Option "Monitor-HDMI-1" "dwm-titus-HDMI-1"' "$work/generated-60.conf"
+grep -Fq 'Option "Monitor-HDMI-1" "dwm-oomaya-HDMI-1"' "$work/generated-60.conf"
 grep -Fq 'MatchDriver "amdgpu"' "$work/generated-60.conf"
 grep -Fq 'Driver "amdgpu"' "$work/generated-60.conf"
 grep -Fq 'Option "TearFree" "true"' "$work/generated-60.conf"
@@ -506,7 +506,7 @@ env "${env_common[@]}" "$BASH_BIN" "$HELPER" preview \
 grep -Fq -- '--dryrun --output HDMI-1 --mode 1920x1080 --rate 60 --pos 0x0 --rotate normal --primary --set TearFree on' "$work/xrandr.log"
 grep -Fq -- '--output HDMI-1 --mode 1920x1080 --rate 60 --pos 0x0 --rotate normal --primary --set TearFree on' "$work/xrandr.log"
 
-managed="$work/etc/X11/xorg.conf.d/90-dwm-titus-display.conf"
+managed="$work/etc/X11/xorg.conf.d/90-dwm-oomaya-display.conf"
 env "${env_common[@]}" DWM_DISPLAY_TIMESTAMP=20260101-000001 \
 	"$BASH_BIN" "$HELPER" install "$work/profile-60.conf" \
 	--config "$managed" --no-preview --yes >/dev/null
@@ -534,13 +534,13 @@ grep -Fq 'output is not connected' "$work/output-error"
 settings_env=(
 	"${env_common[@]}"
 	DWM_DISPLAY_SETUP="$HELPER"
-	DWM_DISPLAY_PROFILE_DIR="$work/home/.config/dwm-titus/display-profiles"
+	DWM_DISPLAY_PROFILE_DIR="$work/home/.config/dwm-oomaya/display-profiles"
 	XDG_RUNTIME_DIR="$work/runtime"
 )
 mkdir -p "$work/runtime"
 chmod 700 "$work/runtime"
-mkdir -p "$work/home/.config/dwm-titus/display-profiles"
-cat >"$work/home/.config/dwm-titus/display-profiles/legacy.conf" <<'EOF'
+mkdir -p "$work/home/.config/dwm-oomaya/display-profiles"
+cat >"$work/home/.config/dwm-oomaya/display-profiles/legacy.conf" <<'EOF'
 HDMI-1 --primary --mode 1920x1080 --rate 60
 DP-1 --mode 2560x1440 --rate 60
 EOF
@@ -621,7 +621,7 @@ spec_dp1='DP-1|1|2560x1440|60|1920|0|left|0'
 spec_dp2='DP-2|0||||||0'
 env "${settings_env[@]}" "$BASH_BIN" "$SETTINGS_HELPER" save desk \
 	"$spec_hdmi" "$spec_dp1" "$spec_dp2" >"$work/settings-save"
-test -f "$work/home/.config/dwm-titus/display-profiles/desk.conf"
+test -f "$work/home/.config/dwm-oomaya/display-profiles/desk.conf"
 
 mkdir -p "$work/runtime/dwm-settings-display"
 chmod 700 "$work/runtime/dwm-settings-display"
@@ -691,7 +691,7 @@ if env "${settings_env[@]}" "$BASH_BIN" "$SETTINGS_HELPER" keep rollback-failure
 	exit 1
 fi
 grep -Fq 'cannot save a named profile after rollback failure' "$work/settings-failed-keep.err"
-test ! -e "$work/home/.config/dwm-titus/display-profiles/unsafe-name.conf"
+test ! -e "$work/home/.config/dwm-oomaya/display-profiles/unsafe-name.conf"
 test -f "$work/runtime/dwm-settings-display/rollback-failure.previous"
 # shellcheck disable=SC2016 # These patterns intentionally match literal shell source.
 claim_line=$(grep -n 'claim=$(claim_preview "$token")' "$SETTINGS_HELPER" | head -n 1 | cut -d: -f1)

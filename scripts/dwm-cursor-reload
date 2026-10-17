@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 """Replace named cursors held by existing X11 clients after a theme change.
 
-Ported from dwm-titus to dwm-oomaya (no changes needed — pure X11)."""
+Ported from dwm-oomaya to dwm-oomaya (no changes needed — pure X11)."""
 
 import ctypes as c
 import os

@@ -212,11 +212,11 @@ printf '%s\t%s\t%s\n' "${QT_QPA_PLATFORMTHEME:-}" "${XCURSOR_THEME:-}" \
 SH
 chmod +x "$work/bin/dex"
 
-mkdir -p "$work/home/.config/dwm-titus"
+mkdir -p "$work/home/.config/dwm-oomaya"
 mkdir -p "$work/runtime"
 printf '%s\n' 'export QT_QPA_PLATFORMTHEME=gtk3' \
 	'export XCURSOR_THEME=Cursor-One' 'export XCURSOR_SIZE=32' \
-	>"$work/home/.config/dwm-titus/theme-env.sh"
+	>"$work/home/.config/dwm-oomaya/theme-env.sh"
 
 DWM_TEST_DEX_LOG="$work/dex.log" \
 	DWM_TEST_THEME_ENV_LOG="$work/theme-env.log" \
@@ -228,10 +228,10 @@ DWM_TEST_DEX_LOG="$work/dex.log" \
 assert_file_line "$work/dex.log" "$work/data/applications/visible.desktop"
 assert_file_line "$work/theme-env.log" "$(printf 'gtk3\tCursor-One\t32')"
 
-mkdir -p "$work/relative-config/dwm-titus"
+mkdir -p "$work/relative-config/dwm-oomaya"
 printf '%s\n' 'export QT_QPA_PLATFORMTHEME=qt6ct' \
 	'export XCURSOR_THEME=Wrong-Cursor' 'export XCURSOR_SIZE=48' \
-	>"$work/relative-config/dwm-titus/theme-env.sh"
+	>"$work/relative-config/dwm-oomaya/theme-env.sh"
 (
 	cd "$work"
 	DWM_TEST_DEX_LOG="$work/dex-relative-config.log" \
@@ -249,7 +249,7 @@ exec 9>"$work/runtime/dwm-theme-apply.lock"
 flock 9
 printf '%s\n' 'export QT_QPA_PLATFORMTHEME=qt6ct' \
 	'export XCURSOR_THEME=Uncommitted-Cursor' 'export XCURSOR_SIZE=48' \
-	>"$work/home/.config/dwm-titus/theme-env.sh"
+	>"$work/home/.config/dwm-oomaya/theme-env.sh"
 rm -f "$work/theme-env-locked.log" "$work/dex-locked.log"
 DWM_TEST_DEX_LOG="$work/dex-locked.log" \
 	DWM_TEST_THEME_ENV_LOG="$work/theme-env-locked.log" \
@@ -269,7 +269,7 @@ done
 [ ! -e "$work/theme-env-locked.log" ]
 printf '%s\n' 'export QT_QPA_PLATFORMTHEME=gtk3' \
 	'export XCURSOR_THEME=Cursor-One' 'export XCURSOR_SIZE=32' \
-	>"$work/home/.config/dwm-titus/theme-env.sh"
+	>"$work/home/.config/dwm-oomaya/theme-env.sh"
 flock -u 9
 exec 9>&-
 wait "$locked_launcher_pid"
@@ -291,7 +291,7 @@ exec 9>&-
 assert_file_line "$work/theme-env-timeout.log" "$(printf 'parent-qt\tParent-Cursor\t24')"
 
 printf '%s\n' 'export QT_QPA_PLATFORMTHEME="unterminated' \
-	>"$work/home/.config/dwm-titus/theme-env.sh"
+	>"$work/home/.config/dwm-oomaya/theme-env.sh"
 QT_QPA_PLATFORMTHEME=parent-qt XCURSOR_THEME=Parent-Cursor XCURSOR_SIZE=24 \
 	DWM_TEST_DEX_LOG="$work/dex-malformed.log" \
 	DWM_TEST_THEME_ENV_LOG="$work/theme-env-malformed.log" \
@@ -303,8 +303,8 @@ QT_QPA_PLATFORMTHEME=parent-qt XCURSOR_THEME=Parent-Cursor XCURSOR_SIZE=24 \
 assert_file_line "$work/dex-malformed.log" "$work/data/applications/visible.desktop"
 assert_file_line "$work/theme-env-malformed.log" "$(printf 'parent-qt\tParent-Cursor\t24')"
 
-mv "$work/home/.config/dwm-titus/theme-env.sh" "$work/theme-env.saved"
-mkfifo "$work/home/.config/dwm-titus/theme-env.sh"
+mv "$work/home/.config/dwm-oomaya/theme-env.sh" "$work/theme-env.saved"
+mkfifo "$work/home/.config/dwm-oomaya/theme-env.sh"
 timeout 3 env \
 	QT_QPA_PLATFORMTHEME=parent-qt XCURSOR_THEME=Parent-Cursor XCURSOR_SIZE=24 \
 	DWM_TEST_DEX_LOG="$work/dex-fifo.log" \
@@ -316,8 +316,8 @@ timeout 3 env \
 	"$repo/scripts/dwm-quickshell-launcher" launch "$work/data/applications/visible.desktop"
 assert_file_line "$work/dex-fifo.log" "$work/data/applications/visible.desktop"
 assert_file_line "$work/theme-env-fifo.log" "$(printf 'parent-qt\tParent-Cursor\t24')"
-rm "$work/home/.config/dwm-titus/theme-env.sh"
-mv "$work/theme-env.saved" "$work/home/.config/dwm-titus/theme-env.sh"
+rm "$work/home/.config/dwm-oomaya/theme-env.sh"
+mv "$work/theme-env.saved" "$work/home/.config/dwm-oomaya/theme-env.sh"
 
 rm -f "$work/dex.log"
 DWM_TEST_DEX_LOG="$work/dex.log" \

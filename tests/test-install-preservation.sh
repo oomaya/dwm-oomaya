@@ -207,7 +207,7 @@ grep -Fq 'dwm is stale. Run make before install-system.' \
 	"$WORK_DIR/stale-install.log"
 test ! -e "$WORK_DIR/stale-stage"
 mkdir -p \
-	"$XDG_CONFIG_HOME/dwm-titus" \
+	"$XDG_CONFIG_HOME/dwm-oomaya" \
 	"$XDG_CONFIG_HOME/picom" \
 	"$XDG_CONFIG_HOME/Thunar" \
 	"$XDG_CONFIG_HOME/quickshell" \
@@ -218,9 +218,9 @@ mkdir -p \
 
 printf '%s\n' '/* local config marker */' >"$TEST_REPO/config.h"
 printf '%s\n' '# existing xinitrc marker' >"$TEST_HOME/.xinitrc"
-printf '%s\n' '# existing hotkeys marker' >"$XDG_CONFIG_HOME/dwm-titus/hotkeys.toml"
-printf '%s\n' '# existing themes marker' >"$XDG_CONFIG_HOME/dwm-titus/themes.toml"
-printf '%s\n' '# existing rules marker' >"$XDG_CONFIG_HOME/dwm-titus/window-rules.toml"
+printf '%s\n' '# existing hotkeys marker' >"$XDG_CONFIG_HOME/dwm-oomaya/hotkeys.toml"
+printf '%s\n' '# existing themes marker' >"$XDG_CONFIG_HOME/dwm-oomaya/themes.toml"
+printf '%s\n' '# existing rules marker' >"$XDG_CONFIG_HOME/dwm-oomaya/window-rules.toml"
 printf '%s\n' '# existing picom marker' >"$XDG_CONFIG_HOME/picom/picom.conf"
 printf '%s\n' '<!-- existing Thunar actions marker -->' >"$XDG_CONFIG_HOME/Thunar/uca.xml"
 printf '%s\n' '# unrelated user service marker' >"$XDG_CONFIG_HOME/systemd/user/custom.service"
@@ -289,9 +289,9 @@ assert_preserved() {
 
 snapshot_file "$TEST_REPO/config.h" "$WORK_DIR/config-h.before"
 snapshot_file "$TEST_HOME/.xinitrc" "$WORK_DIR/xinitrc.before"
-snapshot_file "$XDG_CONFIG_HOME/dwm-titus/hotkeys.toml" "$WORK_DIR/hotkeys.before"
-snapshot_file "$XDG_CONFIG_HOME/dwm-titus/themes.toml" "$WORK_DIR/themes.before"
-snapshot_file "$XDG_CONFIG_HOME/dwm-titus/window-rules.toml" "$WORK_DIR/window-rules.before"
+snapshot_file "$XDG_CONFIG_HOME/dwm-oomaya/hotkeys.toml" "$WORK_DIR/hotkeys.before"
+snapshot_file "$XDG_CONFIG_HOME/dwm-oomaya/themes.toml" "$WORK_DIR/themes.before"
+snapshot_file "$XDG_CONFIG_HOME/dwm-oomaya/window-rules.toml" "$WORK_DIR/window-rules.before"
 snapshot_file "$XDG_CONFIG_HOME/picom/picom.conf" "$WORK_DIR/picom.before"
 snapshot_file "$XDG_CONFIG_HOME/Thunar/uca.xml" "$WORK_DIR/thunar-uca.before"
 snapshot_file "$XDG_CONFIG_HOME/autostart/picom.desktop" "$WORK_DIR/picom-autostart.before"
@@ -312,9 +312,9 @@ done
 
 assert_preserved config-h "$TEST_REPO/config.h" "$WORK_DIR/config-h.before"
 assert_preserved xinitrc "$TEST_HOME/.xinitrc" "$WORK_DIR/xinitrc.before"
-assert_preserved hotkeys "$XDG_CONFIG_HOME/dwm-titus/hotkeys.toml" "$WORK_DIR/hotkeys.before"
-assert_preserved themes "$XDG_CONFIG_HOME/dwm-titus/themes.toml" "$WORK_DIR/themes.before"
-assert_preserved window-rules "$XDG_CONFIG_HOME/dwm-titus/window-rules.toml" "$WORK_DIR/window-rules.before"
+assert_preserved hotkeys "$XDG_CONFIG_HOME/dwm-oomaya/hotkeys.toml" "$WORK_DIR/hotkeys.before"
+assert_preserved themes "$XDG_CONFIG_HOME/dwm-oomaya/themes.toml" "$WORK_DIR/themes.before"
+assert_preserved window-rules "$XDG_CONFIG_HOME/dwm-oomaya/window-rules.toml" "$WORK_DIR/window-rules.before"
 assert_preserved picom "$XDG_CONFIG_HOME/picom/picom.conf" "$WORK_DIR/picom.before"
 assert_preserved thunar-uca "$XDG_CONFIG_HOME/Thunar/uca.xml" \
 	"$WORK_DIR/thunar-uca.before"

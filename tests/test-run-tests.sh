@@ -21,7 +21,7 @@ process_is_live() {
 assert_workspace_removed() {
 	local output=$1 root=$2 label=$3 workspace
 	workspace=$(sed -n 's/^==> Test workspace: //p' "$output" | sed -n '1p')
-	if [[ -z $workspace || $workspace != "$root"/dwm-titus-tests.* ]]; then
+	if [[ -z $workspace || $workspace != "$root"/dwm-oomaya-tests.* ]]; then
 		printf '%s run did not report a workspace below its test root.\n' "$label" >&2
 		exit 1
 	fi

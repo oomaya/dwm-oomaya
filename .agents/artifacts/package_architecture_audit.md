@@ -12,7 +12,7 @@
 The consecutive installation failures encountered on CachyOS Niri (`target not found: xkbset`, followed by `target not found: xprop`) are symptoms of a deeper architectural misalignment:
 
 > [!IMPORTANT]
-> **The Identity Crisis:** `dwm-oomaya` inherited the DNA of `dwm-titus`, which was originally designed as a **monolithic Fedora Kickstart / fresh-install ISO builder** meant to turn a blank, bare-metal server into a complete workstation from scratch. It is not currently behaving like a clean, suckless window manager layer.
+> **The Identity Crisis:** `dwm-oomaya` inherited the DNA of `dwm-oomaya`, which was originally designed as a **monolithic Fedora Kickstart / fresh-install ISO builder** meant to turn a blank, bare-metal server into a complete workstation from scratch. It is not currently behaving like a clean, suckless window manager layer.
 
 When deployed onto an existing, running Linux installation (such as CachyOS Niri or a personal laptop), the installer defaults to `DWM_INSTALL_PROFILE="full"`. This triggers an indiscriminate batch installation of over 50 packages—including printer daemons (`cups`), package managers (`PackageKit`), display managers (`lightdm`), gaming stacks (`steam`, `gamescope`), and 7 legacy GTK themes.
 

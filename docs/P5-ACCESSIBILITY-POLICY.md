@@ -10,7 +10,7 @@ behavior remains a separate Phase 5 boundary.
 ## State Contract
 
 `dwm-accessibility-settings` owns
-`${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus/accessibility.conf` and exposes
+`${XDG_CONFIG_HOME:-$HOME/.config}/dwm-oomaya/accessibility.conf` and exposes
 `accessibility-settings-protocol 1`. An absent file means standard contrast and
 full motion. A valid file stores exactly one contrast choice and one motion
 choice:
@@ -34,7 +34,7 @@ and refuses to overwrite state that changes during a transaction. Malformed or
 incomplete version 1 data can be repaired by an explicit mutation. Future
 protocol versions are preserved and reject every mutation while the shell uses
 safe defaults. Its watch action may create only the missing user-owned
-`dwm-titus` configuration directory; it never creates policy state.
+`dwm-oomaya` configuration directory; it never creates policy state.
 
 ## Shell Behavior
 

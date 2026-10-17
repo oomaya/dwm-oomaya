@@ -18,7 +18,7 @@
   "-drive",
   "file=/home/titus/tmp/dwm-p7-finish/staging/uefi.qcow2,if=virtio,format=qcow2",
   "-cdrom",
-  "/home/titus/tmp/dwm-p7-20260910/media/dwm-titus-standard-p7.iso",
+  "/home/titus/tmp/dwm-p7-20260910/media/dwm-oomaya-standard-p7.iso",
   "-boot",
   "d",
   "-nic",

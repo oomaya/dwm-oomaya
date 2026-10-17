@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Shared package capability map for dwm-titus installers and diagnostics.
+# Shared package capability map for dwm-oomaya installers and diagnostics.
 
 dwm_packages() {
 	local family=$1

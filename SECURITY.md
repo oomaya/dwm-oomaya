@@ -9,7 +9,7 @@ asked to upgrade before receiving a fix.
 ## Reporting a Vulnerability
 
 Do not open a public issue for a suspected vulnerability. Email
-`contact@christitus.com` with the subject `dwm-titus security report`.
+`contact@christitus.com` with the subject `dwm-oomaya security report`.
 
 Include affected versions or commits, reproduction steps, impact, relevant
 logs, and any proposed mitigation. Do not include credentials, private keys,

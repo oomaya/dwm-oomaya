@@ -26,11 +26,11 @@ trap 'exit 129' HUP
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-mkdir -p "$work/qml" "$work/home/.config/dwm-titus" \
-	"$work/data/dwm-titus/scripts" "$work/runtime" "$work/state"
+mkdir -p "$work/qml" "$work/home/.config/dwm-oomaya" \
+	"$work/data/dwm-oomaya/scripts" "$work/runtime" "$work/state"
 chmod 700 "$work/runtime"
 cp -a "$repo/config/quickshell/." "$work/qml/"
-cp "$repo/config/"*.toml "$work/home/.config/dwm-titus/"
+cp "$repo/config/"*.toml "$work/home/.config/dwm-oomaya/"
 python3 "$repo/tests/fixtures/settings-responsiveness.py" "$work/qml" "$repo/tests/qml/SettingsResponsiveness.inc"
 Xvfb -displayfd 3 -screen 0 1024x768x24 -nolisten tcp -extension GLX \
 	3>"$work/display" >"$work/xvfb.log" 2>&1 &

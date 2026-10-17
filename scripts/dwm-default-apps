@@ -6,8 +6,8 @@ config_home=${XDG_CONFIG_HOME:-${HOME:?HOME is required}/.config}
 data_home=${XDG_DATA_HOME:-${HOME:?HOME is required}/.local/share}
 state_home=${XDG_STATE_HOME:-${HOME:?HOME is required}/.local/state}
 mime_file=$config_home/mimeapps.list
-hotkeys_file=$config_home/dwm-titus/hotkeys.toml
-defaults_state_dir=$state_home/dwm-titus/default-apps
+hotkeys_file=$config_home/dwm-oomaya/hotkeys.toml
+defaults_state_dir=$state_home/dwm-oomaya/default-apps
 defaults_transaction_active=0
 defaults_transaction_target=
 defaults_transaction_backup=
@@ -1507,7 +1507,7 @@ watch_defaults() {
 		config_watch_mode=none
 		config_watch_parent=
 		config_watch_next=
-		config_watch_target=$config_home/dwm-titus
+		config_watch_target=$config_home/dwm-oomaya
 		if [[ -d $config_watch_target && ! -L $config_watch_target ]] &&
 			path_has_no_symlink_components "$config_watch_target"; then
 			config_watch_mode=config
@@ -1665,7 +1665,7 @@ watch_defaults() {
 				mimeapps.list | *-mimeapps.list)
 					printf '%s:%s\n' "$event_type" "$event_name"
 					;;
-				dwm-titus)
+				dwm-oomaya)
 					case ,$event_type, in
 					*,CREATE,* | *,DELETE,* | *,MOVED_TO,* | *,MOVED_FROM,*)
 						printf '%s:%s\n' "$event_type" "$event_name"
@@ -1679,7 +1679,7 @@ watch_defaults() {
 			config-managed)
 				case ,$event_type, in
 				*,DELETE_SELF,* | *,MOVE_SELF,*)
-					printf '%s:%s\n' "$event_type" "${event_name:-dwm-titus}"
+					printf '%s:%s\n' "$event_type" "${event_name:-dwm-oomaya}"
 					restart=1
 					break
 					;;

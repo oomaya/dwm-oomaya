@@ -60,7 +60,7 @@ test "$lock_status" -eq 1
 grep -Fqx 'dwm-panel-settings: another panel settings operation is still running' "$work/lock.err"
 
 run_helper set volume disabled | grep -Fqx 'result	set	volume	disabled'
-state_file=$config/dwm-titus/panel-widgets.conf
+state_file=$config/dwm-oomaya/panel-widgets.conf
 test "$(stat -c %a "$state_file")" = 600
 grep -Fqx 'panel-settings-protocol	1	0' "$state_file"
 grep -Fqx 'volume	disabled' "$state_file"
@@ -264,14 +264,14 @@ test -L "$state_file"
 unsafe_config=$work/unsafe-config
 unsafe_target=$work/unsafe-target
 mkdir -p "$unsafe_config" "$unsafe_target"
-ln -s "$unsafe_target" "$unsafe_config/dwm-titus"
+ln -s "$unsafe_target" "$unsafe_config/dwm-oomaya"
 unsafe_dir=$(HOME=$home XDG_CONFIG_HOME=$unsafe_config XDG_RUNTIME_DIR=$runtime "$helper" status)
 printf '%s\n' "$unsafe_dir" | grep -Fqx \
 	'state	unavailable	Persistent panel state directory is unsafe; using all-on defaults'
 
 writable_config=$work/writable-config
-mkdir -p "$writable_config/dwm-titus"
-chmod 777 "$writable_config/dwm-titus"
+mkdir -p "$writable_config/dwm-oomaya"
+chmod 777 "$writable_config/dwm-oomaya"
 writable_dir=$(HOME=$home XDG_CONFIG_HOME=$writable_config XDG_RUNTIME_DIR=$runtime "$helper" status)
 printf '%s\n' "$writable_dir" | grep -Fqx \
 	'state	unavailable	Persistent panel state directory is unsafe; using all-on defaults'
@@ -280,7 +280,7 @@ if HOME=$home XDG_CONFIG_HOME=$writable_config XDG_RUNTIME_DIR=$runtime \
 	printf 'Panel settings accepted a writable-by-others state directory\n' >&2
 	exit 1
 fi
-test ! -e "$writable_config/dwm-titus/panel-widgets.conf"
+test ! -e "$writable_config/dwm-oomaya/panel-widgets.conf"
 
 grep -Fq 'function panelSettingsCommand(action, args)' "$commands"
 grep -Fq 'readonly max_restore_attempts=8' "$helper"

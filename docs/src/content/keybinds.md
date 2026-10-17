@@ -1,6 +1,6 @@
 ---
 title: Keybindings
-description: A complete reference for dwm-titus launchers, windows, workspaces, media controls, screenshots, and system actions.
+description: A complete reference for dwm-oomaya launchers, windows, workspaces, media controls, screenshots, and system actions.
 navLabel: Keybindings
 eyebrow: Reference
 ---

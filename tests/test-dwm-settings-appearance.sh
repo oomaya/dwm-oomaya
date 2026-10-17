@@ -9,7 +9,7 @@ trap 'rm -rf "$work"' EXIT HUP INT TERM
 config_home=$work/config
 data_root=$work/data
 bin_dir=$work/bin
-mkdir -p "$config_home/dwm-titus" "$config_home/alacritty" "$config_home/kitty" \
+mkdir -p "$config_home/dwm-oomaya" "$config_home/alacritty" "$config_home/kitty" \
 	"$config_home/gtk-3.0" "$config_home/gtk-4.0" \
 	"$data_root/themes/Nordic/gtk-3.0" "$data_root/themes/Nordic/gtk-4.0" \
 	"$data_root/icons/Capitaine-Cursors-White/cursors" "$bin_dir"
@@ -19,7 +19,7 @@ mkdir -p "$config_home/dwm-titus" "$config_home/alacritty" "$config_home/kitty" 
 themes_fixture=$work/themes-fixture-baseline.toml
 cp "$repo/config/themes.toml" "$themes_fixture"
 sed -i '/^\[active\]$/,/^\[/ s/^theme = "[^"]*"/theme = "nord"/' "$themes_fixture"
-cp "$themes_fixture" "$config_home/dwm-titus/themes.toml"
+cp "$themes_fixture" "$config_home/dwm-oomaya/themes.toml"
 declare -A fixture_color=()
 while read -r key _ color; do
 	fixture_color[$key]=${color//\"/}
@@ -81,9 +81,9 @@ printf 'import = ["%s"]\n' "$config_home/alacritty/active-theme.toml" \
 	>"$config_home/alacritty/alacritty.toml"
 
 printf 'export QT_QPA_PLATFORMTHEME=qt6ct\nexport XCURSOR_THEME=Capitaine-Cursors-White\nexport XCURSOR_SIZE=32\n' \
-	>"$config_home/dwm-titus/theme-env.sh"
+	>"$config_home/dwm-oomaya/theme-env.sh"
 printf 'Xcursor.theme: Capitaine-Cursors-White\n' \
-	>"$config_home/dwm-titus/cursor.Xresources"
+	>"$config_home/dwm-oomaya/cursor.Xresources"
 printf '  [Settings]  \ngtk-theme-name=Nordic\ngtk-cursor-theme-name=Capitaine-Cursors-White\n' \
 	>"$config_home/gtk-3.0/settings.ini"
 printf '[Settings]\ngtk-theme-name=Nordic\ngtk-cursor-theme-name=Capitaine-Cursors-White\n' \
@@ -203,16 +203,16 @@ snapshot() {
 		"$helper" snapshot
 }
 
-before_hash=$(sha256sum "$config_home/dwm-titus/themes.toml")
-before_mode=$(stat -c %a "$config_home/dwm-titus/themes.toml")
+before_hash=$(sha256sum "$config_home/dwm-oomaya/themes.toml")
+before_mode=$(stat -c %a "$config_home/dwm-oomaya/themes.toml")
 output=$(snapshot)
-after_hash=$(sha256sum "$config_home/dwm-titus/themes.toml")
-after_mode=$(stat -c %a "$config_home/dwm-titus/themes.toml")
+after_hash=$(sha256sum "$config_home/dwm-oomaya/themes.toml")
+after_mode=$(stat -c %a "$config_home/dwm-oomaya/themes.toml")
 [[ $before_hash == "$after_hash" && $before_mode == "$after_mode" ]]
 
 grep -Fqx $'appearance-protocol\t1\t0' <<<"$output"
 grep -Fqx $'provider\tappearance\tavailable\tread-only\tShared theme inventory and integration state' <<<"$output"
-grep -Fqx $'source\tuser\t'"$config_home/dwm-titus/themes.toml" <<<"$output"
+grep -Fqx $'source\tuser\t'"$config_home/dwm-oomaya/themes.toml" <<<"$output"
 grep -Fqx $'active\tnord\tnord\tselected' <<<"$output"
 grep -Fqx $'theme\tnord\tselected\tvalid\ttrue\tNordic\tTheme record is complete' <<<"$output"
 [[ $(grep -c $'^theme\t' <<<"$output") -eq 15 ]]
@@ -296,7 +296,7 @@ grep -Fqx $'integration\tkitty\tunavailable\tmissing-application\tTerminal appli
 grep -Fqx $'error\tkitty\tmissing-application\tTerminal application is not installed' \
 	<<<"$no_kitty"
 
-cp "$config_home/dwm-titus/themes.toml" "$work/replacement-themes.toml"
+cp "$config_home/dwm-oomaya/themes.toml" "$work/replacement-themes.toml"
 sed -i '0,/theme = "nord"/s//theme = "dracula"/' "$work/replacement-themes.toml"
 real_awk=$(command -v awk)
 real_mv=$(command -v mv)
@@ -315,28 +315,28 @@ immutable_snapshot=$(PATH=$bin_dir GTK_THEME='' XCURSOR_THEME='' \
 	DWM_APPEARANCE_DATA_DIRS=$data_root DWM_TEST_REAL_AWK="$real_awk" \
 	DWM_TEST_REAL_MV="$real_mv" \
 	DWM_TEST_REPLACEMENT="$work/replacement-themes.toml" \
-	DWM_TEST_REPLACEMENT_TARGET="$config_home/dwm-titus/themes.toml" \
+	DWM_TEST_REPLACEMENT_TARGET="$config_home/dwm-oomaya/themes.toml" \
 	DWM_TEST_REPLACED_MARKER="$work/replaced.marker" "$helper" snapshot)
 grep -Fqx $'active\tnord\tnord\tselected' <<<"$immutable_snapshot"
-grep -Fq 'theme = "dracula"' "$config_home/dwm-titus/themes.toml"
+grep -Fq 'theme = "dracula"' "$config_home/dwm-oomaya/themes.toml"
 rm -f "$bin_dir/awk"
 ln -s "$real_awk" "$bin_dir/awk"
-cp "$themes_fixture" "$config_home/dwm-titus/themes.toml"
+cp "$themes_fixture" "$config_home/dwm-oomaya/themes.toml"
 
 no_qt_bin=$work/no-qt-bin
 cp -a "$bin_dir" "$no_qt_bin"
 rm -f "$no_qt_bin/qt6ct"
-mv "$config_home/dwm-titus/theme-env.sh" "$work/theme-env.sh"
+mv "$config_home/dwm-oomaya/theme-env.sh" "$work/theme-env.sh"
 no_qt=$(PATH=$no_qt_bin QT_QPA_PLATFORMTHEME='' XDG_CONFIG_HOME=$config_home \
 	XDG_DATA_HOME=$data_root DWM_APPEARANCE_DATA_DIRS=$data_root \
 	"$helper" snapshot)
 grep -Fqx $'integration\tqt\tunavailable\tnone\tNo supported Qt theme backend is active' <<<"$no_qt"
 grep -Fqx $'error\tqt\tmissing-backend\tNo applied Qt theme backend is recorded' \
 	<<<"$no_qt"
-mv "$work/theme-env.sh" "$config_home/dwm-titus/theme-env.sh"
+mv "$work/theme-env.sh" "$config_home/dwm-oomaya/theme-env.sh"
 
-mv "$config_home/dwm-titus/theme-env.sh" "$work/theme-env-regular.sh"
-mkfifo "$config_home/dwm-titus/theme-env.sh"
+mv "$config_home/dwm-oomaya/theme-env.sh" "$work/theme-env-regular.sh"
+mkfifo "$config_home/dwm-oomaya/theme-env.sh"
 timeout 3 env PATH="$bin_dir" GTK_THEME='' \
 	QT_QPA_PLATFORMTHEME=qt6ct XCURSOR_THEME=Capitaine-Cursors-White \
 	XDG_CONFIG_HOME="$config_home" XDG_DATA_HOME="$data_root" \
@@ -344,8 +344,8 @@ timeout 3 env PATH="$bin_dir" GTK_THEME='' \
 	>"$work/special-theme-env.out"
 grep -Fqx $'integration\tqt\tavailable\tqt6ct\tQt applications use the supported theme backend' \
 	"$work/special-theme-env.out"
-rm "$config_home/dwm-titus/theme-env.sh"
-mv "$work/theme-env-regular.sh" "$config_home/dwm-titus/theme-env.sh"
+rm "$config_home/dwm-oomaya/theme-env.sh"
+mv "$work/theme-env-regular.sh" "$config_home/dwm-oomaya/theme-env.sh"
 
 gtk3_qt=$(QT_QPA_PLATFORMTHEME=gtk3 snapshot)
 grep -Fqx $'integration\tqt\tavailable\tqt6ct\tQt applications use the supported theme backend' \
@@ -355,15 +355,15 @@ for malformed_environment in unknown duplicate missing-size; do
 	case $malformed_environment in
 	unknown)
 		printf 'export QT_QPA_PLATFORMTHEME=qt6ct\nexport XCURSOR_THEME=Capitaine-Cursors-White\nexport XCURSOR_SIZE=32\nexport CUSTOM_VALUE=yes\n' \
-			>"$config_home/dwm-titus/theme-env.sh"
+			>"$config_home/dwm-oomaya/theme-env.sh"
 		;;
 	duplicate)
 		printf 'export QT_QPA_PLATFORMTHEME=qt6ct\nexport QT_QPA_PLATFORMTHEME=gtk3\nexport XCURSOR_THEME=Capitaine-Cursors-White\nexport XCURSOR_SIZE=32\n' \
-			>"$config_home/dwm-titus/theme-env.sh"
+			>"$config_home/dwm-oomaya/theme-env.sh"
 		;;
 	missing-size)
 		printf 'export QT_QPA_PLATFORMTHEME=qt6ct\nexport XCURSOR_THEME=Capitaine-Cursors-White\n' \
-			>"$config_home/dwm-titus/theme-env.sh"
+			>"$config_home/dwm-oomaya/theme-env.sh"
 		;;
 	esac
 	malformed_snapshot=$(QT_QPA_PLATFORMTHEME=gtk3 \
@@ -372,10 +372,10 @@ for malformed_environment in unknown duplicate missing-size; do
 		<<<"$malformed_snapshot"
 done
 printf 'export QT_QPA_PLATFORMTHEME=qt6ct\nexport XCURSOR_THEME=Capitaine-Cursors-White\nexport XCURSOR_SIZE=32\n' \
-	>"$config_home/dwm-titus/theme-env.sh"
+	>"$config_home/dwm-oomaya/theme-env.sh"
 
 printf 'personalization-protocol\t1\t0\ngtk\tfollow-system\n' \
-	>"$config_home/dwm-titus/personalization.conf"
+	>"$config_home/dwm-oomaya/personalization.conf"
 invalid_gtk_override=$(snapshot)
 grep -Fqx $'integration\tgtk\tavailable\tNordic\tRequested GTK theme is installed and applied' \
 	<<<"$invalid_gtk_override"
@@ -383,15 +383,15 @@ if grep -F $'integration\tgtk\tpartial\tfollow-system\t' <<<"$invalid_gtk_overri
 	printf 'semantically invalid GTK personalization was reported as active\n' >&2
 	exit 1
 fi
-rm -f "$config_home/dwm-titus/personalization.conf"
+rm -f "$config_home/dwm-oomaya/personalization.conf"
 
 home_cursor_root=$work/home-cursor
 mkdir -p "$home_cursor_root/.icons/Cursor One/cursors"
 printf 'personalization-protocol\t1\t0\ncursor\tCursor One\n' \
-	>"$config_home/dwm-titus/personalization.conf"
+	>"$config_home/dwm-oomaya/personalization.conf"
 printf 'export QT_QPA_PLATFORMTHEME=qt6ct\nexport XCURSOR_THEME=Cursor\\ One\nexport XCURSOR_SIZE=32\n' \
-	>"$config_home/dwm-titus/theme-env.sh"
-printf 'Xcursor.theme: Cursor One\n' >"$config_home/dwm-titus/cursor.Xresources"
+	>"$config_home/dwm-oomaya/theme-env.sh"
+printf 'Xcursor.theme: Cursor One\n' >"$config_home/dwm-oomaya/cursor.Xresources"
 sed -i 's/gtk-cursor-theme-name=.*/gtk-cursor-theme-name=Cursor One/' \
 	"$config_home/gtk-3.0/settings.ini" "$config_home/gtk-4.0/settings.ini"
 spaced_cursor=$(HOME=$home_cursor_root snapshot)
@@ -404,10 +404,10 @@ grep -Fqx $'integration\tcursor\tavailable\tCursor One\tManaged cursor theme is 
 	<<<"$stale_environment_cursor"
 mkdir -p "$data_root/icons/IconOnly"
 printf 'personalization-protocol\t1\t0\ncursor\tIconOnly\n' \
-	>"$config_home/dwm-titus/personalization.conf"
+	>"$config_home/dwm-oomaya/personalization.conf"
 printf 'export QT_QPA_PLATFORMTHEME=qt6ct\nexport XCURSOR_THEME=IconOnly\nexport XCURSOR_SIZE=32\n' \
-	>"$config_home/dwm-titus/theme-env.sh"
-printf 'Xcursor.theme: IconOnly\n' >"$config_home/dwm-titus/cursor.Xresources"
+	>"$config_home/dwm-oomaya/theme-env.sh"
+printf 'Xcursor.theme: IconOnly\n' >"$config_home/dwm-oomaya/cursor.Xresources"
 sed -i 's/gtk-cursor-theme-name=.*/gtk-cursor-theme-name=IconOnly/' \
 	"$config_home/gtk-3.0/settings.ini" "$config_home/gtk-4.0/settings.ini"
 icon_only_cursor=$(HOME=$home_cursor_root snapshot)
@@ -415,23 +415,23 @@ grep -Fqx $'integration\tcursor\tunavailable\tIconOnly\tManaged cursor theme is 
 	<<<"$icon_only_cursor"
 grep -Fqx $'error\tcursor\tmissing-theme\tCursor theme '\''IconOnly'\'' is not installed' \
 	<<<"$icon_only_cursor"
-rm -f "$config_home/dwm-titus/personalization.conf"
+rm -f "$config_home/dwm-oomaya/personalization.conf"
 printf 'export QT_QPA_PLATFORMTHEME=qt6ct\nexport XCURSOR_THEME=Capitaine-Cursors-White\nexport XCURSOR_SIZE=32\n' \
-	>"$config_home/dwm-titus/theme-env.sh"
+	>"$config_home/dwm-oomaya/theme-env.sh"
 printf 'Xcursor.theme: Capitaine-Cursors-White\n' \
-	>"$config_home/dwm-titus/cursor.Xresources"
+	>"$config_home/dwm-oomaya/cursor.Xresources"
 sed -i 's/gtk-cursor-theme-name=.*/gtk-cursor-theme-name=Capitaine-Cursors-White/' \
 	"$config_home/gtk-3.0/settings.ini" "$config_home/gtk-4.0/settings.ini"
 
 sed -i 's/XCURSOR_THEME=Capitaine-Cursors-White/XCURSOR_THEME=Capitaine-Cursors/' \
-	"$config_home/dwm-titus/theme-env.sh"
+	"$config_home/dwm-oomaya/theme-env.sh"
 stale_cursor=$(snapshot)
 grep -Fqx $'integration\tcursor\tpartial\tCapitaine-Cursors-White\tManaged cursor theme is installed but not applied' \
 	<<<"$stale_cursor"
 grep -Fqx $'error\tcursor\tstale-theme\tApplied cursor settings do not match '\''Capitaine-Cursors-White'\''' \
 	<<<"$stale_cursor"
 sed -i 's/XCURSOR_THEME=Capitaine-Cursors/XCURSOR_THEME=Capitaine-Cursors-White/' \
-	"$config_home/dwm-titus/theme-env.sh"
+	"$config_home/dwm-oomaya/theme-env.sh"
 
 printf 'import = ["/wrong/active-theme.toml"]\n' >"$config_home/alacritty/alacritty.toml"
 unimported_alacritty=$(snapshot)
@@ -473,8 +473,8 @@ grep -Fqx $'error\talacritty\tstale-theme\tGenerated active theme does not match
 	<<<"$stale_terminal"
 cp "$work/alacritty-valid.toml" "$config_home/alacritty/active-theme.toml"
 
-sed -i 's/^\[active\]$/[active] # selected theme/' "$config_home/dwm-titus/themes.toml"
-sed -i 's/^\[theme\.nord\]$/[theme.nord] # default theme/' "$config_home/dwm-titus/themes.toml"
+sed -i 's/^\[active\]$/[active] # selected theme/' "$config_home/dwm-oomaya/themes.toml"
+sed -i 's/^\[theme\.nord\]$/[theme.nord] # default theme/' "$config_home/dwm-oomaya/themes.toml"
 commented_headers=$(snapshot)
 grep -Fqx $'provider\tappearance\tavailable\tread-only\tShared theme inventory and integration state' \
 	<<<"$commented_headers"
@@ -485,9 +485,9 @@ if grep -Fq $'error\tparser\tmalformed-section\t' <<<"$commented_headers"; then
 	printf 'Valid commented section header was rejected\n' >&2
 	exit 1
 fi
-cp "$themes_fixture" "$config_home/dwm-titus/themes.toml"
+cp "$themes_fixture" "$config_home/dwm-oomaya/themes.toml"
 
-sed -i 's/^\[theme\.dracula\]$/[theme.dracula] trailing/' "$config_home/dwm-titus/themes.toml"
+sed -i 's/^\[theme\.dracula\]$/[theme.dracula] trailing/' "$config_home/dwm-oomaya/themes.toml"
 malformed_header=$(snapshot)
 grep -Fqx $'provider\tappearance\tpartial\tread-only\tShared theme inventory and integration state' \
 	<<<"$malformed_header"
@@ -498,20 +498,20 @@ if grep -Fq $'theme\tdracula\t' <<<"$malformed_header"; then
 	exit 1
 fi
 
-cp "$themes_fixture" "$config_home/dwm-titus/themes.toml"
-sed -i 's/^\[active\]$/[active/' "$config_home/dwm-titus/themes.toml"
+cp "$themes_fixture" "$config_home/dwm-oomaya/themes.toml"
+sed -i 's/^\[active\]$/[active/' "$config_home/dwm-oomaya/themes.toml"
 truncated_header=$(snapshot)
 grep -Fqx $'provider\tappearance\tpartial\tread-only\tShared theme inventory and integration state' \
 	<<<"$truncated_header"
 grep -Fqx $'active\tnone\tnord\trecovery' <<<"$truncated_header"
 grep -Fq $'error\tparser\tmalformed-section\tMalformed theme section header at line ' \
 	<<<"$truncated_header"
-cp "$themes_fixture" "$config_home/dwm-titus/themes.toml"
+cp "$themes_fixture" "$config_home/dwm-oomaya/themes.toml"
 
 {
 	printf '%s\n' '[ignored]' 'extra = [{x="a=b"}, {x='"'"'c=d'"'"'}] # ignored = comment'
 	cat "$themes_fixture"
-} >"$config_home/dwm-titus/themes.toml"
+} >"$config_home/dwm-oomaya/themes.toml"
 set +e
 inline_table=$(snapshot)
 inline_table_status=$?
@@ -524,7 +524,7 @@ grep -Fqx $'active\tnord\tnord\tselected' <<<"$inline_table"
 {
 	printf '[ignored]\nextra = {x=1}\n'
 	cat "$themes_fixture"
-} >"$config_home/dwm-titus/themes.toml"
+} >"$config_home/dwm-oomaya/themes.toml"
 set +e
 direct_inline_table=$(snapshot)
 direct_inline_table_status=$?
@@ -537,7 +537,7 @@ grep -Fqx $'active\tnord\tnord\tselected' <<<"$direct_inline_table"
 {
 	printf '[ignored]\nextra = ["one", "two"]\n'
 	cat "$themes_fixture"
-} >"$config_home/dwm-titus/themes.toml"
+} >"$config_home/dwm-oomaya/themes.toml"
 scalar_array=$(snapshot)
 grep -Fqx $'provider\tappearance\tavailable\tread-only\tShared theme inventory and integration state' \
 	<<<"$scalar_array"
@@ -546,14 +546,14 @@ grep -Fqx $'active\tnord\tnord\tselected' <<<"$scalar_array"
 {
 	printf '[ignored]\nextra = [\n  {x=1},\n  {x=2}\n]\n'
 	cat "$themes_fixture"
-} >"$config_home/dwm-titus/themes.toml"
+} >"$config_home/dwm-oomaya/themes.toml"
 multiline_array=$(snapshot)
 grep -Fqx $'active\tnord\tnord\tselected' <<<"$multiline_array"
 
 {
 	printf '[ignored]\nextra = [\n'
 	cat "$themes_fixture"
-} >"$config_home/dwm-titus/themes.toml"
+} >"$config_home/dwm-oomaya/themes.toml"
 set +e
 unterminated_array=$(snapshot)
 unterminated_array_status=$?
@@ -567,7 +567,7 @@ grep -Fqx $'error\tparser\tunterminated-complex-value\tAn unrelated multi-line a
 {
 	printf '[ignored]\nextra = [\n  {x=1}, {x=2}]\n'
 	cat "$themes_fixture"
-} >"$config_home/dwm-titus/themes.toml"
+} >"$config_home/dwm-oomaya/themes.toml"
 set +e
 runtime_stuck_array=$(snapshot)
 runtime_stuck_array_status=$?
@@ -596,14 +596,14 @@ done
 	done
 	printf ']\n'
 	cat "$themes_fixture"
-} >"$config_home/dwm-titus/themes.toml"
+} >"$config_home/dwm-oomaya/themes.toml"
 nested_inline_tables=$(snapshot)
 grep -Fqx $'active\tnord\tnord\tselected' <<<"$nested_inline_tables"
 grep -Fqx $'error\tparser\tentry-limit\tTheme configuration exceeds the runtime parser limit of 512 entries' \
 	<<<"$nested_inline_tables"
-cp "$themes_fixture" "$config_home/dwm-titus/themes.toml"
+cp "$themes_fixture" "$config_home/dwm-oomaya/themes.toml"
 
-printf '\n[theme.@unsafe]\nterm_bg = "#000000"\n' >>"$config_home/dwm-titus/themes.toml"
+printf '\n[theme.@unsafe]\nterm_bg = "#000000"\n' >>"$config_home/dwm-oomaya/themes.toml"
 unsafe_name=$(snapshot)
 grep -Fqx $'provider\tappearance\tpartial\tread-only\tShared theme inventory and integration state' \
 	<<<"$unsafe_name"
@@ -613,7 +613,7 @@ if grep -Fq $'theme\t@unsafe\t' <<<"$unsafe_name"; then
 	printf 'Unsafe theme identifier was inventoried\n' >&2
 	exit 1
 fi
-cp "$themes_fixture" "$config_home/dwm-titus/themes.toml"
+cp "$themes_fixture" "$config_home/dwm-oomaya/themes.toml"
 
 rmdir "$data_root/themes/Nordic/gtk-4.0"
 partial_gtk_assets=$(snapshot)
@@ -637,7 +637,7 @@ grep -Fqx $'error\tgtk\tstale-theme\tApplied GTK settings do not match '\''Nordi
 sed -i 's/gtk-theme-name=Adwaita/gtk-theme-name=Nordic/' \
 	"$config_home/gtk-4.0/settings.ini"
 
-mv "$config_home/dwm-titus/themes.toml" "$work/managed-themes.toml"
+mv "$config_home/dwm-oomaya/themes.toml" "$work/managed-themes.toml"
 managed=$(PATH=$bin_dir XDG_CONFIG_HOME=$config_home XDG_DATA_HOME=$data_root \
 	DWM_APPEARANCE_DATA_DIRS=$data_root \
 	DWM_APPEARANCE_MANAGED_THEMES_FILE="$work/managed-themes.toml" \
@@ -645,13 +645,13 @@ managed=$(PATH=$bin_dir XDG_CONFIG_HOME=$config_home XDG_DATA_HOME=$data_root \
 grep -Fqx $'source\tmanaged\t'"$work/managed-themes.toml" <<<"$managed"
 grep -Fqx $'active\tnord\tnord\tselected' <<<"$managed"
 
-mkdir -p "$data_root/dwm-titus/config"
-cp "$work/managed-themes.toml" "$data_root/dwm-titus/config/themes.toml"
+mkdir -p "$data_root/dwm-oomaya/config"
+cp "$work/managed-themes.toml" "$data_root/dwm-oomaya/config/themes.toml"
 installed_managed=$(PATH=$bin_dir XDG_CONFIG_HOME=$config_home XDG_DATA_HOME=$data_root \
 	DWM_APPEARANCE_DATA_DIRS=$data_root "$helper" snapshot)
-grep -Fqx $'source\tmanaged\t'"$data_root/dwm-titus/config/themes.toml" <<<"$installed_managed"
+grep -Fqx $'source\tmanaged\t'"$data_root/dwm-oomaya/config/themes.toml" <<<"$installed_managed"
 
-mkdir "$config_home/dwm-titus/themes.toml"
+mkdir "$config_home/dwm-oomaya/themes.toml"
 set +e
 blocked_user=$(snapshot)
 blocked_user_status=$?
@@ -659,61 +659,61 @@ set -e
 [[ $blocked_user_status -eq 3 ]]
 grep -Fqx $'provider\tappearance\tunavailable\tread-only\tShared theme inventory and integration state' \
 	<<<"$blocked_user"
-grep -Fqx $'source\tuser\t'"$config_home/dwm-titus/themes.toml" <<<"$blocked_user"
+grep -Fqx $'source\tuser\t'"$config_home/dwm-oomaya/themes.toml" <<<"$blocked_user"
 grep -Fqx $'active\tnone\tnone\tunresolved' <<<"$blocked_user"
 grep -Fq $'error\tsource\tunreadable\tUser theme file is not a readable regular file: ' \
 	<<<"$blocked_user"
-rmdir "$config_home/dwm-titus/themes.toml"
+rmdir "$config_home/dwm-oomaya/themes.toml"
 
-ln -s "$work/missing-user-theme.toml" "$config_home/dwm-titus/themes.toml"
+ln -s "$work/missing-user-theme.toml" "$config_home/dwm-oomaya/themes.toml"
 dangling_user=$(snapshot)
 grep -Fqx $'provider\tappearance\tpartial\tread-only\tShared theme inventory and integration state' \
 	<<<"$dangling_user"
-grep -Fqx $'source\tmanaged\t'"$data_root/dwm-titus/config/themes.toml" <<<"$dangling_user"
+grep -Fqx $'source\tmanaged\t'"$data_root/dwm-oomaya/config/themes.toml" <<<"$dangling_user"
 grep -Fqx $'active\tnord\tnord\tselected' <<<"$dangling_user"
 grep -Fq $'error\tsource\tdangling-user\tIgnoring dangling user theme symlink and trying the managed source: ' \
 	<<<"$dangling_user"
-rm -f "$config_home/dwm-titus/themes.toml"
+rm -f "$config_home/dwm-oomaya/themes.toml"
 
 custom_theme=-custom_theme_with_a_name_that_is_longer_than_sixty_four_characters_1234567890
-cp "$work/managed-themes.toml" "$config_home/dwm-titus/themes.toml"
-sed -i "0,/theme = \"nord\"/s//theme = \"$custom_theme\"/" "$config_home/dwm-titus/themes.toml"
-sed -i "0,/^\[theme\.nord\]$/s//[theme.$custom_theme]/" "$config_home/dwm-titus/themes.toml"
+cp "$work/managed-themes.toml" "$config_home/dwm-oomaya/themes.toml"
+sed -i "0,/theme = \"nord\"/s//theme = \"$custom_theme\"/" "$config_home/dwm-oomaya/themes.toml"
+sed -i "0,/^\[theme\.nord\]$/s//[theme.$custom_theme]/" "$config_home/dwm-oomaya/themes.toml"
 custom=$(snapshot)
 grep -Fqx $'active\t'"$custom_theme"$'\t'"$custom_theme"$'\tselected' <<<"$custom"
 grep -Fq $'theme\t'"$custom_theme"$'\tselected\tvalid\ttrue\tNordic' <<<"$custom"
 
-cp "$work/managed-themes.toml" "$config_home/dwm-titus/themes.toml"
+cp "$work/managed-themes.toml" "$config_home/dwm-oomaya/themes.toml"
 sed -i '0,/theme = "nord"/s//theme = "no\\rd"/' \
-	"$config_home/dwm-titus/themes.toml"
+	"$config_home/dwm-oomaya/themes.toml"
 escaped_active=$(snapshot)
 grep -Fqx $'active\tnord\tnord\tselected' <<<"$escaped_active"
 
-cp "$work/managed-themes.toml" "$config_home/dwm-titus/themes.toml"
+cp "$work/managed-themes.toml" "$config_home/dwm-oomaya/themes.toml"
 em_space=$'\u2003'
 sed -i "0,/^\[active\]$/s//${em_space}[active]/; 0,/^theme =/s//${em_space}theme =/" \
-	"$config_home/dwm-titus/themes.toml"
+	"$config_home/dwm-oomaya/themes.toml"
 unicode_space=$(snapshot)
 grep -Fqx $'active\tnone\tnord\trecovery' <<<"$unicode_space"
 grep -Fqx $'error\tactive\tmissing\tThe active theme name is missing' <<<"$unicode_space"
 
-cp "$work/managed-themes.toml" "$config_home/dwm-titus/themes.toml"
-sed -i '0,/theme = "nord"/s//theme = 123/' "$config_home/dwm-titus/themes.toml"
+cp "$work/managed-themes.toml" "$config_home/dwm-oomaya/themes.toml"
+sed -i '0,/theme = "nord"/s//theme = 123/' "$config_home/dwm-oomaya/themes.toml"
 numeric_active=$(snapshot)
 grep -Fqx $'active\tnone\tnord\trecovery' <<<"$numeric_active"
 grep -Fq $'error\tactive\tinvalid-type\tActive theme must resolve to a TOML string at line ' \
 	<<<"$numeric_active"
 
 sed -i '0,/theme = 123/s//theme = 123\n theme = "nord"/' \
-	"$config_home/dwm-titus/themes.toml"
+	"$config_home/dwm-oomaya/themes.toml"
 duplicate_after_numeric=$(snapshot)
 grep -Fqx $'active\tnone\tnord\trecovery' <<<"$duplicate_after_numeric"
 grep -Fq $'error\tactive:__active\tduplicate-key\tDuplicate key '\''theme'\'' at line ' \
 	<<<"$duplicate_after_numeric"
 
-cp "$work/managed-themes.toml" "$config_home/dwm-titus/themes.toml"
+cp "$work/managed-themes.toml" "$config_home/dwm-oomaya/themes.toml"
 sed -i '/^gtk_theme[[:space:]]*=/a author-name = "demo"' \
-	"$config_home/dwm-titus/themes.toml"
+	"$config_home/dwm-oomaya/themes.toml"
 metadata_key=$(snapshot)
 grep -Fqx $'active\tnord\tnord\tselected' <<<"$metadata_key"
 if grep -Fq $'error\ttheme:nord\tinvalid-record\t' <<<"$metadata_key"; then
@@ -723,15 +723,15 @@ fi
 
 printf -v overlong_theme '%*s' 506 ''
 overlong_theme=${overlong_theme// /a}
-cp "$work/managed-themes.toml" "$config_home/dwm-titus/themes.toml"
-sed -i "0,/theme = \"nord\"/s//theme = \"$overlong_theme\"/" "$config_home/dwm-titus/themes.toml"
-sed -i "0,/^\[theme\.nord\]$/s//[theme.$overlong_theme]/" "$config_home/dwm-titus/themes.toml"
+cp "$work/managed-themes.toml" "$config_home/dwm-oomaya/themes.toml"
+sed -i "0,/theme = \"nord\"/s//theme = \"$overlong_theme\"/" "$config_home/dwm-oomaya/themes.toml"
+sed -i "0,/^\[theme\.nord\]$/s//[theme.$overlong_theme]/" "$config_home/dwm-oomaya/themes.toml"
 overlong=$(snapshot)
 grep -Fqx $'active\t'"$overlong_theme"$'\tdracula\trecovery' <<<"$overlong"
 grep -Fq $'error\tparser\tinvalid-theme-name\tTheme name is not a supported bare identifier at line ' \
 	<<<"$overlong"
 
-cat >"$config_home/dwm-titus/themes.toml" <<EOF
+cat >"$config_home/dwm-oomaya/themes.toml" <<EOF
 [active]
 theme = "$overlong_theme"
 [colors]
@@ -752,7 +752,7 @@ grep -Fqx $'error\tactive\tname-too-long\tActive theme name exceeds the runtime 
 	printf '%4095s' '' | tr ' ' x
 	printf '"\n'
 	cat "$work/managed-themes.toml"
-} >"$config_home/dwm-titus/themes.toml"
+} >"$config_home/dwm-oomaya/themes.toml"
 set +e
 long_line=$(snapshot)
 long_line_status=$?
@@ -761,8 +761,8 @@ set -e
 grep -Fqx $'error\tparser\tline-too-long\tTheme configuration contains a physical line that exceeds the runtime reader limit' \
 	<<<"$long_line"
 
-cp "$work/managed-themes.toml" "$config_home/dwm-titus/themes.toml"
-sed -i '0,/theme = "nord"/s//theme = "dracula"/' "$config_home/dwm-titus/themes.toml"
+cp "$work/managed-themes.toml" "$config_home/dwm-oomaya/themes.toml"
+sed -i '0,/theme = "nord"/s//theme = "dracula"/' "$config_home/dwm-oomaya/themes.toml"
 sed -i 's/gtk-theme-name=Nordic/gtk-theme-name=Adwaita-dark/' \
 	"$config_home/gtk-3.0/settings.ini" "$config_home/gtk-4.0/settings.ini"
 adwaita=$(snapshot)
@@ -774,8 +774,8 @@ fi
 sed -i 's/gtk-theme-name=Adwaita-dark/gtk-theme-name=Nordic/' \
 	"$config_home/gtk-3.0/settings.ini" "$config_home/gtk-4.0/settings.ini"
 
-cp "$work/managed-themes.toml" "$config_home/dwm-titus/themes.toml"
-sed -i '0,/theme = "nord"/s//theme = "missing"/' "$config_home/dwm-titus/themes.toml"
+cp "$work/managed-themes.toml" "$config_home/dwm-oomaya/themes.toml"
+sed -i '0,/theme = "nord"/s//theme = "missing"/' "$config_home/dwm-oomaya/themes.toml"
 unknown=$(snapshot)
 grep -Fqx $'provider\tappearance\tpartial\tread-only\tShared theme inventory and integration state' <<<"$unknown"
 grep -Fqx $'active\tmissing\tnord\trecovery' <<<"$unknown"
@@ -784,15 +784,15 @@ grep -Fqx $'color\tbackground\t#434C5E\tterm_bg' <<<"$unknown"
 grep -Fqx $'color\tbar-background\t#434C5E\tnormbgcolor' <<<"$unknown"
 grep -Fqx $'color\taccent\t#81A1C1\tselbordercolor' <<<"$unknown"
 
-cp "$work/managed-themes.toml" "$config_home/dwm-titus/themes.toml"
-printf '\n[theme.nord]\nterm_bg = "#000000"\n' >>"$config_home/dwm-titus/themes.toml"
+cp "$work/managed-themes.toml" "$config_home/dwm-oomaya/themes.toml"
+printf '\n[theme.nord]\nterm_bg = "#000000"\n' >>"$config_home/dwm-oomaya/themes.toml"
 duplicate=$(snapshot)
 grep -Fqx $'active\tnord\tnord\trecovery' <<<"$duplicate"
 grep -Fq $'error\ttheme:nord\tduplicate\tDuplicate theme section at line ' <<<"$duplicate"
 grep -Fqx $'theme\tnord\tselected\tinvalid\ttrue\tNordic\tTheme record is duplicate, malformed, or incomplete' <<<"$duplicate"
 grep -Fqx $'color\tbackground\t#2E3440\tterm_bg' <<<"$duplicate"
 
-cat >"$config_home/dwm-titus/themes.toml" <<'EOF'
+cat >"$config_home/dwm-oomaya/themes.toml" <<'EOF'
 [active]
 theme = "nord"
 
@@ -814,26 +814,26 @@ grep -Fqx $'color\tplaceholder\t#D8DEE9\tterm_color8' <<<"$split_duplicate"
 grep -Fqx $'color\tsuccess\t#81A1C1\tterm_color2' <<<"$split_duplicate"
 [[ $(grep -Ec $'^color\t[^\t]+\t#[0-9A-Fa-f]{6}\t' <<<"$split_duplicate") -eq 18 ]]
 
-cp "$work/managed-themes.toml" "$config_home/dwm-titus/themes.toml"
-sed -i '0,/theme = "nord"/s//theme = "broken"/' "$config_home/dwm-titus/themes.toml"
-printf '\n[theme.broken]\ndark_mode = true\n' >>"$config_home/dwm-titus/themes.toml"
+cp "$work/managed-themes.toml" "$config_home/dwm-oomaya/themes.toml"
+sed -i '0,/theme = "nord"/s//theme = "broken"/' "$config_home/dwm-oomaya/themes.toml"
+printf '\n[theme.broken]\ndark_mode = true\n' >>"$config_home/dwm-oomaya/themes.toml"
 incomplete=$(snapshot)
 grep -Fqx $'active\tbroken\tnord\trecovery' <<<"$incomplete"
 grep -Fqx $'color\tbackground\t#434C5E\tterm_bg' <<<"$incomplete"
 grep -Fqx $'error\ttheme:broken\tmissing-key\tTheme is missing 25 required keys; first missing key is '\''normfgcolor'\''' <<<"$incomplete"
 grep -Fqx $'error\tactive\tinvalid\tActive theme '\''broken'\'' is invalid or incomplete' <<<"$incomplete"
 
-cp "$work/managed-themes.toml" "$config_home/dwm-titus/themes.toml"
+cp "$work/managed-themes.toml" "$config_home/dwm-oomaya/themes.toml"
 sed -i '0,/normfgcolor     = "#D8DEE9"/s//normfgcolor     = "not-a-color"/' \
-	"$config_home/dwm-titus/themes.toml"
+	"$config_home/dwm-oomaya/themes.toml"
 invalid_color=$(snapshot)
 grep -Fqx $'active\tnord\tdracula\trecovery' <<<"$invalid_color"
 grep -Fqx $'color\tbackground\t#2E3440\tterm_bg' <<<"$invalid_color"
 grep -Fqx $'error\ttheme:nord\tinvalid-color\tTheme key '\''normfgcolor'\'' is not a #RRGGBB color' <<<"$invalid_color"
 
-cp "$work/managed-themes.toml" "$config_home/dwm-titus/themes.toml"
+cp "$work/managed-themes.toml" "$config_home/dwm-oomaya/themes.toml"
 sed -i $'0,/dark_mode       = true/s//dark_mode       = "bogus\tvalue"/' \
-	"$config_home/dwm-titus/themes.toml"
+	"$config_home/dwm-oomaya/themes.toml"
 invalid_dark=$(snapshot)
 grep -Fqx $'theme\tnord\tselected\tinvalid\tbogus value\tNordic\tTheme record is duplicate, malformed, or incomplete' \
 	<<<"$invalid_dark"
@@ -846,7 +846,7 @@ grep -Fqx $'error\ttheme:nord\tinvalid-dark-mode\tTheme dark_mode must be true o
 		printf 'extra-%s = 1\n' "$entry_index"
 	done
 	cat "$work/managed-themes.toml"
-} >"$config_home/dwm-titus/themes.toml"
+} >"$config_home/dwm-oomaya/themes.toml"
 set +e
 alternate_key_limit=$(snapshot)
 alternate_key_status=$?
@@ -864,7 +864,7 @@ printf -v multibyte_key 'é%.0s' {1..300}
 		printf '%s-%s = 1\n' "$multibyte_key" "$entry_index"
 	done
 	cat "$work/managed-themes.toml"
-} >"$config_home/dwm-titus/themes.toml"
+} >"$config_home/dwm-oomaya/themes.toml"
 multibyte_keys=$(snapshot)
 grep -Fqx $'provider\tappearance\tavailable\tread-only\tShared theme inventory and integration state' \
 	<<<"$multibyte_keys"
@@ -884,7 +884,7 @@ nord_block=$(awk '
 		'selfgcolor = "#ECEFF4"' \
 		'selbgcolor = "#5E81AC"' \
 		'selbordercolor = "#81A1C1"'
-} >"$config_home/dwm-titus/themes.toml"
+} >"$config_home/dwm-oomaya/themes.toml"
 legacy_collision=$(snapshot)
 grep -Fqx $'active\tlegacy\tlegacy\tselected' <<<"$legacy_collision"
 grep -Fqx $'theme\tlegacy\tselected\tvalid\ttrue\tNordic\tTheme record is complete' \
@@ -898,7 +898,7 @@ grep -Fqx $'theme\t@legacy-colors\tavailable\tvalid\ttrue\tautomatic\tTheme reco
 		printf '[theme.sparse%s]\n' "$theme_index"
 	done
 	printf '[theme.nord]\n%s\n' "$nord_block"
-} >"$config_home/dwm-titus/themes.toml"
+} >"$config_home/dwm-oomaya/themes.toml"
 nord_after_cap=$(snapshot)
 grep -Fqx $'active\tmissing\tnord\trecovery' <<<"$nord_after_cap"
 grep -Fqx $'theme\tnord\trecovery\tvalid\ttrue\tNordic\tTheme record is complete' \
@@ -910,12 +910,12 @@ grep -Fqx $'theme\tnord\trecovery\tvalid\ttrue\tNordic\tTheme record is complete
 		printf '[theme.sparse%s]\n' "$theme_index"
 	done
 	printf '[theme.chosen]\n%s\n' "$nord_block"
-} >"$config_home/dwm-titus/themes.toml"
+} >"$config_home/dwm-oomaya/themes.toml"
 selected_after_cap=$(snapshot)
 grep -Fqx $'active\tchosen\tchosen\tselected' <<<"$selected_after_cap"
 grep -Fqx $'theme\tchosen\tselected\tvalid\ttrue\tNordic\tTheme record is complete' \
 	<<<"$selected_after_cap"
-sed -i '0,/theme = "chosen"/s//theme = chosen/' "$config_home/dwm-titus/themes.toml"
+sed -i '0,/theme = "chosen"/s//theme = chosen/' "$config_home/dwm-oomaya/themes.toml"
 bare_selected_after_cap=$(snapshot)
 grep -Fqx $'active\tchosen\tchosen\tselected' <<<"$bare_selected_after_cap"
 grep -Fqx $'theme\tchosen\tselected\tvalid\ttrue\tNordic\tTheme record is complete' \
@@ -926,7 +926,7 @@ grep -Fqx $'theme\tchosen\tselected\tvalid\ttrue\tNordic\tTheme record is comple
 	for ((theme_index = 0; theme_index < 20; theme_index++)); do
 		printf '[theme.t%s]\n%s\n' "$theme_index" "$nord_block"
 	done
-} >"$config_home/dwm-titus/themes.toml"
+} >"$config_home/dwm-oomaya/themes.toml"
 entry_limited=$(snapshot)
 grep -Fqx $'provider\tappearance\tpartial\tread-only\tShared theme inventory and integration state' \
 	<<<"$entry_limited"
@@ -943,7 +943,7 @@ fi
 	for ((theme_index = 0; theme_index < 100; theme_index++)); do
 		printf '[theme.t%s]\ndark_mode = true\n' "$theme_index"
 	done
-} >"$config_home/dwm-titus/themes.toml"
+} >"$config_home/dwm-oomaya/themes.toml"
 set +e
 timeout 5 env PATH="$bin_dir" XDG_CONFIG_HOME="$config_home" XDG_DATA_HOME="$data_root" \
 	DWM_APPEARANCE_DATA_DIRS="$data_root" "$helper" snapshot >"$work/many-incomplete.out"
@@ -959,7 +959,7 @@ grep -Fqx $'provider\tappearance\tunavailable\tread-only\tShared theme inventory
 		printf '# comment\n'
 	done
 	cat "$work/managed-themes.toml"
-} >"$config_home/dwm-titus/themes.toml"
+} >"$config_home/dwm-oomaya/themes.toml"
 timeout 5 env PATH="$bin_dir" GTK_THEME='' XDG_CONFIG_HOME="$config_home" \
 	XDG_DATA_HOME="$data_root" DWM_APPEARANCE_DATA_DIRS="$data_root" \
 	"$helper" snapshot >"$work/comment-heavy.out"
@@ -970,7 +970,7 @@ grep -Fqx $'active\tnord\tnord\tselected' "$work/comment-heavy.out"
 	for ((scalar_index = 0; scalar_index < 68000; scalar_index++)); do
 		printf 'extra%s = 1\n' "$scalar_index"
 	done
-} >"$config_home/dwm-titus/themes.toml"
+} >"$config_home/dwm-oomaya/themes.toml"
 timeout 5 env PATH="$bin_dir" GTK_THEME='' XCURSOR_THEME='' \
 	XDG_CONFIG_HOME="$config_home" XDG_DATA_HOME="$data_root" \
 	DWM_APPEARANCE_DATA_DIRS="$data_root" "$helper" snapshot \
@@ -985,7 +985,7 @@ grep -Fqx $'error\tparser\tentry-limit\tTheme configuration exceeds the runtime 
 		printf 'post-budget%s = 1\n' "$post_budget_index"
 	done
 	printf 'ignored-complex = [{x=1}]\n'
-} >"$config_home/dwm-titus/themes.toml"
+} >"$config_home/dwm-oomaya/themes.toml"
 post_budget_complex=$(snapshot)
 grep -Fqx $'active\tnord\tnord\tselected' <<<"$post_budget_complex"
 if grep -Fq $'error\tparser\tunsupported-complex-value\t' <<<"$post_budget_complex"; then
@@ -993,7 +993,7 @@ if grep -Fq $'error\tparser\tunsupported-complex-value\t' <<<"$post_budget_compl
 	exit 1
 fi
 
-cat >"$config_home/dwm-titus/themes.toml" <<'EOF'
+cat >"$config_home/dwm-oomaya/themes.toml" <<'EOF'
 [colors]
 normfgcolor = "#D8DEE9"
 normbgcolor = "#2E3440"
@@ -1018,7 +1018,7 @@ fi
 grep -Fqx $'error\tparser\tlegacy-format\tLegacy [colors] palette is active; named themes are recommended' \
 	<<<"$legacy"
 
-cat >"$config_home/dwm-titus/themes.toml" <<'EOF'
+cat >"$config_home/dwm-oomaya/themes.toml" <<'EOF'
 [active]
 theme = "missing"
 [colors]
@@ -1033,16 +1033,16 @@ grep -Fqx $'active\tmissing\tnone\tunresolved' <<<"$legacy_not_recovery"
 grep -Fqx $'error\tactive\tno-valid-theme\tNo complete theme is available for recovery' \
 	<<<"$legacy_not_recovery"
 
-mkdir -p "$work/fallback-home/.config/dwm-titus"
-cp "$work/managed-themes.toml" "$work/fallback-home/.config/dwm-titus/themes.toml"
+mkdir -p "$work/fallback-home/.config/dwm-oomaya"
+cp "$work/managed-themes.toml" "$work/fallback-home/.config/dwm-oomaya/themes.toml"
 relative_xdg=$(HOME="$work/fallback-home" XDG_CONFIG_HOME=relative-config \
 	XDG_DATA_HOME=relative-data DWM_APPEARANCE_DATA_DIRS=$data_root \
 	"$helper" snapshot)
-grep -Fqx $'source\tuser\t'"$work/fallback-home/.config/dwm-titus/themes.toml" \
+grep -Fqx $'source\tuser\t'"$work/fallback-home/.config/dwm-oomaya/themes.toml" \
 	<<<"$relative_xdg"
 grep -Fqx $'active\tnord\tnord\tselected' <<<"$relative_xdg"
 
-rm -f "$config_home/dwm-titus/themes.toml" "$work/missing-managed.toml"
+rm -f "$config_home/dwm-oomaya/themes.toml" "$work/missing-managed.toml"
 set +e
 missing=$(PATH=$bin_dir XDG_CONFIG_HOME=$config_home XDG_DATA_HOME=$data_root \
 	DWM_APPEARANCE_DATA_DIRS=$data_root \
