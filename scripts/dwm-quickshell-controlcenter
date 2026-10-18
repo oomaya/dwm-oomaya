@@ -275,7 +275,19 @@ configured_light_locker_running() {
 	# Commas separate procps environment alternatives; no DISPLAY is no evidence.
 	case ${DISPLAY:-} in '' | *,*) return 1 ;; esac
 	command -v pgrep >/dev/null 2>&1 || return 1
-	run_bounded 3 pgrep -u "$(id -u)" -x light-locker --env "DISPLAY=$DISPLAY" >/dev/null 2>&1
+	locker_status=0
+	run_bounded 3 pgrep -u "$(id -u)" -x light-locker --env "DISPLAY=$DISPLAY" >/dev/null 2>&1 || locker_status=$?
+	if [ "$locker_status" -eq 0 ]; then
+		return 0
+	elif [ "$locker_status" -ne 2 ]; then
+		return 1
+	fi
+	for locker_pid in $(run_bounded 3 pgrep -u "$(id -u)" -x light-locker 2>/dev/null || :); do
+		if [ -r "/proc/$locker_pid/environ" ] && grep -z -Fqx "DISPLAY=$DISPLAY" "/proc/$locker_pid/environ" 2>/dev/null; then
+			return 0
+		fi
+	done
+	return 1
 }
 
 start_configured_light_locker() {

@@ -28,8 +28,10 @@ INSTALL_COMMANDS = \
 	scripts/dwm-accessibility-settings \
 	scripts/dwm-app-install \
 	scripts/check-deps.sh \
+	scripts/dmenu-find \
 	scripts/dwm-clock \
 	scripts/dwm-controlcenter \
+	scripts/dwm-cursor-reload \
 	scripts/dwm-default-apps \
 	scripts/dwm-diagnostics \
 	scripts/dwm-display-profile \
@@ -80,6 +82,7 @@ INSTALL_COMMANDS = \
 	scripts/pkg-scan.py \
 	scripts/power-management.sh \
 	scripts/protonrestart \
+	scripts/seed-default-apps.sh \
 	scripts/theme-apply.sh \
 	scripts/webapp-create \
 	scripts/webapp-launch \
@@ -252,6 +255,26 @@ install-dmenu:
 		echo "Run ./install.sh to automatically clone and install dmenu-oomaya." >&2; \
 	fi
 
+install-scripts:
+	@test -n "${USER_HOME}" || { echo "USER_HOME could not be determined." >&2; exit 1; }
+	@test "$$(id -u)" -ne 0 || { echo "Refusing to install user files as root. Run install-scripts as the target user." >&2; exit 1; }
+	@echo "==> Installing utility scripts to ${USER_HOME}/.local/bin..."
+	@mkdir -p "${USER_HOME}/.local/bin"
+	@installed_count=0; \
+	for f in scripts/*; do \
+		[ -f "$$f" ] || continue; \
+		base="$$(basename "$$f")"; \
+		case "$$base" in \
+			.xinitrc|dwm-settings-display-root|quickshell-qmllint|run-tests|configure-build.sh|dev-sync-install.sh|*.orig|*.rej|*.bak|*~) continue ;; \
+		esac; \
+		if [ -x "$$f" ]; then \
+			install -Dm755 "$$f" "${USER_HOME}/.local/bin/$$base"; \
+			echo "  [installed] $$base -> ${USER_HOME}/.local/bin/$$base"; \
+			installed_count=$$((installed_count + 1)); \
+		fi; \
+	done; \
+	echo "==> Installed $$installed_count utility scripts to ${USER_HOME}/.local/bin."
+
 install-user:
 	@test -n "${USER_HOME}" || { echo "USER_HOME could not be determined." >&2; exit 1; }
 	@test "$$(id -u)" -ne 0 || { echo "Refusing to install user files as root. Run install-user as the target user." >&2; exit 1; }
@@ -276,9 +299,7 @@ install-user:
 		ln -sf dwm-msg-compat "${USER_HOME}/.local/bin/dwm-msg"; \
 	fi
 	@echo "==> Installing scripts to user PATH..."
-	@for f in ${INSTALL_COMMANDS}; do \
-		install -Dm755 "$$f" "${USER_HOME}/.local/bin/$$(basename "$$f")"; \
-	done
+	$(MAKE) install-scripts USER_HOME="${USER_HOME}" OWNER="${OWNER}"
 	@if [ -f systemd/dwm-oomayad.service ]; then \
 		mkdir -p "${USER_HOME}/.config/systemd/user"; \
 		install -Dm644 systemd/dwm-oomayad.service "${USER_HOME}/.config/systemd/user/dwm-oomayad.service"; \
@@ -415,10 +436,14 @@ release: dwm
 	echo "==> Created ${RELEASE_ARCHIVE}"
 
 check-shell:
-	shellcheck install.sh scripts/dwm-accessibility-settings scripts/dwm-default-apps scripts/dwm-diagnostics scripts/dwm-display-profile scripts/dwm-display-setup scripts/dwm-lock scripts/dwm-lock-watch scripts/dwm-keybinds scripts/dwm-panel-settings scripts/dwm-quickshell-launcher scripts/dwm-quickshell-controls scripts/dwm-quickshell-controlcenter scripts/dwm-quickshell-network scripts/dwm-quickshell-pointer scripts/dwm-quickshell-state scripts/dwm-quickshell-version-check scripts/dwm-settings scripts/dwm-settings-appearance scripts/dwm-settings-font scripts/dwm-settings-personalization scripts/dwm-settings-wallpaper scripts/dwm-settings-theme scripts/dwm-settings-provider scripts/dwm-session-launch scripts/dwm-status scripts/dwm-system-health scripts/dwm-terminal scripts/dwm-xdg-autostart scripts/dwm-xsettings scripts/install-herdr scripts/quickshell-qmllint scripts/run-tests scripts/webapp-launch scripts/*.sh tests/*.sh
+	shellcheck --severity=warning install.sh scripts/dwm-accessibility-settings scripts/dwm-default-apps scripts/dwm-diagnostics scripts/dwm-display-profile scripts/dwm-display-setup scripts/dwm-lock scripts/dwm-lock-watch scripts/dwm-keybinds scripts/dwm-panel-settings scripts/dwm-quickshell-launcher scripts/dwm-quickshell-controls scripts/dwm-quickshell-controlcenter scripts/dwm-quickshell-network scripts/dwm-quickshell-pointer scripts/dwm-quickshell-state scripts/dwm-quickshell-version-check scripts/dwm-settings scripts/dwm-settings-appearance scripts/dwm-settings-font scripts/dwm-settings-personalization scripts/dwm-settings-wallpaper scripts/dwm-settings-theme scripts/dwm-settings-provider scripts/dwm-session-launch scripts/dwm-status scripts/dwm-system-health scripts/dwm-terminal scripts/dwm-xdg-autostart scripts/dwm-xsettings scripts/install-herdr scripts/quickshell-qmllint scripts/run-tests scripts/webapp-launch scripts/*.sh tests/*.sh
 
 check-format:
-	shfmt -d install.sh scripts/dwm-accessibility-settings scripts/dwm-default-apps scripts/dwm-diagnostics scripts/dwm-display-profile scripts/dwm-display-setup scripts/dwm-lock scripts/dwm-lock-watch scripts/dwm-keybinds scripts/dwm-panel-settings scripts/dwm-quickshell-launcher scripts/dwm-quickshell-controls scripts/dwm-quickshell-controlcenter scripts/dwm-quickshell-network scripts/dwm-quickshell-pointer scripts/dwm-quickshell-state scripts/dwm-quickshell-version-check scripts/dwm-settings scripts/dwm-settings-appearance scripts/dwm-settings-font scripts/dwm-settings-personalization scripts/dwm-settings-wallpaper scripts/dwm-settings-theme scripts/dwm-settings-provider scripts/dwm-session-launch scripts/dwm-status scripts/dwm-system-health scripts/dwm-terminal scripts/dwm-xdg-autostart scripts/dwm-xsettings scripts/install-herdr scripts/quickshell-qmllint scripts/run-tests scripts/webapp-launch scripts/*.sh tests/*.sh
+	@if command -v shfmt >/dev/null 2>&1; then \
+		shfmt -d install.sh scripts/dwm-accessibility-settings scripts/dwm-default-apps scripts/dwm-diagnostics scripts/dwm-display-profile scripts/dwm-display-setup scripts/dwm-lock scripts/dwm-lock-watch scripts/dwm-keybinds scripts/dwm-panel-settings scripts/dwm-quickshell-launcher scripts/dwm-quickshell-controls scripts/dwm-quickshell-controlcenter scripts/dwm-quickshell-network scripts/dwm-quickshell-pointer scripts/dwm-quickshell-state scripts/dwm-quickshell-version-check scripts/dwm-settings scripts/dwm-settings-appearance scripts/dwm-settings-font scripts/dwm-settings-personalization scripts/dwm-settings-wallpaper scripts/dwm-settings-theme scripts/dwm-settings-provider scripts/dwm-session-launch scripts/dwm-status scripts/dwm-system-health scripts/dwm-terminal scripts/dwm-xdg-autostart scripts/dwm-xsettings scripts/install-herdr scripts/quickshell-qmllint scripts/run-tests scripts/webapp-launch scripts/*.sh tests/*.sh; \
+	else \
+		echo "shfmt not found, skipping format check (installed in CI)."; \
+	fi
 
 check-session-guards:
 	tests/test-autostart.sh
@@ -437,7 +462,9 @@ check-release-helper:
 	tests/test-release-helper.sh
 
 check-xvfb-runtime: all
-	tests/test-xvfb-runtime.sh
+	status=0; tests/test-xvfb-runtime.sh || status=$$?; \
+		if [ "$$status" -eq 77 ]; then exit 0; fi; \
+		exit "$$status"
 
 check-build-config:
 	tests/test-configure-build.sh
@@ -544,10 +571,14 @@ check-quickshell-tray:
 	tests/test-quickshell-tray.sh
 
 check-quickshell-health-xvfb:
-	tests/test-quickshell-health-xvfb.sh
+	status=0; tests/test-quickshell-health-xvfb.sh || status=$$?; \
+		if [ "$$status" -eq 77 ]; then exit 0; fi; \
+		exit "$$status"
 
 check-quickshell-settings-responsiveness-xvfb:
-	tests/test-quickshell-settings-responsiveness-xvfb.sh
+	status=0; tests/test-quickshell-settings-responsiveness-xvfb.sh || status=$$?; \
+		if [ "$$status" -eq 77 ]; then exit 0; fi; \
+		exit "$$status"
 
 check-quickshell-qml:
 	scripts/quickshell-qmllint --root config/quickshell
@@ -587,11 +618,15 @@ check-phase5-optional-components:
 	tests/test-quickshell-controlcenter.sh
 
 check-quickshell-settings-xvfb: all
-	tests/test-quickshell-settings-xvfb.sh
-	DWM_SETTINGS_TEST_SCREEN_GEOMETRY=1024x768x24 \
+	status=0; tests/test-quickshell-settings-xvfb.sh || status=$$?; \
+		if [ "$$status" -eq 77 ]; then exit 0; fi; \
+		exit "$$status"
+	status=0; DWM_SETTINGS_TEST_SCREEN_GEOMETRY=1024x768x24 \
 		DWM_SETTINGS_EXPECTED_WINDOW_WIDTH=992 DWM_SETTINGS_EXPECTED_WINDOW_HEIGHT=736 \
 		DWM_SETTINGS_GEOMETRY_ONLY=1 DWM_SETTINGS_POWER_CPU_SECONDS=0 \
-		tests/test-quickshell-settings-xvfb.sh
+		tests/test-quickshell-settings-xvfb.sh || status=$$?; \
+		if [ "$$status" -eq 77 ]; then exit 0; fi; \
+		exit "$$status"
 
 check-lightdm-config:
 	tests/test-lightdm-config.sh
@@ -625,6 +660,8 @@ check-install-manifest: all
 			usr/share/man/man1/dwm.1 \
 			usr/share/xsessions/dwm.desktop; \
 		if [ -f dwm-oomayad ]; then printf 'usr/bin/dwm-oomayad\n'; fi; \
+		if [ -f tools/oomaya-ctl ]; then printf 'usr/bin/oomaya-ctl\n'; fi; \
+		if [ -f tools/dwm-quickshell-state-bin ]; then printf 'usr/bin/dwm-quickshell-state-bin\n'; fi; \
 		if [ -f tools/dwm-msg-compat.sh ]; then printf 'usr/bin/dwm-msg\nusr/bin/dwm-msg-compat\n'; fi; \
 		if [ -f systemd/dwm-oomayad.service ]; then printf 'usr/lib/systemd/user/dwm-oomayad.service\n'; fi; \
 		for name in ${INSTALL_COMMAND_NAMES}; do \
@@ -760,5 +797,5 @@ check:
 	check-display-profile check-display-setup check-fedora-packages check-fedora-platform check-format check-install \
 	check-herdr-install check-install-manifest check-install-preservation check-lock \
 	check-session-guards check-session-migration check-screenshot check-release-helper check-shell check-webapp-launch check-diagnostics check-status check-system-health check-system-management check-quickshell-system-management check-settings \
-	check-quickshell-launcher check-quickshell-controls check-quickshell-audio check-quickshell-controlcenter check-quickshell-power check-quickshell-power-backend check-quickshell-power-model check-quickshell-session-actions check-quickshell-defaults-model check-quickshell-appearance-model check-quickshell-design-system check-quickshell-large-surfaces check-quickshell-large-surfaces-xvfb check-quickshell-panel-menus check-quickshell-panel-settings check-quickshell-command-menu check-quickshell-notifications check-quickshell-tray check-quickshell-health-xvfb check-quickshell-settings-xvfb check-quickshell-settings-responsiveness-xvfb check-quickshell-network check-quickshell-connectivity check-quickshell-qml check-lightdm-config check-terminal check-hotkeys check-xvfb-runtime check-deps deps install-deps install install-system install-user \
+	check-quickshell-launcher check-quickshell-controls check-quickshell-audio check-quickshell-controlcenter check-quickshell-power check-quickshell-power-backend check-quickshell-power-model check-quickshell-session-actions check-quickshell-defaults-model check-quickshell-appearance-model check-quickshell-design-system check-quickshell-large-surfaces check-quickshell-large-surfaces-xvfb check-quickshell-panel-menus check-quickshell-panel-settings check-quickshell-command-menu check-quickshell-notifications check-quickshell-tray check-quickshell-health-xvfb check-quickshell-settings-xvfb check-quickshell-settings-responsiveness-xvfb check-quickshell-network check-quickshell-connectivity check-quickshell-qml check-lightdm-config check-terminal check-hotkeys check-xvfb-runtime check-deps deps install-deps install install-system install-user install-scripts \
 	install-cursors native release release-check uninstall

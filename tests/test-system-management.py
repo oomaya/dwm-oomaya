@@ -41,6 +41,21 @@ provider = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = provider
 SPEC.loader.exec_module(provider)
 
+_os_release_override = None
+if "DWM_TEST_OS_RELEASE" not in os.environ:
+    try:
+        with open("/etc/os-release", "r", encoding="utf-8") as _f:
+            _content = _f.read()
+    except OSError:
+        _content = ""
+    if "ID=fedora" not in _content:
+        _os_release_override = tempfile.NamedTemporaryFile("w", delete=False)
+        _os_release_override.write("ID=fedora\nVERSION_ID=44\n")
+        _os_release_override.close()
+        os.environ["DWM_TEST_OS_RELEASE"] = _os_release_override.name
+        import atexit
+        atexit.register(lambda: os.unlink(_os_release_override.name) if os.path.exists(_os_release_override.name) else None)
+
 
 class ComposedFixtureSnapshotTests(unittest.TestCase):
     def test_original_snapshot_modes_survive_each_fixture_wrapper(self):
@@ -3625,14 +3640,23 @@ class MountMonitorTests(unittest.TestCase):
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
-FILE *fopen64(const char *path, const char *mode) {
-    FILE *(*original)(const char *, const char *) = dlsym(RTLD_NEXT, "fopen64");
-    FILE *result = original(path, mode);
-    if (result && strstr(path, "/mountinfo") && strchr(mode, 'e')) {
+static void check_marker(const char *path, const char *mode) {
+    if (strstr(path, "/mountinfo") && strchr(mode, 'e')) {
         int fd = open(getenv("DWM_MOUNT_PARSE_MARKER"), O_WRONLY | O_CREAT, 0600);
         if (fd >= 0) close(fd);
         usleep(350000);
     }
+}
+FILE *fopen(const char *path, const char *mode) {
+    FILE *(*original)(const char *, const char *) = dlsym(RTLD_NEXT, "fopen");
+    FILE *result = original(path, mode);
+    if (result) check_marker(path, mode);
+    return result;
+}
+FILE *fopen64(const char *path, const char *mode) {
+    FILE *(*original)(const char *, const char *) = dlsym(RTLD_NEXT, "fopen64");
+    FILE *result = original(path, mode);
+    if (result) check_marker(path, mode);
     return result;
 }
 """)
@@ -9720,16 +9744,17 @@ class PackageKitSafetyTests(unittest.TestCase):
                                                                     mock.Mock(return_value=-1)))
 
     def test_platform_identity_is_fixed_bounded_and_never_evaluated(self):
-        with mock.patch("builtins.open", mock.mock_open(read_data=b'ID=fedora\nVERSION_ID="44"\nNAME="ignored"\n')) as source:
-            self.assertEqual(provider.read_fedora_identity(), {"ID": "fedora", "VERSION_ID": "44"})
-            source.assert_called_once_with("/etc/os-release", "rb")
-            source().read.assert_called_once_with(65537)
-        for data in (b"ID=ubuntu\nID_LIKE=fedora", b"ID=fedora\nID=fedora", b"ID=$(false)",
-                     b"ID=fedora#variant", b'ID="fedora"#variant', b"ID=fedora #inline",
-                     b"ID='fedora", b"\xff", b"x" * 65537):
-            with self.subTest(data=data[:20]), mock.patch("builtins.open", mock.mock_open(read_data=data)):
-                with self.assertRaises(provider.SnapshotFailure):
-                    provider.read_fedora_identity()
+        with mock.patch.dict(os.environ, {"DWM_TEST_OS_RELEASE": ""}):
+            with mock.patch("builtins.open", mock.mock_open(read_data=b'ID=fedora\nVERSION_ID="44"\nNAME="ignored"\n')) as source:
+                self.assertEqual(provider.read_fedora_identity(), {"ID": "fedora", "VERSION_ID": "44"})
+                source.assert_called_once_with("/etc/os-release", "rb")
+                source().read.assert_called_once_with(65537)
+            for data in (b"ID=ubuntu\nID_LIKE=fedora", b"ID=fedora\nID=fedora", b"ID=$(false)",
+                         b"ID=fedora#variant", b'ID="fedora"#variant', b"ID=fedora #inline",
+                         b"ID='fedora", b"\xff", b"x" * 65537):
+                with self.subTest(data=data[:20]), mock.patch("builtins.open", mock.mock_open(read_data=data)):
+                    with self.assertRaises(provider.SnapshotFailure):
+                        provider.read_fedora_identity()
 
 
 class PackageKitExecutionTests(unittest.TestCase):

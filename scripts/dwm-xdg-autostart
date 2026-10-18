@@ -696,11 +696,14 @@ prepare_action() {
 
 print_action_success() {
 	local operation=$1 desktop_id=$2 backup=${3:-} detail=$4
+	local clean_backup clean_detail
 	load_entry "$desktop_id" || die "resulting entry is invalid: $entry_detail"
 	printf 'autostart-protocol\t%s\t%s\n' "$protocol_major" "$protocol_minor"
+	clean_backup=$(safe_field "$backup")
+	clean_detail=$(safe_field "$detail")
 	printf 'action\tsuccess\t%s\t%s\t%s\t%s\t%s\t%s\n' \
 		"$operation" "$desktop_id" "$entry_state" "$entry_revision" \
-		"$(safe_field "$backup")" "$(safe_field "$detail")"
+		"$clean_backup" "$clean_detail"
 }
 
 set_entry() {
