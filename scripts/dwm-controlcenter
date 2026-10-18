@@ -1,10 +1,275 @@
-#!/bin/sh
-set -eu
+#!/usr/bin/env bash
+# dwm-controlcenter — Native Suckless Control Center with Quickshell hybrid fallback
+set -euo pipefail
 
+PROMPT="⚡ Control Center >"
+
+get_wifi_status() {
+	if command -v nmcli >/dev/null 2>&1; then
+		local active
+		active=$(timeout 0.5s nmcli -t -f active,ssid dev wifi 2>/dev/null | awk -F: '$1=="yes" {print $2; exit}' || true)
+		if [ -n "$active" ]; then
+			printf "📶  Wi-Fi: %s" "$active"
+			return
+		fi
+	fi
+	printf "📶  Wi-Fi: Disconnected / Off"
+}
+
+get_bt_status() {
+	if command -v bluetoothctl >/dev/null 2>&1; then
+		local bt_info
+		bt_info=$(timeout 0.5s bluetoothctl show 2>/dev/null || true)
+		if [ -n "$bt_info" ] && grep -q "Powered: yes" <<<"$bt_info"; then
+			local dev
+			dev=$(timeout 0.5s bluetoothctl devices Connected 2>/dev/null | head -n 1 | cut -d ' ' -f 3- || true)
+			if [ -n "$dev" ]; then
+				printf "󰂯  Bluetooth: %s" "$dev"
+				return
+			fi
+			printf "󰂯  Bluetooth: On"
+			return
+		fi
+	fi
+	printf "󰂯  Bluetooth: Off"
+}
+
+get_volume_status() {
+	if command -v wpctl >/dev/null 2>&1; then
+		local vol
+		vol=$(timeout 0.5s wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null || true)
+		if [ -n "$vol" ]; then
+			if [[ "$vol" == *"[MUTED]"* ]]; then
+				printf "🔇  Volume: Muted"
+				return
+			fi
+			local pct
+			pct=$(awk '{print int($2 * 100)}' <<<"$vol")
+			printf "🔊  Volume: %s%%" "$pct"
+			return
+		fi
+	elif command -v pactl >/dev/null 2>&1; then
+		local vol
+		vol=$(timeout 0.5s pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null | grep -o '[0-9]\+%' | head -n 1 || true)
+		if [ -n "$vol" ]; then
+			printf "🔊  Volume: %s" "$vol"
+			return
+		fi
+	fi
+	printf "🔊  Volume: Available"
+}
+
+get_brightness_status() {
+	if command -v brightnessctl >/dev/null 2>&1; then
+		local cur max
+		cur=$(timeout 0.5s brightnessctl get 2>/dev/null || true)
+		max=$(timeout 0.5s brightnessctl max 2>/dev/null || true)
+		if [ -n "$cur" ] && [ -n "$max" ] && [ "$max" -gt 0 ]; then
+			local pct=$(( cur * 100 / max ))
+			printf "󰃠  Brightness: %d%%" "$pct"
+			return
+		fi
+	fi
+	printf "󰃠  Brightness: 100%%"
+}
+
+get_power_profile_status() {
+	if command -v powerprofilesctl >/dev/null 2>&1; then
+		local prof
+		prof=$(timeout 0.5s powerprofilesctl get 2>/dev/null || true)
+		if [ -n "$prof" ]; then
+			printf "⚡  Power: %s" "$prof"
+			return
+		fi
+	fi
+	printf "⚡  Power: Balanced"
+}
+
+get_menu_options() {
+	get_wifi_status; echo
+	get_bt_status; echo
+	get_volume_status; echo
+	get_brightness_status; echo
+	get_power_profile_status; echo
+	printf "󰏘  Appearance & Wallpapers >\n"
+	printf "⚙  Full Settings Hub >\n"
+}
+
+show_native_controlcenter() {
+	local choice
+	choice=$(get_menu_options | dmenu -p "$PROMPT" -l 7 "$@")
+	[ -n "$choice" ] || exit 0
+
+	case "$choice" in
+		*"Wi-Fi"*)
+			if command -v nmcli >/dev/null 2>&1; then
+				local wifi_list
+				wifi_list=$(nmcli -f SSID,SIGNAL,SECURITY dev wifi list 2>/dev/null | tail -n +2 | grep -v '^--' | sort -u || true)
+				local sub
+				sub=$(printf "%s\n󰖩  Toggle Wi-Fi On/Off\n󰑐  Rescan Networks" "$wifi_list" | dmenu -p "Wi-Fi Networks >" -l 10)
+				[ -n "$sub" ] || exit 0
+				case "$sub" in
+					*"Toggle"*)
+						local cur
+						cur=$(nmcli radio wifi 2>/dev/null || echo "enabled")
+						if [ "$cur" = "enabled" ]; then
+							nmcli radio wifi off && command -v notify-send >/dev/null 2>&1 && notify-send -a "Wi-Fi" "Wi-Fi Disabled"
+						else
+							nmcli radio wifi on && command -v notify-send >/dev/null 2>&1 && notify-send -a "Wi-Fi" "Wi-Fi Enabled"
+						fi
+						;;
+					*"Rescan"*)
+						nmcli dev wifi rescan 2>/dev/null || true
+						show_native_controlcenter
+						;;
+					*)
+						local ssid
+						ssid=$(printf '%s' "$sub" | awk '{print $1}')
+						if [ -n "$ssid" ]; then
+							local pass
+							pass=$(dmenu -p "Password for $ssid (empty if open/saved):" </dev/null || true)
+							if [ -n "$pass" ]; then
+								nmcli dev wifi connect "$ssid" password "$pass" 2>&1 | dmenu -p "Connect Status" -l 2 || true
+							else
+								nmcli dev wifi connect "$ssid" 2>&1 | dmenu -p "Connect Status" -l 2 || true
+							fi
+						fi
+						;;
+				esac
+			else
+				command -v notify-send >/dev/null 2>&1 && notify-send "Wi-Fi" "nmcli not found"
+			fi
+			;;
+		*"Bluetooth"*)
+			if command -v bluetoothctl >/dev/null 2>&1; then
+				local sub
+				sub=$(printf "%s\n" \
+					"󰂯  Toggle Bluetooth Power" \
+					"🔍  Scan for Devices (Terminal)" \
+					"📱  Connect Paired Device" \
+					"🎛  Open Blueman Manager" | dmenu -p "Bluetooth >" -l 4)
+				case "$sub" in
+					*"Toggle"*)
+						if bluetoothctl show 2>/dev/null | grep -q "Powered: yes"; then
+							bluetoothctl power off && command -v notify-send >/dev/null 2>&1 && notify-send -a "Bluetooth" "Bluetooth Powered Off"
+						else
+							bluetoothctl power on && command -v notify-send >/dev/null 2>&1 && notify-send -a "Bluetooth" "Bluetooth Powered On"
+						fi
+						;;
+					*"Scan"*)
+						dwm-terminal -T "Bluetooth Scan" -e sh -c "bluetoothctl scan on" &
+						;;
+					*"Connect"*)
+						local dev
+						dev=$(bluetoothctl devices 2>/dev/null | dmenu -p "Select Device >" -l 6)
+						if [ -n "$dev" ]; then
+							local mac
+							mac=$(printf '%s' "$dev" | awk '{print $2}')
+							bluetoothctl connect "$mac" 2>&1 | dmenu -p "Status" -l 2 || true
+						fi
+						;;
+					*"Blueman"*)
+						if command -v blueman-manager >/dev/null 2>&1; then
+							blueman-manager &
+						fi
+						;;
+				esac
+			else
+				command -v notify-send >/dev/null 2>&1 && notify-send "Bluetooth" "bluetoothctl not found"
+			fi
+			;;
+		*"Volume"*)
+			local sub
+			sub=$(printf "%s\n" \
+				"🔊  100%" \
+				"🔉  75%" \
+				"🔉  50%" \
+				"🔈  25%" \
+				"🔇  Toggle Mute" \
+				"🎧  Switch Audio Output Sink" \
+				"🎛  Open Audio Mixer" | dmenu -p "Volume >" -l 7)
+			case "$sub" in
+				*"100%"*)
+					if command -v wpctl >/dev/null 2>&1; then wpctl set-volume @DEFAULT_AUDIO_SINK@ 1.0; elif command -v pactl >/dev/null 2>&1; then pactl set-sink-volume @DEFAULT_SINK@ 100%; fi
+					;;
+				*"75%"*)
+					if command -v wpctl >/dev/null 2>&1; then wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.75; elif command -v pactl >/dev/null 2>&1; then pactl set-sink-volume @DEFAULT_SINK@ 75%; fi
+					;;
+				*"50%"*)
+					if command -v wpctl >/dev/null 2>&1; then wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.50; elif command -v pactl >/dev/null 2>&1; then pactl set-sink-volume @DEFAULT_SINK@ 50%; fi
+					;;
+				*"25%"*)
+					if command -v wpctl >/dev/null 2>&1; then wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.25; elif command -v pactl >/dev/null 2>&1; then pactl set-sink-volume @DEFAULT_SINK@ 25%; fi
+					;;
+				*"Mute"*)
+					if command -v wpctl >/dev/null 2>&1; then wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle; elif command -v pactl >/dev/null 2>&1; then pactl set-sink-mute @DEFAULT_SINK@ toggle; fi
+					;;
+				*"Switch"*)
+					if command -v pactl >/dev/null 2>&1; then
+						local sinks
+						sinks=$(pactl list short sinks 2>/dev/null | awk '{print $2}')
+						local chosen
+						chosen=$(printf "%s\n" "$sinks" | dmenu -p "Output Sink >" -l 6)
+						[ -n "$chosen" ] && pactl set-default-sink "$chosen"
+					fi
+					;;
+				*"Mixer"*)
+					if command -v pavucontrol >/dev/null 2>&1; then
+						pavucontrol &
+					elif command -v alsamixer >/dev/null 2>&1; then
+						dwm-terminal alsamixer &
+					fi
+					;;
+			esac
+			;;
+		*"Brightness"*)
+			local sub
+			sub=$(printf "%s\n" "100%" "75%" "50%" "25%" "10%" | dmenu -p "Brightness >" -l 5)
+			if [ -n "$sub" ] && command -v brightnessctl >/dev/null 2>&1; then
+				brightnessctl set "$sub" 2>/dev/null || true
+			fi
+			;;
+		*"Power"*)
+			if command -v powerprofilesctl >/dev/null 2>&1; then
+				local sub
+				sub=$(printf "%s\n" "performance" "balanced" "power-saver" | dmenu -p "Power Profile >" -l 3)
+				if [ -n "$sub" ]; then
+					powerprofilesctl set "$sub" 2>/dev/null || true
+					command -v notify-send >/dev/null 2>&1 && notify-send -a "Power" "Power profile set to: $sub"
+				fi
+			fi
+			;;
+		*"Appearance"*)
+			dwm-settings-hub "󰏘  Wallpaper & Background" 2>/dev/null || dwm-settings-hub
+			;;
+		*"Settings"*)
+			dwm-settings-hub
+			;;
+	esac
+}
+
+# 1. Non-interactive introspection
+if [[ "${1:-}" == "--list" || "${1:-}" == "--dry-run" ]]; then
+	get_menu_options
+	exit 0
+fi
+
+# 2. Check for explicit --native flag
+if [[ "${1:-}" == "--native" ]]; then
+	shift
+	show_native_controlcenter "$@"
+	exit 0
+fi
+
+# 3. Quickshell Hybrid fallback: if quickshell is running and config exists, use IPC
 config=${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/shell.qml
-
 if [ ! -f "$config" ]; then
 	config=${XDG_DATA_HOME:-$HOME/.local/share}/dwm-oomaya/config/quickshell/shell.qml
 fi
 
-exec quickshell ipc --path "$config" call controlcenter toggle
+if command -v quickshell >/dev/null 2>&1 && [ -f "$config" ] && pgrep -u "$(id -u)" -x quickshell >/dev/null 2>&1; then
+	exec quickshell ipc --path "$config" call controlcenter toggle
+fi
+
+# 4. Fall back to pure native dmenu Control Center
+show_native_controlcenter "$@"

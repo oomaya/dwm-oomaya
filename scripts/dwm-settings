@@ -25,12 +25,21 @@ open | close | toggle | refresh | status)
 		exec quickshell ipc --path "$config" call settings "toggle"
 	fi
 	helper=dwm-settings-hub
-	if [ -n "${HOME:-}" ] && [ -x "$HOME/.local/bin/dwm-settings-hub" ]; then
-		helper="$HOME/.local/bin/dwm-settings-hub"
-	elif case $0 in */*) [ -x "${0%/*}/dwm-settings-hub" ] ;; *) false ;; esac then
+	if case $0 in */*) [ -x "${0%/*}/dwm-settings-hub" ] ;; *) false ;; esac then
 		helper="${0%/*}/dwm-settings-hub"
+	elif [ -n "${HOME:-}" ] && [ -x "$HOME/.local/bin/dwm-settings-hub" ]; then
+		helper="$HOME/.local/bin/dwm-settings-hub"
 	fi
 	exec "$helper"
+	;;
+--list | --dry-run)
+	helper=dwm-settings-hub
+	if case $0 in */*) [ -x "${0%/*}/dwm-settings-hub" ] ;; *) false ;; esac then
+		helper="${0%/*}/dwm-settings-hub"
+	elif [ -n "${HOME:-}" ] && [ -x "$HOME/.local/bin/dwm-settings-hub" ]; then
+		helper="$HOME/.local/bin/dwm-settings-hub"
+	fi
+	exec "$helper" "$@"
 	;;
 *)
 	printf 'usage: %s [open|close|toggle|refresh|status]\n' "$0" >&2

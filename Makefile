@@ -598,6 +598,7 @@ check-quickshell-system-management: all
 check-settings:
 	tests/test-settings.sh
 	tests/test-settings-input.sh
+	tests/test-dwm-controlcenter.sh
 	python3 tests/test-display-profiles.py
 
 check-appearance:

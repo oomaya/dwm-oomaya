@@ -127,6 +127,7 @@ exec /usr/bin/awk "$@"
 SH
 chmod +x "$work/bin/awk"
 
+: >"$work/status.log"
 PATH="$work/bin:/usr/bin:/bin" \
 	DISPLAY=:199 \
 	DWM_STATUS_TEST_LOG="$work/status.log" \
@@ -140,7 +141,7 @@ track_runner "$status_runner"
 
 display_key=$(printf '%s' :199 | sha256sum | awk '{ print $1 }')
 identity_file=$work/runtime/dwm-oomaya/dwm-status.$display_key.identity
-for _ in 1 2 3 4 5 6 7 8 9 10; do
+for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
 	[ -s "$identity_file" ] && break
 	sleep 0.02
 done
@@ -148,7 +149,7 @@ done
 
 sleep 0.3
 printf '81\n' >"$work/power/BAT0/capacity"
-for _ in 1 2 3 4 5 6 7 8 9 10; do
+for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30; do
 	grep -Fq 'BAT 81% Discharging' "$work/status.log" && break
 	sleep 0.05
 done
