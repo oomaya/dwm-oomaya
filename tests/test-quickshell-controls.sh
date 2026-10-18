@@ -10,6 +10,12 @@ trap 'rm -rf "$work"' EXIT
 
 mkdir -p "$work/bin"
 
+cat >"$work/bin/oomaya-ctl" <<'SH'
+#!/bin/sh
+exit 1
+SH
+chmod +x "$work/bin/oomaya-ctl"
+
 cat >"$work/bin/pactl" <<'SH'
 #!/bin/sh
 set -eu

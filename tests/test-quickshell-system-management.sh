@@ -181,7 +181,7 @@ if grep -Eq 'Quickshell\.Io|\bProcess\b|\bCommands\.|systemManagementCommand' "$
 	exit 1
 fi
 pane_model_members=$(grep -Eo 'systemManagementModel\.[A-Za-z][A-Za-z0-9]*' "$pane" |
-	sort -u)
+	LC_ALL=C sort -u)
 expected_pane_model_members=$(printf '%s\n' \
 	'systemManagementModel.activeOperation' \
 	'systemManagementModel.busy' \

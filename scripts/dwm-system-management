@@ -6864,7 +6864,8 @@ def packagekit_security_floor(
 def read_fedora_identity() -> dict[str, str]:
     """Read only the fixed platform identity keys; never evaluate shell content."""
     try:
-        with open("/etc/os-release", "rb") as source:
+        path = os.environ.get("DWM_TEST_OS_RELEASE") or "/etc/os-release"
+        with open(path, "rb") as source:
             data = source.read(65537)
         if len(data) > 65536:
             raise ValueError
@@ -9357,8 +9358,9 @@ class UpdateEventMonitor:
         try:
             self.deadline = time.monotonic() + 10
             self.deadline_source = self.GLib.timeout_add(10000, timeout)
+            signal_add = getattr(self.GLibUnix, "signal_add", None) or getattr(self.GLibUnix, "signal_add_full", None) or getattr(self.GLib, "unix_signal_add")
             for signum in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
-                self.sources.append(self.GLibUnix.signal_add(self.GLib.PRIORITY_DEFAULT, signum, terminate))
+                self.sources.append(signal_add(self.GLib.PRIORITY_DEFAULT, signum, terminate))
             self.Gio.bus_get(self.Gio.BusType.SYSTEM, self.cancellable, self.connected, None)
             self.loop.run()
         finally:
@@ -9945,8 +9947,9 @@ class UnitEventMonitor(AuthenticatedEventMonitor):
         try:
             self.deadline = time.monotonic() + 10
             self.deadline_source = self.GLib.timeout_add(10000, expired)
+            signal_add = getattr(self.GLibUnix, "signal_add", None) or getattr(self.GLibUnix, "signal_add_full", None) or getattr(self.GLib, "unix_signal_add")
             for signum in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
-                self.sources.append(self.GLibUnix.signal_add(self.GLib.PRIORITY_DEFAULT, signum, terminate))
+                self.sources.append(signal_add(self.GLib.PRIORITY_DEFAULT, signum, terminate))
             address = self.Gio.dbus_address_get_for_bus_sync(self.Gio.BusType.SYSTEM, self.cancellable)
             if self.setting_up():
                 self.connecting = True

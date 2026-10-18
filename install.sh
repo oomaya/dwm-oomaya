@@ -912,6 +912,11 @@ make install-user \
 	OWNER="$(id -un)" \
 	XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}" \
 	XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+info "Deploying desktop utility scripts to $HOME/.local/bin..."
+make install-scripts \
+	USER_HOME="$HOME" \
+	OWNER="$(id -un)"
+ok "Desktop utility scripts deployed to $HOME/.local/bin."
 install_dmenu_ecosystem
 configure_displays_after_install
 

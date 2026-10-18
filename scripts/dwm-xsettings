@@ -30,7 +30,7 @@ die() {
 	exit 1
 }
 
-ensure_runtime() {
+ensure_runtime_dir() {
 	if [[ ! -e $runtime_base ]]; then
 		(umask 077 && mkdir -p -- "$runtime_base")
 	fi
@@ -38,6 +38,10 @@ ensure_runtime() {
 		$(stat -c %u -- "$runtime_base") == "$UID" ]] ||
 		die "unsafe runtime directory: $runtime_base"
 	chmod 700 -- "$runtime_base"
+}
+
+ensure_runtime() {
+	ensure_runtime_dir
 	if [[ -e $lock_file ]]; then
 		[[ -f $lock_file && ! -L $lock_file &&
 			$(stat -c %u -- "$lock_file") == "$UID" ]] ||
@@ -376,17 +380,27 @@ watch_owner() {
 	# pidwait blocks on Linux pidfds. xsettingsd exits when its XSETTINGS
 	# selection is replaced, so process lifecycle covers both owner loss and an
 	# ordinary daemon exit without polling the status helper.
-	pidwait -p "$pid_list" >/dev/null 2>&1 &
-	wait_pid=$!
+	local pidfile=''
+	if pidwait --help 2>&1 | grep -q -- ' -p\b'; then
+		pidwait -p "$pid_list" >/dev/null 2>&1 &
+		wait_pid=$!
+	else
+		ensure_runtime_dir
+		pidfile=$runtime_base/pidwait.$$.pid
+		printf '%s\n' "${pid_list//,/ }" >"$pidfile"
+		pidwait -F "$pidfile" 9>&- >/dev/null 2>&1 &
+		wait_pid=$!
+	fi
 	if [[ -n ${DWM_TEST_XSETTINGS_WATCH_READY:-} ]]; then
 		: >"$DWM_TEST_XSETTINGS_WATCH_READY"
 	fi
-	trap 'kill -TERM "$wait_pid" 2>/dev/null || true; wait "$wait_pid" 2>/dev/null || true; exit 129' HUP
-	trap 'kill -TERM "$wait_pid" 2>/dev/null || true; wait "$wait_pid" 2>/dev/null || true; exit 130' INT
-	trap 'kill -TERM "$wait_pid" 2>/dev/null || true; wait "$wait_pid" 2>/dev/null || true; exit 143' TERM
+	trap 'kill -TERM "$wait_pid" 2>/dev/null || true; wait "$wait_pid" 2>/dev/null || true; [[ -z $pidfile ]] || rm -f -- "$pidfile"; exit 129' HUP
+	trap 'kill -TERM "$wait_pid" 2>/dev/null || true; wait "$wait_pid" 2>/dev/null || true; [[ -z $pidfile ]] || rm -f -- "$pidfile"; exit 130' INT
+	trap 'kill -TERM "$wait_pid" 2>/dev/null || true; wait "$wait_pid" 2>/dev/null || true; [[ -z $pidfile ]] || rm -f -- "$pidfile"; exit 143' TERM
 	wait "$wait_pid" || wait_status=$?
 	wait_pid=
 	trap - HUP INT TERM
+	[[ -z $pidfile ]] || rm -f -- "$pidfile"
 	if ((wait_status != 0)); then
 		while IFS= read -r identity; do
 			[[ -z $identity ]] || ! identity_matches "$identity" ||

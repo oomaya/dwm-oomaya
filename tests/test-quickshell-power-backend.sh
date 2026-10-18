@@ -143,7 +143,23 @@ chmod +x "$work/bin/light-locker"
 
 cat >"$work/bin/pgrep" <<'SH'
 #!/bin/sh
-if [ "${DWM_POWER_TEST_REAL_PGREP:-0}" = 1 ]; then exec /usr/bin/pgrep --pid "${DWM_POWER_TEST_LOCKER_PID:?}" "$@"; fi
+if [ "${DWM_POWER_TEST_REAL_PGREP:-0}" = 1 ]; then
+	if /usr/bin/pgrep --help 2>&1 | grep -q -- ' -p,'; then
+		exec /usr/bin/pgrep --pid "${DWM_POWER_TEST_LOCKER_PID:?}" "$@"
+	else
+		pidfile=$(mktemp)
+		printf '%s\n' "${DWM_POWER_TEST_LOCKER_PID:?}" >"$pidfile"
+		status=0
+		out=$(/usr/bin/pgrep -F "$pidfile" "$@" 2>/dev/null) || status=$?
+		rm -f "$pidfile"
+		if [ "$status" -ne 0 ]; then
+			exit "$status"
+		fi
+		[ -z "$out" ] && exit 1
+		printf '%s\n' "$out"
+		exit 0
+	fi
+fi
 case $* in
 *light-locker*) test -e "${DWM_POWER_TEST_STATE:?}/light-locker.running" ;;
 *) exit 1 ;;
@@ -153,7 +169,17 @@ chmod +x "$work/bin/pgrep"
 
 cat >"$work/bin/pkill" <<'SH'
 #!/bin/sh
-if [ "${DWM_POWER_TEST_REAL_PGREP:-0}" = 1 ]; then exec /usr/bin/pkill --pid "${DWM_POWER_TEST_LOCKER_PID:?}" "$@"; fi
+if [ "${DWM_POWER_TEST_REAL_PGREP:-0}" = 1 ]; then
+	if /usr/bin/pkill --help 2>&1 | grep -q -- ' -p,'; then
+		exec /usr/bin/pkill --pid "${DWM_POWER_TEST_LOCKER_PID:?}" "$@"
+	else
+		pidfile=$(mktemp)
+		printf '%s\n' "${DWM_POWER_TEST_LOCKER_PID:?}" >"$pidfile"
+		/usr/bin/pkill -F "$pidfile" "$@" 2>/dev/null || true
+		rm -f "$pidfile"
+		exit 0
+	fi
+fi
 case $* in
 *light-locker*)
 	if [ "${DWM_POWER_TEST_LOCKER_EXIT_DELAY:-0}" = 1 ]; then
@@ -364,6 +390,7 @@ for malformed_after in '5' 'bad 5' 'uint32 4294967296' 'uint32 -1'; do
 	DWM_POWER_TEST_GSETTINGS_RAW="$malformed_after" run_helper power-lock-snapshot >"$work/malformed-lock"
 	grep -q '^power-lock[[:space:]]partial[[:space:]]' "$work/malformed-lock"
 done
+unset DWM_POWER_TEST_GSETTINGS_RAW
 
 # A private process with the actual locker comm name tests procps environment
 # matching without starting a locker or connecting to an X server.

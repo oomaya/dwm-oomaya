@@ -5,6 +5,17 @@ repo=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 work=$(mktemp -d)
 trap 'find "$work" -depth -delete' EXIT
 
+# shellcheck source=scripts/dwm-utils.sh
+source "$repo/scripts/dwm-utils.sh"
+# shellcheck source=scripts/dwm-packages.sh
+source "$repo/scripts/dwm-packages.sh"
+
+if [[ ${DISTRO_ID:-} != fedora || ${DISTRO_FAMILY:-} != fedora ]] || ! command -v dnf >/dev/null 2>&1; then
+	printf 'Fedora package validation requires Fedora with dnf; skipped on %s.\n' \
+		"${DISTRO_NAME:-non-Fedora host}"
+	exit 0
+fi
+
 for command_name in dnf sort comm awk; do
 	if ! command -v "$command_name" >/dev/null 2>&1; then
 		printf 'Missing required Fedora package-check command: %s\n' \
@@ -12,17 +23,6 @@ for command_name in dnf sort comm awk; do
 		exit 1
 	fi
 done
-
-# shellcheck source=scripts/dwm-utils.sh
-source "$repo/scripts/dwm-utils.sh"
-# shellcheck source=scripts/dwm-packages.sh
-source "$repo/scripts/dwm-packages.sh"
-
-if [[ $DISTRO_ID != fedora || $DISTRO_FAMILY != fedora ]]; then
-	printf 'Fedora package validation requires Fedora; detected %s.\n' \
-		"$DISTRO_NAME" >&2
-	exit 1
-fi
 
 mapfile -t packages < <(
 	{

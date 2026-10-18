@@ -90,11 +90,10 @@ if grep -Fq 'System Identity' "$work/power-rejection.out"; then
 	exit 1
 fi
 
-# Expansion is intentionally deferred to the child shell.
-# shellcheck disable=SC2016
+expected_host_family=$(bash -c '. "$1"; printf "%s" "$DISTRO_FAMILY"' sh "$repo/scripts/dwm-utils.sh")
 host_family=$(env -u DWM_TEST_MODE DWM_OS_RELEASE="$work/unsupported" bash -c \
 	'. "$1"; printf "%s" "$DISTRO_FAMILY"' sh "$repo/scripts/dwm-utils.sh")
-[[ $host_family == fedora ]]
+[[ $host_family == "$expected_host_family" ]]
 
 root_package_command=$(DWM_TEST_MODE=1 DWM_OS_RELEASE="$work/fedora" bash -c \
 	'. "$1"; printf "%s" "$PKG_CMD"' sh "$repo/scripts/dwm-utils.sh")

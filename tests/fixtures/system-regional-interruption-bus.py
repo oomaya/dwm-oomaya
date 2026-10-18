@@ -5,6 +5,7 @@ import os
 import runpy
 import signal
 import sys
+import tempfile
 
 os.environ["DBUS_SYSTEM_BUS_ADDRESS"] = os.environ["DBUS_SESSION_BUS_ADDRESS"]
 from gi.repository import Gio, GLib
@@ -90,7 +91,7 @@ def check(action, argument, method, signum, stage):
             "locale": ["LANG=POSIX"], "method": method, "stage": stage,
             "stop_source": 0, "deadline_source": 0, "done": False}
     current = case
-    state_home = os.path.join(os.environ["DWM_TEST_WORKSPACE"], f"regional-{action}-{signum}-{stage}")
+    state_home = os.path.join(os.environ.get("DWM_TEST_WORKSPACE") or tempfile.gettempdir(), f"regional-{action}-{signum}-{stage}")
     os.mkdir(state_home, 0o700)
     os.environ["XDG_STATE_HOME"] = state_home
     state = (provider["parse_locale_configuration"](case["locale"]) if action == "locale-set"
