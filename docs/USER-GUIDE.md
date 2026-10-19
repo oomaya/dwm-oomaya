@@ -111,12 +111,13 @@ exec dwm-session-launch
 ### 2) Control Center, Settings & Power
 | Action | Keybinding | Description |
 | :--- | :--- | :--- |
-| **Native Control Center** | `Super + F1` or `Super + c` | `dwm-controlcenter` (Wi-Fi, Bluetooth, Audio, Power) |
-| **System Settings Hub** | `Super + Shift + s` | `dwm-settings-hub` (Appearance, Displays, Fonts, Input) |
+| **Native Control Center** | `Super + c` / `Alt + c` / `Super + F1` | `dwm-controlcenter` (Wi-Fi, Bluetooth, Audio, Power) |
+| **System Settings Hub** | `Alt + s` / `Super + Shift + s` | `dwm-settings-hub` (Appearance, Displays, Fonts, Input) |
+| **Sovereign Flow Cockpit** | `Super + Shift + c` | `dwm-flow` (Dual-pane `agy-flow` + `nvim-studio`) |
 | **Dmenu Tools Hub** | `Super + Shift + h` | `dmenu-hub` |
 | **Power Menu** | `Alt + x` or `Super + Ctrl + q` | `dmenu-power` (Lock, Logout, Suspend, Reboot, Shutdown) |
 | **Toggle Shell Mode** | `Super + Ctrl + r` | `dwm-shell-mode toggle` (Suckless ↔ Quickshell) |
-| **In-Place DWM Restart** | `Super + Shift + r` | Atomic restart in RAM preserving all running windows |
+| **In-Place DWM Restart** | `Super + Shift + r` / `Alt + Shift + r` | Atomic restart in RAM preserving all running windows |
 
 ### 3) Window Management & Tiling
 | Action | Keybinding | Description |

@@ -141,7 +141,8 @@ static const Key keys[] = {
     { MODKEY,                           XK_u,       spawn,          SHCMD("dwm-screenshot clip") },
 
     // application launchers & terminals (Ghostty/Kitty support)
-    { MODKEY,                           XK_c,       spawn,          SHCMD("dwm-flow") },
+    { MODKEY,                           XK_c,       spawn,          SHCMD("dwm-controlcenter") },
+    { Mod1Mask,                         XK_c,       spawn,          SHCMD("dwm-controlcenter") },
     { MODKEY|ShiftMask,                 XK_c,       spawn,          SHCMD("dwm-flow") },
     { MODKEY,                           XK_d,       spawn,          SHCMD("dmenu-desktop") },
     { MODKEY|ShiftMask,                 XK_Return,  spawn,          SHCMD("ghostty || kitty") },
@@ -151,6 +152,7 @@ static const Key keys[] = {
     { MODKEY,                           XK_slash,   spawn,          SHCMD("dwm-keybinds") },
     { MODKEY,                           XK_F1,      spawn,          SHCMD("dwm-controlcenter") },
     { MODKEY|ShiftMask,                 XK_s,       spawn,          SHCMD("dwm-settings-hub") },
+    { Mod1Mask,                         XK_s,       spawn,          SHCMD("dwm-settings-hub") },
     { MODKEY|ControlMask,               XK_r,       spawn,          SHCMD("dwm-shell-mode toggle") },
     { Mod1Mask,                         XK_p,       spawn,          SHCMD("dmenu-run") },
     { Mod1Mask,                         XK_x,       spawn,          SHCMD("dmenu-power") },
@@ -245,6 +247,7 @@ static const Key keys[] = {
     { MODKEY|ControlMask,               XK_q,       spawn,          SHCMD("killall bar.sh dwm") },
     { MODKEY,                           XK_q,       killclient,     {0} },
     { MODKEY|ShiftMask,                 XK_r,       restart,        {0} },
+    { Mod1Mask|ShiftMask,               XK_r,       restart,        {0} },
 
     // file manager (Super + E)
     { MODKEY,                           XK_e,       spawn,          SHCMD("xdg-open ~ || thunar || pcmanfm") },

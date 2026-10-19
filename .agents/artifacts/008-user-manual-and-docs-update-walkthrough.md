@@ -6,10 +6,10 @@ Packet #008 establishes authoritative documentation for the sovereign `dwm-oomay
 
 ---
 
-## Deliverables Created & Modernized
+## Deliverables Created & Modernized (100% English Standard)
 
 ### 1. Comprehensive User Manual (`docs/USER-GUIDE.md`)
-- **Architecture Overview**: Decoupled pure C sovereign desktop core vs optional `quickshell-oomaya` companion plugin.
+- Authoritative, pure English manual covering architecture, multi-distro installation, complete keybindings matrix, native control center, settings hub, shell modes, and troubleshooting.
 - **Multi-Distro Installation**: Automated one-click `./install.sh --desktop` across Fedora, Arch Linux / CachyOS, Debian, Ubuntu, Linux Mint, Peppermint OS; native RPM / PKGBUILD package builds; manual `make install-system`/`make install-user`.
 - **Session Launch**: Display managers (`dwm.desktop` for LightDM, GDM, SDDM) and `.xinitrc` integration.
 - **Complete Keybindings Matrix**: Categorized reference tables for launchers, window tiling, vanitygaps, workspaces (tags), multi-monitor, and media keys.

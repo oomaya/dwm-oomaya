@@ -30,10 +30,12 @@ A structured 10-step verification matrix designed to validate the live host X11 
 ---
 
 ## 4. Control Center & Settings Hub
-- [ ] `Super + F1` or `Super + c`: Invokes the native lightweight control center (`dwm-controlcenter` / `dwm-flow`).
+- [ ] `Super + c` or `Alt + c` (or `Super + F1`): Invokes the native lightweight control center (`dwm-controlcenter`).
   - Verify that Wi-Fi, Bluetooth, Audio devices, and Power Profile submenus are interactive and responsive.
-- [ ] `Super + Shift + s`: Invokes the system settings hub (`dwm-settings-hub`).
-  - Verify that Display, Appearance, Fonts, and Input submodules open cleanly.
+- [ ] `Alt + s` or `Super + Shift + s`: Invokes the system settings hub (`dwm-settings-hub`).
+  - *Note for VM/Windows hosts*: `Alt + s` is immune to the Windows Snipping Tool (`Win + Shift + S`) shortcut interceptor.
+- [ ] `Super + Shift + c`: Invokes the Sovereign Flow Cockpit (`dwm-flow`).
+  - Launches dual-pane workspace with `agy-flow` dispatcher and `nvim-studio` LazyVim stack.
 
 ---
 
@@ -82,4 +84,4 @@ A structured 10-step verification matrix designed to validate the live host X11 
 - [ ] `Super + Ctrl + r`: Toggles shell mode (`dwm-shell-mode toggle`).
   - If Quickshell companion is not installed, alerts user cleanly while maintaining Suckless mode.
 - [ ] `Alt + x` or `Super + Ctrl + q`: Opens power management menu (`dmenu-power`).
-- [ ] `Super + Shift + r`: In-place hot restart of DWM (refreshes binary without closing client windows).
+- [ ] `Super + Shift + r` or `Alt + Shift + r`: In-place hot restart of DWM (refreshes binary without closing client windows). *Note: In VM/Windows environments, `Alt + Shift + r` bypasses host game bar shortcut traps.*
