@@ -42,7 +42,7 @@ All core documents in [`oomaya/dwm-oomaya`](https://github.com/oomaya/dwm-oomaya
 
 Follow these standardized steps to roll out `dwm-oomaya` across other VMs (Fedora, Arch, Debian/Ubuntu).
 
-### Method 1: Git User-Space Deployment (Fastest, No Root Required)
+### Greenfield Deployment (Fresh VM)
 
 ```bash
 # 1. Clone repository
@@ -52,16 +52,34 @@ cd ~/.local/src/dwm-oomaya
 # 2. Check and install dependencies automatically
 ./scripts/check-deps.sh
 
-# If manual package installation is needed:
-# - Fedora:   sudo dnf install gcc make libX11-devel libXinerama-devel libXft-devel freetype-devel
-# - Arch:     sudo pacman -S base-devel libx11 libxinerama libxft freetype2
-# - Debian:   sudo apt install build-essential libx11-dev libxinerama-dev libxft-dev libfreetype6-dev
-
-# 3. User-space build & installation
+# 3. User-space build & installation (no root needed)
 make install-user
 
 # 4. (Optional) System-wide Display Manager session (.desktop entry for SDDM/GDM/LightDM)
 sudo make install
+```
+
+### Brownfield Deployment (Upgrading Existing Installations)
+
+When updating an existing VM that already has `dwm-oomaya` or an earlier version installed:
+
+```bash
+# 1. Pull latest changes
+cd ~/.local/src/dwm-oomaya
+git pull origin main
+
+# 2. Recompile and install binary & updated utility scripts
+make install-user
+# Note: 'make install-user' safely preserves your existing ~/.config/dwm-oomaya/ dotfiles.
+
+# 3. Adopt new hotkeys (Control Center, Settings Hub & VM-safe aliases)
+# To overwrite with the new default keybindings:
+cp config/hotkeys.toml ~/.config/dwm-oomaya/hotkeys.toml
+# Or merge manually if you have custom keybindings.
+
+# 4. Live in-place hot reload (zero downtime, no logout or reboot required)
+# Press Super + Shift + r (or Alt + Shift + r), or run:
+kill -USR1 $(pidof dwm)
 ```
 
 ### Method 2: Native Package Managers
