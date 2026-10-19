@@ -1,0 +1,217 @@
+#!/bin/sh
+# dwm-shell-mode — Inspect, switch, and toggle dwm-oomaya desktop shell modes
+# Modes:
+#   suckless   (Default: Native status2d C bar, dwm-status, dunst, zero Qt6 dependencies)
+#   quickshell (Optional: Qt6/QML desktop shell, panel, control center, and widgets)
+set -eu
+
+PROMPT="🖥️  Shell Mode >"
+DMENU_FN="${DMENU_FN:-JetBrainsMono Nerd Font:size=14:antialias=true:autohint=true}"
+DMENU_NB="${DMENU_NB:-#1a1b26}"
+DMENU_NF="${DMENU_NF:-#a9b1d6}"
+DMENU_SB="${DMENU_SB:-#7aa2f7}"
+DMENU_SF="${DMENU_SF:-#1a1b26}"
+
+run_dmenu() {
+	if command -v dmenu >/dev/null 2>&1; then
+		dmenu -fn "$DMENU_FN" -nb "$DMENU_NB" -nf "$DMENU_NF" -sb "$DMENU_SB" -sf "$DMENU_SF" "$@"
+	else
+		cat
+	fi
+}
+
+config_home=${XDG_CONFIG_HOME:-$HOME/.config}
+state_file=$config_home/dwm-oomaya/shell-mode
+quickshell_config=$config_home/quickshell/shell.qml
+
+get_current_mode() {
+	if [ -n "${DWM_SHELL_MODE:-}" ]; then
+		case $DWM_SHELL_MODE in
+		suckless | quickshell)
+			printf '%s\n' "$DWM_SHELL_MODE"
+			return 0
+			;;
+		esac
+	fi
+
+	if [ -f "$state_file" ]; then
+		read -r mode <"$state_file" 2>/dev/null || true
+		case $mode in
+		suckless | quickshell)
+			printf '%s\n' "$mode"
+			return 0
+			;;
+		esac
+	fi
+
+	printf 'suckless\n'
+}
+
+print_options() {
+	current=$(get_current_mode)
+	if [ "$current" = "suckless" ]; then
+		printf 'suckless   (Active)  - Pure Suckless C (status2d bar + dwm-status + dunst)\n'
+		printf 'quickshell           - Qt6/QML Modular Shell (animated panel & widgets)\n'
+	else
+		printf 'quickshell (Active)  - Qt6/QML Modular Shell (animated panel & widgets)\n'
+		printf 'suckless             - Pure Suckless C (status2d bar + dwm-status + dunst)\n'
+	fi
+}
+
+notify_user() {
+	title=$1
+	msg=$2
+	if command -v notify-send >/dev/null 2>&1; then
+		notify-send -a "dwm-oomaya" -i preferences-desktop-theme "$title" "$msg" 2>/dev/null || true
+	fi
+}
+
+set_suckless_mode() {
+	mkdir -p "$(dirname "$state_file")"
+	printf 'suckless\n' >"$state_file"
+
+	# Stop Quickshell cleanly so dwm unmanagealtbar restores native bar
+	if pgrep -u "$(id -u)" -x quickshell >/dev/null 2>&1; then
+		pkill -u "$(id -u)" -x quickshell 2>/dev/null || true
+	fi
+
+	# Ensure dunst is running for Tokyo Night notifications
+	if command -v dunst >/dev/null 2>&1 && ! pgrep -u "$(id -u)" -x dunst >/dev/null 2>&1; then
+		if command -v setsid >/dev/null 2>&1; then
+			setsid -f dunst >/dev/null 2>&1 || dunst >/dev/null 2>&1 &
+		else
+			dunst >/dev/null 2>&1 &
+		fi
+	fi
+
+	# Ensure dwm-status is running for status2d bar
+	if command -v dwm-status >/dev/null 2>&1 && ! pgrep -u "$(id -u)" -x dwm-status >/dev/null 2>&1; then
+		if command -v setsid >/dev/null 2>&1; then
+			setsid -f dwm-status >/dev/null 2>&1 || dwm-status >/dev/null 2>&1 &
+		else
+			dwm-status >/dev/null 2>&1 &
+		fi
+	fi
+
+	notify_user "Shell Mode" "Activated Pure Suckless C Mode (status2d bar + Dunst)"
+	printf 'Switched to suckless mode.\n'
+}
+
+set_quickshell_mode() {
+	if ! command -v quickshell >/dev/null 2>&1; then
+		notify_user "Shell Mode Error" "Quickshell is not installed on this system"
+		printf 'Error: quickshell executable not found in PATH\n' >&2
+		return 1
+	fi
+
+	if [ ! -f "$quickshell_config" ]; then
+		notify_user "Shell Mode Error" "Quickshell configuration missing: $quickshell_config"
+		printf 'Error: quickshell configuration missing: %s\n' "$quickshell_config" >&2
+		return 1
+	fi
+
+	mkdir -p "$(dirname "$state_file")"
+	printf 'quickshell\n' >"$state_file"
+
+	# Stop dunst so Quickshell notification server can bind
+	if pgrep -u "$(id -u)" -x dunst >/dev/null 2>&1; then
+		pkill -u "$(id -u)" -x dunst 2>/dev/null || true
+	fi
+
+	# Start managed quickshell if not running
+	if ! pgrep -u "$(id -u)" -x quickshell >/dev/null 2>&1; then
+		if command -v setsid >/dev/null 2>&1; then
+			setsid -f quickshell --path "$quickshell_config" --no-duplicate >/dev/null 2>&1 ||
+				quickshell --path "$quickshell_config" --no-duplicate >/dev/null 2>&1 &
+		else
+			quickshell --path "$quickshell_config" --no-duplicate >/dev/null 2>&1 &
+		fi
+	fi
+
+	notify_user "Shell Mode" "Activated Quickshell Qt6/QML Desktop Shell"
+	printf 'Switched to quickshell mode.\n'
+}
+
+toggle_mode() {
+	current=$(get_current_mode)
+	if [ "$current" = "suckless" ]; then
+		set_quickshell_mode
+	else
+		set_suckless_mode
+	fi
+}
+
+show_status() {
+	configured=$(get_current_mode)
+	printf 'Configured Mode : %s\n' "$configured"
+	printf 'Quickshell Proc : '
+	if pgrep -u "$(id -u)" -x quickshell >/dev/null 2>&1; then
+		printf 'RUNNING (PID %s)\n' "$(pgrep -u "$(id -u)" -x quickshell | tr '\n' ' ')"
+	else
+		printf 'STOPPED\n'
+	fi
+	printf 'Dunst Daemon    : '
+	if pgrep -u "$(id -u)" -x dunst >/dev/null 2>&1; then
+		printf 'RUNNING (PID %s)\n' "$(pgrep -u "$(id -u)" -x dunst | tr '\n' ' ')"
+	else
+		printf 'STOPPED\n'
+	fi
+	printf 'DWM Status Feed : '
+	if pgrep -u "$(id -u)" -x dwm-status >/dev/null 2>&1; then
+		printf 'RUNNING (PID %s)\n' "$(pgrep -u "$(id -u)" -x dwm-status | tr '\n' ' ')"
+	else
+		printf 'STOPPED\n'
+	fi
+}
+
+# Subcommands and CLI dispatch
+cmd=${1:-}
+
+case $cmd in
+--list)
+	print_options
+	exit 0
+	;;
+--dry-run)
+	exit 0
+	;;
+current)
+	get_current_mode
+	exit 0
+	;;
+status)
+	show_status
+	exit 0
+	;;
+suckless | set-suckless)
+	set_suckless_mode
+	exit 0
+	;;
+quickshell | set-quickshell)
+	set_quickshell_mode
+	exit 0
+	;;
+toggle)
+	toggle_mode
+	exit 0
+	;;
+--help | -h)
+	printf 'usage: dwm-shell-mode [suckless|quickshell|toggle|current|status|--list|--dry-run]\n'
+	exit 0
+	;;
+"")
+	# Interactive dmenu picker
+	choice=$(print_options | run_dmenu -p "$PROMPT" -l 2 "$@" | awk '{print $1}')
+	[ -n "$choice" ] || exit 0
+	case $choice in
+	suckless) set_suckless_mode ;;
+	quickshell) set_quickshell_mode ;;
+	*) exit 0 ;;
+	esac
+	;;
+*)
+	printf 'unknown command: %s\n' "$cmd" >&2
+	printf 'usage: dwm-shell-mode [suckless|quickshell|toggle|current|status|--list|--dry-run]\n' >&2
+	exit 1
+	;;
+esac
