@@ -6,12 +6,6 @@ on:
   pull_request:
     branches: ["main"]
   workflow_dispatch:
-    inputs:
-      test_quickshell:
-        description: "Run optional Quickshell QML matrix jobs"
-        required: false
-        type: boolean
-        default: false
 
 permissions:
   contents: read
@@ -81,84 +75,3 @@ jobs:
 
       - name: Build with Clang
         run: make clean all CC=clang
-
-  validate-shell-appearance:
-    name: Shell & Appearance Tests (Quickshell QML)
-    if: github.event_name == 'workflow_dispatch' && inputs.test_quickshell == true
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    container: fedora:44
-    env:
-      DWM_TEST_TMP_ROOT: /var/tmp/dwm-oomaya-tests
-
-    steps:
-      - name: Install checkout dependency
-        run: dnf install -y --setopt=install_weak_deps=False git
-
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-
-      - name: Trust the container checkout
-        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-
-      - name: Install shell and appearance dependencies
-        run: |
-          source scripts/dwm-utils.sh
-          source scripts/dwm-packages.sh
-          mapfile -t required_packages < <(dwm_packages fedora required | awk 'NF' | sort -u)
-          mapfile -t qml_packages < <(dwm_packages fedora qml-validation | awk 'NF' | sort -u)
-          mapfile -t desktop_packages < <(dwm_packages fedora desktop | awk 'NF' | sort -u)
-          mapfile -t theme_packages < <(dwm_packages fedora theme | awk 'NF' | sort -u)
-          mapfile -t font_packages < <(dwm_packages fedora fonts | awk 'NF' | sort -u)
-          dnf install -y --setopt=install_weak_deps=False \
-            "${required_packages[@]}" "${qml_packages[@]}" \
-            "${desktop_packages[@]}" "${theme_packages[@]}" "${font_packages[@]}" \
-            diffutils inotify-tools jq \
-            pkgconf-pkg-config \
-            xorg-x11-server-Xvfb
-
-      - name: Validate Shell & Appearance
-        run: scripts/run-tests make check-shell-appearance
-
-  validate-system-management:
-    name: System Management Tests (Quickshell QML)
-    if: github.event_name == 'workflow_dispatch' && inputs.test_quickshell == true
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    container: fedora:44
-    env:
-      DWM_TEST_TMP_ROOT: /var/tmp/dwm-oomaya-tests
-
-    steps:
-      - name: Install checkout dependency
-        run: dnf install -y --setopt=install_weak_deps=False git
-
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-
-      - name: Trust the container checkout
-        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-
-      - name: Install system management dependencies
-        run: |
-          source scripts/dwm-utils.sh
-          source scripts/dwm-packages.sh
-          mapfile -t required_packages < <(dwm_packages fedora required | awk 'NF' | sort -u)
-          mapfile -t qml_packages < <(dwm_packages fedora qml-validation | awk 'NF' | sort -u)
-          mapfile -t system_management_packages < <(dwm_packages fedora system-management | awk 'NF' | sort -u)
-          dnf install -y --setopt=install_weak_deps=False \
-            "${required_packages[@]}" "${qml_packages[@]}" \
-            "${system_management_packages[@]}" \
-            diffutils dbus-daemon inotify-tools jq \
-            pkgconf-pkg-config \
-            xorg-x11-server-Xvfb
-
-      - name: Validate privileged display helper security
-        env:
-          DWM_SECURITY_CONTAINER: "1"
-        run: scripts/run-tests tests/test-settings-display-security.sh
-
-      - name: Validate System Management
-        run: scripts/run-tests make check-system

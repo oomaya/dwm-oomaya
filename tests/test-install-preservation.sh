@@ -339,13 +339,15 @@ if grep -q '^WantedBy=default.target$' "$SESSION_UNIT"; then
 	exit 1
 fi
 
-if ! cmp -s "$TEST_REPO/config/quickshell/shell.qml" "$XDG_CONFIG_HOME/quickshell/shell.qml"; then
-	printf 'Install did not refresh managed Quickshell config.\n' >&2
-	exit 1
-fi
-if [ -e "$XDG_CONFIG_HOME/quickshell/stale.txt" ]; then
-	printf 'Install did not replace managed Quickshell config directory.\n' >&2
-	exit 1
+if [ -d "$TEST_REPO/config/quickshell" ]; then
+	if ! cmp -s "$TEST_REPO/config/quickshell/shell.qml" "$XDG_CONFIG_HOME/quickshell/shell.qml"; then
+		printf 'Install did not refresh managed Quickshell config.\n' >&2
+		exit 1
+	fi
+	if [ -e "$XDG_CONFIG_HOME/quickshell/stale.txt" ]; then
+		printf 'Install did not replace managed Quickshell config directory.\n' >&2
+		exit 1
+	fi
 fi
 
 LOCKER_OVERRIDE="$XDG_CONFIG_HOME/autostart/light-locker.desktop"

@@ -66,11 +66,13 @@ while [ -e "$work/light-locker.running" ] && [ "$i" -lt 100 ]; do
 	/bin/sleep 0.01
 done
 test ! -e "$work/light-locker.running"
-grep -Fq 'Commands.sessionActionCommand(requestedAction.id)' \
-	"$repo_dir/config/quickshell/power/PowerMenuModel.qml"
-grep -Fq 'run_helper session-action lock' "$repo_dir/tests/test-quickshell-session-actions.sh"
-grep -Fq 'return helperCommand("dwm-lock", undefined, [], true)' \
-	"$repo_dir/config/quickshell/core/Commands.qml"
+if [ -d "$repo_dir/config/quickshell" ]; then
+	grep -Fq 'Commands.sessionActionCommand(requestedAction.id)' \
+		"$repo_dir/config/quickshell/power/PowerMenuModel.qml"
+	grep -Fq 'run_helper session-action lock' "$repo_dir/tests/test-quickshell-session-actions.sh"
+	grep -Fq 'return helperCommand("dwm-lock", undefined, [], true)' \
+		"$repo_dir/config/quickshell/core/Commands.qml"
+fi
 
 cat >"$work/bin/loginctl" <<'SCRIPT'
 #!/bin/sh

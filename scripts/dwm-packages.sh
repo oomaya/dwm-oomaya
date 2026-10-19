@@ -19,11 +19,8 @@ dwm_packages() {
 		printf '%s\n' dbus-x11 curl git procps-ng psmisc unzip util-linux xclip xdotool xprop xdg-utils wmctrl
 		;;
 	fedora:desktop)
-		# Fedora 44 publishes the compatible Quickshell snapshot in its official
-		# fedora/updates repositories. It is required and belongs in the strict
-		# desktop transaction; the Fedora package-map check proves availability.
 		printf '%s\n' \
-			quickshell dunst picom feh dex-autostart mate-polkit xsettingsd \
+			dunst picom feh dex-autostart mate-polkit xsettingsd \
 			alsa-utils brightnessctl dbus-tools inotify-tools jq pulseaudio-utils pipewire pavucontrol \
 			pipewire-pulseaudio wireplumber libnotify light-locker xorg-x11-drv-libinput \
 			bluez blueman playerctl upower power-profiles-daemon flatpak xdg-desktop-portal-gtk \
@@ -44,6 +41,7 @@ dwm_packages() {
 		;;
 	fedora:desktop-optional)
 		printf '%s\n' \
+			quickshell \
 			Thunar gvfs gvfs-smb tumbler thunar-archive-plugin file-roller \
 			xdg-user-dirs gnome-keyring gnome-keyring-pam NetworkManager \
 			rsync
