@@ -12,10 +12,10 @@ printf '==> Running native dwm-controlcenter tests\n'
 # Test 1: Non-interactive introspection --list
 printf 'Test 1: dwm-controlcenter --list outputs options... '
 list_out=$("$controlcenter" --list)
-if printf '%s\n' "$list_out" | grep -Fq "Wi-Fi" && \
-   printf '%s\n' "$list_out" | grep -Fq "Bluetooth" && \
-   printf '%s\n' "$list_out" | grep -Fq "Volume" && \
-   printf '%s\n' "$list_out" | grep -Fq "Full Settings Hub"; then
+if printf '%s\n' "$list_out" | grep -Fq "Wi-Fi" &&
+	printf '%s\n' "$list_out" | grep -Fq "Bluetooth" &&
+	printf '%s\n' "$list_out" | grep -Fq "Volume" &&
+	printf '%s\n' "$list_out" | grep -Fq "Full Settings Hub"; then
 	printf 'PASS\n'
 else
 	printf 'FAIL: --list output missing expected control center items\n' >&2
@@ -53,9 +53,9 @@ chmod +x "$mock_bin/pgrep"
 PATH="$mock_bin:$PATH" XDG_CONFIG_HOME="$work/config" \
 	DWM_CC_TEST_LOG="$work/quickshell.log" "$controlcenter"
 
-if grep -Fqx 'ipc' "$work/quickshell.log" && \
-   grep -Fqx 'controlcenter' "$work/quickshell.log" && \
-   grep -Fqx 'toggle' "$work/quickshell.log"; then
+if grep -Fqx 'ipc' "$work/quickshell.log" &&
+	grep -Fqx 'controlcenter' "$work/quickshell.log" &&
+	grep -Fqx 'toggle' "$work/quickshell.log"; then
 	printf 'PASS\n'
 else
 	printf 'FAIL: quickshell IPC invocation mismatch\n' >&2
