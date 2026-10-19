@@ -101,7 +101,7 @@ keys = [
   { mod="SUPER",            key="Print",   desc="Screenshot Tool",         func="spawn",       cmd="dmenu-scrot" },
 
   # ── Web apps ─────────────────────────────────────────────────────────────────
-  { mod="SUPER CTRL",       key="c",       desc="ChatGPT",                 func="spawn",       cmd="dwm-quickshell-launcher launch-chatgpt" },
+  { mod="SUPER CTRL",       key="c",       desc="ChatGPT",                 func="spawn",       cmd="webapp-launch https://chatgpt.com/" },
   { mod="SUPER CTRL",       key="g",       desc="Gemini",                  func="spawn",       cmd="webapp-launch https://gemini.google.com/" },
   { mod="SUPER",            key="b",       desc="Toggle Bar",              func="togglebar" },
 

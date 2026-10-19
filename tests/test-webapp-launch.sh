@@ -127,7 +127,9 @@ for invalid_url in '' chatgpt.com 'https://' 'https:///' 'https://chatgpt.com/ba
 	grep -Fq 'invalid web app URL' "$work/invalid.err"
 done
 
-grep -Fq 'DWM_CHATGPT_WEB_FALLBACK=1 webapp-launch https://chatgpt.com' \
-	"$repo_dir/scripts/dwm-quickshell-launcher"
+if [ -f "$repo_dir/scripts/dwm-quickshell-launcher" ]; then
+	grep -Fq 'DWM_CHATGPT_WEB_FALLBACK=1 webapp-launch https://chatgpt.com' \
+		"$repo_dir/scripts/dwm-quickshell-launcher"
+fi
 
 printf 'Legacy ChatGPT web-app compatibility: PASS\n'

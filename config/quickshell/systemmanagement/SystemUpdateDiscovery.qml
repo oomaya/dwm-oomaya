@@ -1,3 +1,0 @@
-SystemProviderDiscovery {
-    domain: "updates"
-}

@@ -663,153 +663,155 @@ if PATH="$work/launcher-bin:$PATH" HOME="$work/home" \
 fi
 grep -Fq 'managed Quickshell configuration not found' "$work/missing-config.err"
 
-grep -Fq 'target: "settings"' "$repo/config/quickshell/shell.qml"
-grep -Fq 'providerProcess.running = false' "$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'Commands.settingsProviderCommand("discover")' "$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'Commands.settingsDisplayCommand("discover")' "$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'Commands.settingsInputCommand("discover")' "$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'Commands.settingsDisplayCommand("watch", root.watchOwnerArguments())' \
-	"$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'Commands.settingsInputCommand("watch", root.watchOwnerArguments())' \
-	"$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'Commands.settingsProviderCommand("watch-notifications", [])' \
-	"$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'stdout: SplitParser { onRead: notificationOwnerSettleTimer.restart() }' \
-	"$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'notificationOwnerWatchProcess.running = id === "appearance" && root.visible;' \
-	"$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'if (id === "appearance") root.refreshCapabilities();' \
-	"$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'path: "/proc/" + Quickshell.processId.toString() + "/stat"' \
-	"$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'root.runInput("preview-status", [])' "$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'root.runDisplay("preview-status", [])' "$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'if (!root.visible) root.closeRollbackPending = true;' \
-	"$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'if (!root.previewToken && (displayPreviewStarting || inputPreviewStarting)) {' \
-	"$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'root.previewKind = "input"; root.previewToken = fields[1]; root.previewOperationLocked = true;' \
-	"$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'root.previewKind = "display"; root.previewToken = fields[1]; root.previewOperationLocked = true;' \
-	"$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'property var displayUnsupportedProfiles: []' "$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'readonly property bool displayPersistenceAvailable:' "$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'root.settingsModel.displayPersistenceAvailable' "$repo/config/quickshell/settings/DisplaySettingsPane.qml"
-grep -Fq 'root.settingsModel.displayUnsupportedProfiles' "$repo/config/quickshell/settings/DisplaySettingsPane.qml"
-grep -Fq 'if (!visible) root.confirmation = "";' \
-	"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
-grep -Fq 'label: "Apply changes"' "$repo/config/quickshell/settings/DisplaySettingsPane.qml"
-grep -Fq 'enabled: root.settingsModel.displayState === "ready"' \
-	"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
-grep -Fq '&& root.settingsModel.displayHasPendingChanges' \
-	"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
-grep -Fq 'readonly property bool displayHasPendingChanges:' \
-	"$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'property bool displayRefreshPending: false' \
-	"$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'property bool inputRefreshPending: false' \
-	"$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'root.inputRefreshPending = true;' \
-	"$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'if (!running && root.inputRefreshPending && root.visible) {' \
-	"$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'root.displayRefreshPending = true;' \
-	"$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'if (!running && root.displayRefreshPending && root.visible) {' \
-	"$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq '? "Display changes are ready to apply" : outputs.length + " connected outputs";' \
-	"$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'label: root.settingsModel.previewRollbackFailed ? "Keep current" : "Keep changes"' \
-	"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
-grep -Fq 'onActivated: root.settingsModel.keepPreview()' \
-	"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
-grep -Fq 'root.settingsModel.placeDisplay(outputCard.index, outputCard.anchorIndex, modelData.direction)' \
-	"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
-if grep -Eq 'xPositionInput|yPositionInput' "$repo/config/quickshell/settings/DisplaySettingsPane.qml"; then
-	printf 'Display placement must not require raw coordinates.\n' >&2
-	exit 1
+if [ -d "$repo/config/quickshell" ]; then
+	grep -Fq 'target: "settings"' "$repo/config/quickshell/shell.qml"
+	grep -Fq 'providerProcess.running = false' "$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'Commands.settingsProviderCommand("discover")' "$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'Commands.settingsDisplayCommand("discover")' "$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'Commands.settingsInputCommand("discover")' "$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'Commands.settingsDisplayCommand("watch", root.watchOwnerArguments())' \
+		"$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'Commands.settingsInputCommand("watch", root.watchOwnerArguments())' \
+		"$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'Commands.settingsProviderCommand("watch-notifications", [])' \
+		"$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'stdout: SplitParser { onRead: notificationOwnerSettleTimer.restart() }' \
+		"$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'notificationOwnerWatchProcess.running = id === "appearance" && root.visible;' \
+		"$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'if (id === "appearance") root.refreshCapabilities();' \
+		"$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'path: "/proc/" + Quickshell.processId.toString() + "/stat"' \
+		"$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'root.runInput("preview-status", [])' "$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'root.runDisplay("preview-status", [])' "$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'if (!root.visible) root.closeRollbackPending = true;' \
+		"$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'if (!root.previewToken && (displayPreviewStarting || inputPreviewStarting)) {' \
+		"$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'root.previewKind = "input"; root.previewToken = fields[1]; root.previewOperationLocked = true;' \
+		"$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'root.previewKind = "display"; root.previewToken = fields[1]; root.previewOperationLocked = true;' \
+		"$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'property var displayUnsupportedProfiles: []' "$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'readonly property bool displayPersistenceAvailable:' "$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'root.settingsModel.displayPersistenceAvailable' "$repo/config/quickshell/settings/DisplaySettingsPane.qml"
+	grep -Fq 'root.settingsModel.displayUnsupportedProfiles' "$repo/config/quickshell/settings/DisplaySettingsPane.qml"
+	grep -Fq 'if (!visible) root.confirmation = "";' \
+		"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
+	grep -Fq 'label: "Apply changes"' "$repo/config/quickshell/settings/DisplaySettingsPane.qml"
+	grep -Fq 'enabled: root.settingsModel.displayState === "ready"' \
+		"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
+	grep -Fq '&& root.settingsModel.displayHasPendingChanges' \
+		"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
+	grep -Fq 'readonly property bool displayHasPendingChanges:' \
+		"$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'property bool displayRefreshPending: false' \
+		"$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'property bool inputRefreshPending: false' \
+		"$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'root.inputRefreshPending = true;' \
+		"$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'if (!running && root.inputRefreshPending && root.visible) {' \
+		"$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'root.displayRefreshPending = true;' \
+		"$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'if (!running && root.displayRefreshPending && root.visible) {' \
+		"$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq '? "Display changes are ready to apply" : outputs.length + " connected outputs";' \
+		"$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'label: root.settingsModel.previewRollbackFailed ? "Keep current" : "Keep changes"' \
+		"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
+	grep -Fq 'onActivated: root.settingsModel.keepPreview()' \
+		"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
+	grep -Fq 'root.settingsModel.placeDisplay(outputCard.index, outputCard.anchorIndex, modelData.direction)' \
+		"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
+	if grep -Eq 'xPositionInput|yPositionInput' "$repo/config/quickshell/settings/DisplaySettingsPane.qml"; then
+		printf 'Display placement must not require raw coordinates.\n' >&2
+		exit 1
+	fi
+	grep -Fq 'function keepPreview() {' \
+		"$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'root.runDisplay("keep", [root.previewToken]);' \
+		"$repo/config/quickshell/settings/SettingsModel.qml"
+	if grep -Fq 'keepPreview(root.profileName' \
+		"$repo/config/quickshell/settings/DisplaySettingsPane.qml"; then
+		printf 'Keeping a display preview must not implicitly save a typed layout name.\n' >&2
+		exit 1
+	fi
+	grep -Fq 'label: "Use at next login"' "$repo/config/quickshell/settings/DisplaySettingsPane.qml"
+	grep -Fq 'label: "Restore login backup"' "$repo/config/quickshell/settings/DisplaySettingsPane.qml"
+	grep -Fq 'the previous dwm-oomaya next-login layout will be backed up' \
+		"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
+	if grep -Fq 'root.profileName = modelData;' \
+		"$repo/config/quickshell/settings/DisplaySettingsPane.qml"; then
+		printf 'Trying a saved layout must not populate the save target.\n' >&2
+		exit 1
+	fi
+	if grep -Fq 'label: "Install persistent"' \
+		"$repo/config/quickshell/settings/DisplaySettingsPane.qml"; then
+		printf 'Displays still exposes implementation-oriented persistence wording.\n' >&2
+		exit 1
+	fi
+	grep -Fq -- '--no-preview --yes' \
+		"$repo/scripts/dwm-settings-display-root"
+	grep -Fq -- '--tearfree auto --force-full-composition-pipeline auto' \
+		"$repo/scripts/dwm-settings-display-root"
+	grep -Fq 'fields.length >= 10 ? fields[9] : "unsupported"' \
+		"$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'NVIDIA anti-tearing available at next login' \
+		"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
+	grep -Fq 'import QtQuick.Controls as Controls' \
+		"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
+	grep -Fq 'component DisplayComboBox: Controls.ComboBox' \
+		"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
+	grep -Fq 'Accessible.name: accessibleLabel' \
+		"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
+	grep -Fq 'palette.window: Theme.popupBackground' \
+		"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
+	grep -Fq 'highlighted: comboBox.highlightedIndex === index' \
+		"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
+	grep -Fq 'accessibleLabel: "Resolution for " + outputCard.modelData.name' \
+		"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
+	grep -Fq 'root.settingsModel.displayResolutionChoices(outputCard.index)' \
+		"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
+	grep -Fq 'root.settingsModel.setDisplayResolution(outputCard.index, model[index])' \
+		"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
+	grep -Fq 'root.settingsModel.displayRefreshRateChoices(outputCard.index)' \
+		"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
+	grep -Fq 'root.settingsModel.setDisplayRefreshRate(outputCard.index, model[index])' \
+		"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
+	grep -Fq 'function displayResolutionChoices(index)' \
+		"$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'const scanVariant = /^([ip])/i.exec(match[3]);' \
+		"$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq '(scanVariant ? scanVariant[1].toLowerCase() : "")' \
+		"$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'function displayRefreshRateChoices(index)' \
+		"$repo/config/quickshell/settings/SettingsModel.qml"
+	if grep -Fq 'cycleDisplayMode' "$repo/config/quickshell/settings/DisplaySettingsPane.qml"; then
+		printf 'Display resolution must not be presented as a mode-cycling button.\n' >&2
+		exit 1
+	fi
+	grep -Fq 'migrate or remove it before installing a managed display profile' \
+		"$repo/scripts/dwm-settings-display-root"
+	grep -Fq 'watch-apply' "$repo/scripts/autostart.sh"
+	grep -Fq 'displayWatchProcess.running = false' "$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'inputWatchProcess.running = false' "$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'notificationOwnerWatchProcess.running = false' \
+		"$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'stdout: SplitParser { onRead: inputSettleTimer.restart() }' \
+		"$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'root.searchQuery = ""' "$repo/config/quickshell/settings/SettingsModel.qml"
+	grep -Fq 'activeFocusOnTab: root.enabled' "$repo/config/quickshell/core/ShellButton.qml"
+	grep -Fq 'event.key === Qt.Key_Return' "$repo/config/quickshell/core/ShellButton.qml"
+	grep -Fq 'property bool primary: false' "$repo/config/quickshell/core/ShellButton.qml"
+	grep -Fq ': root.danger ? (root.hovered ? Theme.controlHoverFill : Theme.controlNormalFill)' \
+		"$repo/config/quickshell/core/ShellButton.qml"
+	grep -Fq 'title: "dwm settings"' "$repo/config/quickshell/settings/SettingsWindow.qml"
+	grep -Fq 'label: "Settings"' "$repo/config/quickshell/controlcenter/ControlCenterWindow.qml"
+	grep -Fq 'root.settingsModel.openOnScreen(targetScreen)' "$repo/config/quickshell/controlcenter/ControlCenterWindow.qml"
 fi
-grep -Fq 'function keepPreview() {' \
-	"$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'root.runDisplay("keep", [root.previewToken]);' \
-	"$repo/config/quickshell/settings/SettingsModel.qml"
-if grep -Fq 'keepPreview(root.profileName' \
-	"$repo/config/quickshell/settings/DisplaySettingsPane.qml"; then
-	printf 'Keeping a display preview must not implicitly save a typed layout name.\n' >&2
-	exit 1
-fi
-grep -Fq 'label: "Use at next login"' "$repo/config/quickshell/settings/DisplaySettingsPane.qml"
-grep -Fq 'label: "Restore login backup"' "$repo/config/quickshell/settings/DisplaySettingsPane.qml"
-grep -Fq 'the previous dwm-oomaya next-login layout will be backed up' \
-	"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
-if grep -Fq 'root.profileName = modelData;' \
-	"$repo/config/quickshell/settings/DisplaySettingsPane.qml"; then
-	printf 'Trying a saved layout must not populate the save target.\n' >&2
-	exit 1
-fi
-if grep -Fq 'label: "Install persistent"' \
-	"$repo/config/quickshell/settings/DisplaySettingsPane.qml"; then
-	printf 'Displays still exposes implementation-oriented persistence wording.\n' >&2
-	exit 1
-fi
-grep -Fq -- '--no-preview --yes' \
-	"$repo/scripts/dwm-settings-display-root"
-grep -Fq -- '--tearfree auto --force-full-composition-pipeline auto' \
-	"$repo/scripts/dwm-settings-display-root"
-grep -Fq 'fields.length >= 10 ? fields[9] : "unsupported"' \
-	"$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'NVIDIA anti-tearing available at next login' \
-	"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
-grep -Fq 'import QtQuick.Controls as Controls' \
-	"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
-grep -Fq 'component DisplayComboBox: Controls.ComboBox' \
-	"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
-grep -Fq 'Accessible.name: accessibleLabel' \
-	"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
-grep -Fq 'palette.window: Theme.popupBackground' \
-	"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
-grep -Fq 'highlighted: comboBox.highlightedIndex === index' \
-	"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
-grep -Fq 'accessibleLabel: "Resolution for " + outputCard.modelData.name' \
-	"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
-grep -Fq 'root.settingsModel.displayResolutionChoices(outputCard.index)' \
-	"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
-grep -Fq 'root.settingsModel.setDisplayResolution(outputCard.index, model[index])' \
-	"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
-grep -Fq 'root.settingsModel.displayRefreshRateChoices(outputCard.index)' \
-	"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
-grep -Fq 'root.settingsModel.setDisplayRefreshRate(outputCard.index, model[index])' \
-	"$repo/config/quickshell/settings/DisplaySettingsPane.qml"
-grep -Fq 'function displayResolutionChoices(index)' \
-	"$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'const scanVariant = /^([ip])/i.exec(match[3]);' \
-	"$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq '(scanVariant ? scanVariant[1].toLowerCase() : "")' \
-	"$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'function displayRefreshRateChoices(index)' \
-	"$repo/config/quickshell/settings/SettingsModel.qml"
-if grep -Fq 'cycleDisplayMode' "$repo/config/quickshell/settings/DisplaySettingsPane.qml"; then
-	printf 'Display resolution must not be presented as a mode-cycling button.\n' >&2
-	exit 1
-fi
-grep -Fq 'migrate or remove it before installing a managed display profile' \
-	"$repo/scripts/dwm-settings-display-root"
-grep -Fq 'watch-apply' "$repo/scripts/autostart.sh"
-grep -Fq 'displayWatchProcess.running = false' "$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'inputWatchProcess.running = false' "$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'notificationOwnerWatchProcess.running = false' \
-	"$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'stdout: SplitParser { onRead: inputSettleTimer.restart() }' \
-	"$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'root.searchQuery = ""' "$repo/config/quickshell/settings/SettingsModel.qml"
-grep -Fq 'activeFocusOnTab: root.enabled' "$repo/config/quickshell/core/ShellButton.qml"
-grep -Fq 'event.key === Qt.Key_Return' "$repo/config/quickshell/core/ShellButton.qml"
-grep -Fq 'property bool primary: false' "$repo/config/quickshell/core/ShellButton.qml"
-grep -Fq ': root.danger ? (root.hovered ? Theme.controlHoverFill : Theme.controlNormalFill)' \
-	"$repo/config/quickshell/core/ShellButton.qml"
-grep -Fq 'title: "dwm settings"' "$repo/config/quickshell/settings/SettingsWindow.qml"
-grep -Fq 'label: "Settings"' "$repo/config/quickshell/controlcenter/ControlCenterWindow.qml"
-grep -Fq 'root.settingsModel.openOnScreen(targetScreen)' "$repo/config/quickshell/controlcenter/ControlCenterWindow.qml"
 grep -Fq '{ title="dwm settings",             isfloating=1, alwaysontop=1 }' \
 	"$repo/config/window-rules.toml"
 
@@ -833,23 +835,25 @@ fi
 grep -Fq 'must run through polkit as root' "$work/root-helper.err"
 
 printf 'Settings capability provider and shell contract: PASS\n'
-qml_runner=
-for candidate in /usr/lib64/qt6/bin/qml /usr/lib/qt6/bin/qml qml6; do
-	if command -v "$candidate" >/dev/null 2>&1; then
-		qml_runner=$(command -v "$candidate")
-		break
+if [ -d "$repo/config/quickshell" ]; then
+	qml_runner=
+	for candidate in /usr/lib64/qt6/bin/qml /usr/lib/qt6/bin/qml qml6; do
+		if command -v "$candidate" >/dev/null 2>&1; then
+			qml_runner=$(command -v "$candidate")
+			break
+		fi
+	done
+	if [ -n "$qml_runner" ]; then
+		QT_QPA_PLATFORM=offscreen "$qml_runner" "$repo/tests/quickshell-display-layout.qml"
+	else
+		printf 'SKIP: Qt 6 qml runner unavailable; display geometry assertions not run.\n'
 	fi
-done
-if [ -n "$qml_runner" ]; then
-	QT_QPA_PLATFORM=offscreen "$qml_runner" "$repo/tests/quickshell-display-layout.qml"
-else
-	printf 'SKIP: Qt 6 qml runner unavailable; display geometry assertions not run.\n'
-fi
 
-if command -v quickshell >/dev/null 2>&1; then
-	cp -a "$repo/config/quickshell" "$work/profile-model"
-	cp "$repo/tests/quickshell-display-profiles.qml" "$work/profile-model/shell.qml"
-	QT_QPA_PLATFORM=offscreen timeout 20 quickshell --no-duplicate --path "$work/profile-model/shell.qml"
-else
-	printf 'SKIP: Quickshell unavailable; automatic display model assertions not run.\n'
+	if command -v quickshell >/dev/null 2>&1; then
+		cp -a "$repo/config/quickshell" "$work/profile-model"
+		cp "$repo/tests/quickshell-display-profiles.qml" "$work/profile-model/shell.qml"
+		QT_QPA_PLATFORM=offscreen timeout 20 quickshell --no-duplicate --path "$work/profile-model/shell.qml"
+	else
+		printf 'SKIP: Quickshell unavailable; automatic display model assertions not run.\n'
+	fi
 fi

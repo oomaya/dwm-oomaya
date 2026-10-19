@@ -132,4 +132,18 @@ else
 	exit 1
 fi
 
+# Test 9: dwm-shell-mode quickshell fails gracefully when companion plugin missing
+printf 'Test 9: dwm-shell-mode quickshell fails gracefully when plugin missing... '
+rm -f "$work/config/quickshell/shell.qml"
+if missing_err=$("$repo_dir/scripts/dwm-shell-mode" quickshell 2>&1); then
+	printf 'FAIL: expected non-zero exit when companion plugin missing\n' >&2
+	exit 1
+fi
+if printf '%s\n' "$missing_err" | grep -q 'quickshell-oomaya'; then
+	printf 'PASS\n'
+else
+	printf 'FAIL: error message missing companion repo advice: %s\n' "$missing_err" >&2
+	exit 1
+fi
+
 printf 'ALL DWM-SHELL-MODE TESTS PASSED\n'

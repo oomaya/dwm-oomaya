@@ -211,17 +211,19 @@ exit 1
 SH
 chmod +x "$work/bin/xprop" "$work/bin/xdotool"
 
-DWM_TEST_FULLSCREEN_MONITORS='0, 1' \
-	DWM_TEST_MONITOR_DESKTOPS='2560, 0, 2560, 1440, 0, 0, 0, 2560, 1440, 4' \
-	DWM_TEST_SELECTED_MONITOR=1 \
-	PATH="$work/bin:$PATH" \
-	"$repo_dir/scripts/dwm-quickshell-state" state >"$work/state.out"
-grep -Fqx 'monitor_desktops=2560,0,2560,1440,0,0,0,2560,1440,4' "$work/state.out"
-grep -Fqx 'focused_monitor=1' "$work/state.out"
-grep -Fqx 'fullscreen_monitors=0|1' "$work/state.out"
+if [ -x "$repo_dir/scripts/dwm-quickshell-state" ]; then
+	DWM_TEST_FULLSCREEN_MONITORS='0, 1' \
+		DWM_TEST_MONITOR_DESKTOPS='2560, 0, 2560, 1440, 0, 0, 0, 2560, 1440, 4' \
+		DWM_TEST_SELECTED_MONITOR=1 \
+		PATH="$work/bin:$PATH" \
+		"$repo_dir/scripts/dwm-quickshell-state" state >"$work/state.out"
+	grep -Fqx 'monitor_desktops=2560,0,2560,1440,0,0,0,2560,1440,4' "$work/state.out"
+	grep -Fqx 'focused_monitor=1' "$work/state.out"
+	grep -Fqx 'fullscreen_monitors=0|1' "$work/state.out"
 
-PATH="$work/bin:$PATH" \
-	"$repo_dir/scripts/dwm-quickshell-state" state >"$work/fallback.out"
-grep -Fqx 'monitor_desktops=4' "$work/fallback.out"
+	PATH="$work/bin:$PATH" \
+		"$repo_dir/scripts/dwm-quickshell-state" state >"$work/fallback.out"
+	grep -Fqx 'monitor_desktops=4' "$work/fallback.out"
+fi
 
 printf '%s\n' "Monitor tag-switch source guard: PASS"

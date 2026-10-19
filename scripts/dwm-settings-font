@@ -274,7 +274,7 @@ publish_config_if_hash() {
 		printf 'dwm-settings-font: GNU mv with --exchange and --no-copy is required (coreutils 9.5 or newer)\n' >&2
 		return 1
 	fi
-	if ! mv --exchange --no-copy -- "$staged" "$config_file"; then
+	if ! mv -f --exchange --no-copy -- "$staged" "$config_file"; then
 		printf 'dwm-settings-font: atomic file exchange is unavailable on the font configuration filesystem\n' >&2
 		return 1
 	fi
@@ -290,7 +290,7 @@ publish_config_if_hash() {
 		published_config_retained=true
 		return 1
 	fi
-	if mv --exchange --no-copy -- "$staged" "$config_file"; then
+	if mv -f --exchange --no-copy -- "$staged" "$config_file"; then
 		rollback_hash=$(config_path_hash "$staged" 2>/dev/null || true)
 		if [[ $rollback_hash == "$published_hash" ]]; then
 			unlink -- "$staged"
@@ -401,7 +401,7 @@ exchange_supported() {
 		unlink -- "$probe_a"
 		return 1
 	}
-	if mv --exchange --no-copy -- "$probe_a" "$probe_b" 2>/dev/null; then
+	if mv -f --exchange --no-copy -- "$probe_a" "$probe_b" 2>/dev/null; then
 		status=0
 	else
 		exchange_failure_detail='Atomic file exchange is unavailable on the font configuration filesystem'

@@ -65,7 +65,6 @@ sed "s/VERSION/$version/g" "$test_repo/dwm.1" >"$manprefix/man1/dwm.1"
 sed "s|@PREFIX@|$prefix|g" "$test_repo/dwm.desktop" >"$xsessions_dir/dwm.desktop"
 cp -a "$test_repo/config" "$data_dir/config"
 cp -a "$test_repo/scripts" "$data_dir/scripts"
-cp -a "$test_repo/config/quickshell" "$config_home/quickshell"
 printf '%s\n' '# preserved custom user unit' \
 	>"$config_home/systemd/user/wm-graphical-session.service"
 for cursor_source in "$test_repo"/assets/cursors/Capitaine-Cursors*; do
@@ -202,13 +201,13 @@ fi
 rm "$test_bin/id" "$test_bin/sudo" "$test_bin/dnf"
 mv "$test_bin/xsettingsd.missing" "$test_bin/xsettingsd"
 
-printf '%s\n' '// stale live marker' >>"$config_home/quickshell/shell.qml"
+printf '%s\n' '# stale live marker' >>"$data_dir/config/hotkeys.toml"
 if run_check >"$output" 2>&1; then
-	printf '%s\n' 'Managed Quickshell mismatch unexpectedly passed.' >&2
+	printf '%s\n' 'Managed config mismatch unexpectedly passed.' >&2
 	exit 1
 fi
-grep -Fq 'MISMATCH TREE: managed Quickshell' "$output"
-cp "$test_repo/config/quickshell/shell.qml" "$config_home/quickshell/shell.qml"
+grep -Fq 'MISMATCH TREE: managed data config' "$output"
+cp "$test_repo/config/hotkeys.toml" "$data_dir/config/hotkeys.toml"
 
 rm -f "$prefix/bin/dwm-status"
 if run_check >"$output" 2>&1; then

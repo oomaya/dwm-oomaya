@@ -289,7 +289,9 @@ verify_install() {
 	verify_file "$expected_xsession" "$xsession_target" "dwm X session"
 	verify_tree "$repo_dir/config" "$data_dir/config" "managed data config"
 	verify_tree "$repo_dir/scripts" "$data_dir/scripts" "managed data scripts"
-	verify_tree "$repo_dir/config/quickshell" "$quickshell_dir" "managed Quickshell"
+	if [ -d "$repo_dir/config/quickshell" ]; then
+		verify_tree "$repo_dir/config/quickshell" "$quickshell_dir" "managed Quickshell"
+	fi
 
 	for cursor_source in "$repo_dir"/assets/cursors/Capitaine-Cursors*; do
 		[ -d "$cursor_source" ] || continue
@@ -402,7 +404,7 @@ runtime_verify() {
 		printf 'Quickshell activation deferred to the required session restart to preserve tray startup order.\n'
 	fi
 
-	if command -v quickshell >/dev/null 2>&1; then
+	if [ -d "$quickshell_dir" ] && command -v quickshell >/dev/null 2>&1; then
 		if [ "$restart_quickshell_now" -eq 1 ]; then
 			control_helper=$prefix/bin/dwm-quickshell-controlcenter
 			if [ ! -x "$control_helper" ]; then

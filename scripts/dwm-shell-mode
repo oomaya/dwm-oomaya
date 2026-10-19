@@ -105,8 +105,10 @@ set_quickshell_mode() {
 	fi
 
 	if [ ! -f "$quickshell_config" ]; then
-		notify_user "Shell Mode Error" "Quickshell configuration missing: $quickshell_config"
+		notify_user "Shell Mode Error" "Quickshell companion plugin missing. Install from github.com/oomaya/quickshell-oomaya"
 		printf 'Error: quickshell configuration missing: %s\n' "$quickshell_config" >&2
+		printf 'Install the companion plugin with:\n' >&2
+		printf '  git clone https://github.com/oomaya/quickshell-oomaya.git ~/.config/quickshell\n' >&2
 		return 1
 	fi
 
