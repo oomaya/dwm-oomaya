@@ -101,7 +101,7 @@ dwm.o: drw.h util.h tomlparser.h
 util.o: util.h
 tomlparser.o: tomlparser.h
 
-config.h:
+config.h: config.def.h
 	cp config.def.h $@
 
 dwm: check-build-deps ${OBJ}
