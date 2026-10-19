@@ -447,16 +447,29 @@ fi
 [ -z "$systemctl_import_pid" ] || wait "$systemctl_import_pid"
 [ -z "$dbus_import_pid" ] || wait "$dbus_import_pid"
 
-# Start Quickshell before XDG autostart applications, then wait for the tray IPC
-# endpoint before activating the rest of the graphical session.
+# Shell Mode Reconciler: Pure Suckless C mode is the sovereign default.
+# Users can toggle or select Quickshell modular shell via dwm-shell-mode.
 case ${XDG_CONFIG_HOME:-} in
-/*) quickshell_config_home=$XDG_CONFIG_HOME ;;
-*) quickshell_config_home=${HOME:?HOME is required for XDG_CONFIG_HOME fallback}/.config ;;
+/*) shell_config_home=$XDG_CONFIG_HOME ;;
+*) shell_config_home=${HOME:?HOME is required for XDG_CONFIG_HOME fallback}/.config ;;
 esac
-QUICKSHELL_CONFIG=$quickshell_config_home/quickshell/shell.qml
-if [ -f "$QUICKSHELL_CONFIG" ]; then
+QUICKSHELL_CONFIG=$shell_config_home/quickshell/shell.qml
+
+shell_mode="suckless"
+if [ -n "${DWM_SHELL_MODE:-}" ]; then
+	case $DWM_SHELL_MODE in
+	suckless | quickshell) shell_mode="$DWM_SHELL_MODE" ;;
+	esac
+elif [ -f "$shell_config_home/dwm-oomaya/shell-mode" ]; then
+	read -r configured_mode <"$shell_config_home/dwm-oomaya/shell-mode" 2>/dev/null || true
+	case $configured_mode in
+	suckless | quickshell) shell_mode="$configured_mode" ;;
+	esac
+fi
+
+quickshell_compatible=0
+if [ "$shell_mode" = "quickshell" ] && [ -f "$QUICKSHELL_CONFIG" ]; then
 	quickshell_check=
-	quickshell_compatible=0
 	case $0 in
 	*/*)
 		[ ! -x "${0%/*}/dwm-quickshell-version-check" ] ||
@@ -481,7 +494,7 @@ if [ -f "$QUICKSHELL_CONFIG" ]; then
 	fi
 fi
 
-# Notification daemon fallback: start dunst if Quickshell is absent or not running
+# Notification daemon: start dunst if Quickshell is absent, disabled, or not running
 if [ "${quickshell_compatible:-0}" -ne 1 ] && ! pgrep -u "$(id -u)" -x quickshell >/dev/null 2>&1; then
 	if command -v systemctl >/dev/null 2>&1 && systemctl --user list-unit-files dunst.service >/dev/null 2>&1; then
 		systemctl --user start dunst.service 2>/dev/null || start_once dunst dunst

@@ -11,6 +11,8 @@ DWM_AUTOSTART_NO_INPUT_WATCH=1
 export DWM_AUTOSTART_NO_INPUT_WATCH
 TEST_REAL_UID=$(id -u)
 export TEST_REAL_UID
+DWM_SHELL_MODE=quickshell
+export DWM_SHELL_MODE
 
 repo_dir=$(CDPATH='' cd -- "$(dirname "$0")/.." && pwd)
 work=$(mktemp -d)
@@ -957,6 +959,50 @@ EOF
 	grep -Eq "^$$[[:space:]]+[1-9][0-9]*$" "$state/watcher.session"
 }
 
+run_suckless_default_case() {
+	home="$work/suckless-default/home"
+	state="$work/suckless-default/state"
+	runtime="$work/suckless-default/runtime"
+	mkdir -p "$home/Pictures/backgrounds" "$home/.config" "$state" "$runtime"
+	chmod 700 "$runtime"
+	: >"$home/Pictures/backgrounds/wallpaper"
+
+	# Prevent this isolated test from starting a host polkit agent.
+	: >"$state/polkit-mate-authentication-agent-1.running"
+
+	# Unset DWM_SHELL_MODE so autostart uses the default suckless mode
+	(
+		unset DWM_SHELL_MODE
+		DISPLAY=:199 \
+			HOME=$home \
+			TEST_STATE=$state \
+			PATH="$work/bin:/usr/bin:/bin" \
+			XDG_CONFIG_HOME="$home/.config" \
+			XDG_RUNTIME_DIR="$runtime" \
+			DWM_AUTOSTART_NO_INPUT_WATCH=1 \
+			DWM_AUTOSTART_NO_SETSID=1 \
+			sh "$repo_dir/scripts/autostart.sh"
+	)
+
+	wait_for_marker "$state/feh.running"
+	wait_for_marker "$state/picom.running"
+	wait_for_marker "$state/dwm-status.running"
+	wait_for_marker "$state/dwm-lock-watch.running"
+
+	# Quickshell MUST NOT run in default suckless mode
+	test ! -f "$state/quickshell.running"
+	test ! -f "$state/quickshell.args"
+
+	# Clean up spawned status process
+	if [ -f "$state/dwm-status-runtime.identities" ]; then
+		while IFS= read -r runtime_identity; do
+			runtime_pid=${runtime_identity%%:*}
+			kill -KILL "$runtime_pid" 2>/dev/null || true
+		done <"$state/dwm-status-runtime.identities"
+	fi
+}
+
+run_suckless_default_case
 run_duplicate_case display-manager
 run_duplicate_case startx
 run_relative_config_home_case
