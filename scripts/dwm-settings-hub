@@ -15,6 +15,7 @@ get_menu_options() {
 		"  Autostart Services" \
 		"󰌌  Input Devices" \
 		"󰂯  Bluetooth Manager" \
+		"🔊  Audio & Sound Devices" \
 		"󰍛  System Diagnostics"
 }
 
@@ -23,7 +24,7 @@ if [[ "${1:-}" == "--list" || "${1:-}" == "--dry-run" ]]; then
 	exit 0
 fi
 
-choice=$(get_menu_options | dmenu -p "$PROMPT" -l 9 "$@")
+choice=$(get_menu_options | dmenu -p "$PROMPT" -l 10 "$@")
 [ -n "$choice" ] || exit 0
 
 case "$choice" in
@@ -45,8 +46,16 @@ case "$choice" in
 				mkdir -p "$bg_dir"
 				# Auto-seed default wallpaper if directory is empty
 				if [ -z "$(ls -A "$bg_dir" 2>/dev/null)" ]; then
-					if [ -f "/home/rand/.local/src/dwm-oomaya/assets/dwm-oomaya.jpg" ]; then
-						cp "/home/rand/.local/src/dwm-oomaya/assets/dwm-oomaya.jpg" "$bg_dir/" 2>/dev/null || true
+					script_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
+					repo_asset="$script_dir/../assets/dwm-oomaya-wallpaper.jpg"
+					local_asset="${XDG_DATA_HOME:-$HOME/.local/share}/dwm-oomaya/assets/dwm-oomaya-wallpaper.jpg"
+					sys_asset="/usr/share/backgrounds/dwm-oomaya/dwm-oomaya-wallpaper.jpg"
+					if [ -f "$repo_asset" ]; then
+						cp "$repo_asset" "$bg_dir/" 2>/dev/null || true
+					elif [ -f "$local_asset" ]; then
+						cp "$local_asset" "$bg_dir/" 2>/dev/null || true
+					elif [ -f "$sys_asset" ]; then
+						cp "$sys_asset" "$bg_dir/" 2>/dev/null || true
 					elif [ -f "/usr/share/backgrounds/foxy.jpg" ]; then
 						cp "/usr/share/backgrounds/foxy.jpg" "$bg_dir/" 2>/dev/null || true
 					fi
@@ -253,16 +262,91 @@ case "$choice" in
 			command -v notify-send >/dev/null 2>&1 && notify-send -a "Bluetooth" "Not Installed" "Bluetooth stack not found. Run: sudo apt install bluez blueman"
 		fi
 		;;
+	*"Audio"*)
+		sub=$(printf "%s\n" \
+			"🔊  Volume Up (+5%)" \
+			"🔉  Volume Down (-5%)" \
+			"🔇  Toggle Mute" \
+			"🎧  Switch Audio Output Sink" \
+			"🎛  Open Audio Mixer" | dmenu -p "🔊 Audio >" -l 5)
+		case "$sub" in
+			*"Volume Up"*)
+				if command -v wpctl >/dev/null 2>&1; then
+					wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%+
+				elif command -v pactl >/dev/null 2>&1; then
+					pactl set-sink-volume @DEFAULT_SINK@ +5%
+				fi
+				command -v notify-send >/dev/null 2>&1 && notify-send -a "Audio" "Volume Raised (+5%)"
+				;;
+			*"Volume Down"*)
+				if command -v wpctl >/dev/null 2>&1; then
+					wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-
+				elif command -v pactl >/dev/null 2>&1; then
+					pactl set-sink-volume @DEFAULT_SINK@ -5%
+				fi
+				command -v notify-send >/dev/null 2>&1 && notify-send -a "Audio" "Volume Lowered (-5%)"
+				;;
+			*"Toggle Mute"*)
+				if command -v wpctl >/dev/null 2>&1; then
+					wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
+				elif command -v pactl >/dev/null 2>&1; then
+					pactl set-sink-mute @DEFAULT_SINK@ toggle
+				fi
+				command -v notify-send >/dev/null 2>&1 && notify-send -a "Audio" "Mute Toggled"
+				;;
+			*"Switch Audio Output Sink"*)
+				if command -v pactl >/dev/null 2>&1; then
+					sinks=$(pactl list short sinks 2>/dev/null | awk '{print $2}')
+					if [ -n "$sinks" ]; then
+						chosen_sink=$(printf "%s\n" "$sinks" | dmenu -p "Select Output Sink >" -l 6)
+						if [ -n "$chosen_sink" ]; then
+							pactl set-default-sink "$chosen_sink"
+							command -v notify-send >/dev/null 2>&1 && notify-send -a "Audio" "Default sink set to: $chosen_sink"
+						fi
+					fi
+				elif command -v wpctl >/dev/null 2>&1; then
+					sink_lines=$(wpctl status 2>/dev/null | sed -n '/Sinks:/,/Sources:/p' | grep -E '^[[:space:]]+(\*|[0-9]+)\.' || true)
+					if [ -n "$sink_lines" ]; then
+						chosen_line=$(printf "%s\n" "$sink_lines" | dmenu -p "Select Output Sink >" -l 6)
+						chosen_id=$(printf '%s\n' "$chosen_line" | grep -oE '[0-9]+' | head -n 1 || true)
+						if [ -n "$chosen_id" ]; then
+							wpctl set-default "$chosen_id"
+							command -v notify-send >/dev/null 2>&1 && notify-send -a "Audio" "Default sink set to ID: $chosen_id"
+						fi
+					fi
+				fi
+				;;
+			*"Open Audio Mixer"*)
+				if command -v pavucontrol >/dev/null 2>&1; then
+					pavucontrol &
+				elif command -v alsamixer >/dev/null 2>&1; then
+					dwm-terminal alsamixer &
+				else
+					command -v notify-send >/dev/null 2>&1 && notify-send -a "Audio" "Mixer Missing" "Neither pavucontrol nor alsamixer found"
+				fi
+				;;
+		esac
+		;;
 	*"Diagnostics"*)
 		sub=$(printf "%s\n" \
 			"📋  Quick Diagnostics Summary" \
-			"🖥  Run Full Diagnostics in Terminal" | dmenu -p "󰍛 Diagnostics >" -l 2)
+			"🖥  Run Full Diagnostics in Terminal" \
+			"📦  Check & Apply System Updates" | dmenu -p "󰍛 Diagnostics >" -l 3)
 		case "$sub" in
 			*"Summary"*)
 				dwm-diagnostics 2>&1 | dmenu -p "Diagnostics Summary" -l 15 || true
 				;;
 			*"Terminal"*)
 				dwm-terminal dwm-diagnostics &
+				;;
+			*"System Updates"*)
+				if command -v dnf >/dev/null 2>&1; then
+					dwm-terminal -T "System Update" -e sh -c "sudo dnf upgrade; printf '\nPress Enter to close...'; read -r _" &
+				elif command -v pacman >/dev/null 2>&1; then
+					dwm-terminal -T "System Update" -e sh -c "sudo pacman -Syu; printf '\nPress Enter to close...'; read -r _" &
+				elif command -v apt >/dev/null 2>&1; then
+					dwm-terminal -T "System Update" -e sh -c "sudo apt update && sudo apt upgrade; printf '\nPress Enter to close...'; read -r _" &
+				fi
 				;;
 		esac
 		;;
