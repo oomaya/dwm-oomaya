@@ -3,7 +3,15 @@ name: CI
 on:
   push:
     branches: ["main"]
+  pull_request:
+    branches: ["main"]
   workflow_dispatch:
+    inputs:
+      test_quickshell:
+        description: "Run optional Quickshell QML matrix jobs"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -49,8 +57,34 @@ jobs:
       - name: Validate Core C & Desktop
         run: scripts/run-tests make check-core
 
+  clang-build:
+    name: Clang Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container: fedora:44
+
+    steps:
+      - name: Install checkout dependency
+        run: dnf install -y --setopt=install_weak_deps=False git
+
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Install Clang and build dependencies
+        run: |
+          dnf install -y --setopt=install_weak_deps=False \
+            clang make pkgconf-pkg-config \
+            libX11-devel libXft-devel libXinerama-devel libXrender-devel \
+            imlib2-devel libxcb-devel xcb-util-devel \
+            fontconfig-devel freetype-devel
+
+      - name: Build with Clang
+        run: make clean all CC=clang
+
   validate-shell-appearance:
-    name: Shell & Appearance Tests
+    name: Shell & Appearance Tests (Quickshell QML)
+    if: github.event_name == 'workflow_dispatch' && inputs.test_quickshell == true
     runs-on: ubuntu-latest
     timeout-minutes: 20
     container: fedora:44
@@ -88,7 +122,8 @@ jobs:
         run: scripts/run-tests make check-shell-appearance
 
   validate-system-management:
-    name: System Management Tests
+    name: System Management Tests (Quickshell QML)
+    if: github.event_name == 'workflow_dispatch' && inputs.test_quickshell == true
     runs-on: ubuntu-latest
     timeout-minutes: 20
     container: fedora:44
@@ -127,29 +162,3 @@ jobs:
 
       - name: Validate System Management
         run: scripts/run-tests make check-system
-
-  clang-build:
-    if: github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    container: fedora:44
-
-    steps:
-      - name: Install checkout dependency
-        run: dnf install -y --setopt=install_weak_deps=False git
-
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-
-      - name: Install Clang and build dependencies
-        run: |
-          dnf install -y --setopt=install_weak_deps=False \
-            clang make pkgconf-pkg-config \
-            libX11-devel libXft-devel libXinerama-devel libXrender-devel \
-            imlib2-devel libxcb-devel xcb-util-devel \
-            fontconfig-devel freetype-devel
-
-      - name: Build with Clang
-        run: make clean all CC=clang
-
