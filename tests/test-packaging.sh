@@ -6,8 +6,14 @@ repo=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 rpm_spec="$repo/packaging/rpm/dwm-oomaya.spec"
 arch_pkg="$repo/packaging/arch/PKGBUILD"
 
-test -f "$rpm_spec" || { echo "RPM spec missing: $rpm_spec" >&2; exit 1; }
-test -f "$arch_pkg" || { echo "PKGBUILD missing: $arch_pkg" >&2; exit 1; }
+test -f "$rpm_spec" || {
+	echo "RPM spec missing: $rpm_spec" >&2
+	exit 1
+}
+test -f "$arch_pkg" || {
+	echo "PKGBUILD missing: $arch_pkg" >&2
+	exit 1
+}
 
 # 1. Version alignment
 config_mk_version=$(grep -E '^VERSION[[:space:]]*=' "$repo/config.mk" | cut -d= -f2 | tr -d '[:space:]')
