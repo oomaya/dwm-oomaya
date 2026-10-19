@@ -36,7 +36,7 @@ The modern Linux desktop landscape is heavily dominated by complex compositor st
 ```
 
 ### The Performance Floor
-- **Total System Idle RAM:** `< 180MB` (including Xorg, dwm, Quickshell panel, and background services).
+- **Total System Idle RAM:** `< 80MB` (pure C sovereign desktop) / `< 180MB` (with optional Quickshell companion).
 - **Core Binary Size:** `~150KB` compiled with `-Os` optimization.
 - **Window Management Latency:** `< 2ms` event-to-screen response.
 - **IPC Architecture:** Zero background daemon polling; 100% event-driven via X11 atoms (`xprop -spy`).

@@ -1,29 +1,17 @@
-# Fedora-Only Desktop Environment Roadmap
+# DWM-Oomaya Multi-Distro Desktop Environment Roadmap
 
 ## Mission
 
-dwm-oomaya is expanding from an opinionated dwm build into a cohesive
-X11 desktop environment. The product is a complete Fedora desktop installed
-from the official Fedora Server Network Install ISO or onto an existing Fedora
-installation.
+dwm-oomaya is a cohesive, ultra-fast, sovereign X11 desktop environment engineered around a pure C Suckless core (`dwm`, `dwm-oomayad`, `dmenu-oomaya`). It delivers 100% native desktop parity across Fedora, Arch Linux / CachyOS, and the Debian family (Debian, Ubuntu, Linux Mint, Peppermint OS).
 
-The desktop keeps dwm as the small window-management core and Quickshell as the
-managed shell and settings layer. New features must preserve existing keybinds,
-runtime TOML configuration, X11 behavior, and the ability to use the session
-when optional components fail.
+The desktop maintains pure C99/C11 as its sovereign, zero-dependency foundation with ChadDWM Status2d as the default topbar, while supporting Qt6/QML desktop overlays via the optional `quickshell-oomaya` companion plugin.
 
 ## Delivery Model
 
-- Fedora is the only supported distribution, implementation target, and
-  release-qualification target.
-- Fedora 44 Server Network Install is the current canonical image base.
-- Standard and NVIDIA image variants remain separate.
-- No other distribution is part of the product, installer, test, or release
-  contract.
-- Wayland-native support remains out of scope.
-- The Settings experience will be hybrid: common desktop controls belong in a
-  cohesive Quickshell application, while high-risk administration is delegated
-  to trusted Fedora tools or narrowly scoped privileged helpers.
+- Tier 1 supported distributions: Fedora 41-44+, Arch Linux, CachyOS, Debian 12/13, Ubuntu LTS, Linux Mint, Peppermint OS.
+- Sovereign default: Zero Qt6 or Python runtime dependencies in core package.
+- Clean packaging: Fedora RPM spec (`packaging/rpm/dwm-oomaya.spec`) and Arch PKGBUILD (`packaging/arch/PKGBUILD`).
+- Sub-60s CI build and test execution with automated container suites.
 
 ## Planning Rules
 

@@ -24,10 +24,10 @@ The platform contract dynamically resolves target environments via `/etc/os-rele
 
 ---
 
-## 3. Adaptive Dual-Shell Architecture (Quickshell vs. ChadDWM Bar)
-
-The environment strictly decouples the C window manager event loop from user-facing status surfaces and launchers. The runtime session auto-negotiates the active shell profile at startup without requiring re-compilation of the `dwm` binary.
-
+## 3. Sovereign Default Architecture & Companion Extensibility
+ 
+The environment strictly decouples the C window manager event loop from user-facing status surfaces and launchers. The default runtime operates in pure Suckless mode, while Quickshell is supported as an optional companion.
+ 
 ```text
                     ┌───────────────────────────────┐
                     │  dwm core (C99, ~150KB, IPC)  │
@@ -35,11 +35,11 @@ The environment strictly decouples the C window manager event loop from user-fac
                                     │
                ┌────────────────────┴────────────────────┐
                ▼                                         ▼
-   [Profile: Modern / Tier 1]                [Profile: Lean / Legacy / Tier 2/3]
-   Quickshell Managed Shell                  ChadDWM Status2d Engine
-   - Qt6 / QML Event-Driven Engine           - Microsecond POSIX status emitter
-   - Control Center & OSD                    - Sub-2ms C status2d rendering
-   - IPC: Atom `_DWM_CURRENT_LAYOUT`         - Zero Qt/C++ runtime dependency
+   [Sovereign Default: Pure C]               [Optional Companion Plugin]
+   ChadDWM Status2d Engine                   quickshell-oomaya
+   - Microsecond POSIX status emitter        - Qt6 / QML Event-Driven Engine
+   - Sub-2ms C status2d rendering            - Rich Control Center & OSD
+   - Zero Qt/C++ runtime dependency          - Independent Companion Repository
 ```
 
 ### 3.1 Shell Capability Detection Contract

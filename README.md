@@ -4,21 +4,21 @@
   <p><strong>A high-performance, keyboard-driven suckless X11 desktop environment engineered for speed, sharp-corner aesthetics, and zero bloat.</strong></p>
 
   <p>
-    <a href="https://github.com/oomaya/dwm-oomaya/releases"><img src="https://img.shields.io/badge/version-6.5--oomaya-7aa2f7?style=flat-square" alt="Version" /></a>
-    <a href="https://github.com/oomaya/dwm-oomaya/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-GPLv3-7dcfff?style=flat-square" alt="License" /></a>
-    <a href="#installation--quickstart"><img src="https://img.shields.io/badge/platform-Fedora%20%7C%20Arch%20%7C%20Debian-bb9af7?style=flat-square" alt="Platform" /></a>
+    <a href="https://github.com/oomaya/dwm-oomaya/releases"><img src="https://img.shields.io/badge/version-0.8.0-7aa2f7?style=flat-square" alt="Version" /></a>
+    <a href="https://github.com/oomaya/dwm-oomaya/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT%20%2F%20GPLv3-7dcfff?style=flat-square" alt="License" /></a>
+    <a href="#installation--quickstart"><img src="https://img.shields.io/badge/platform-Fedora%20%7C%20Arch%20%7C%20Debian%20%7C%20Ubuntu-bb9af7?style=flat-square" alt="Platform" /></a>
     <a href="#aesthetic-standards"><img src="https://img.shields.io/badge/theme-Tokyo%20Night-24283b?style=flat-square" alt="Theme" /></a>
     <a href="#14-vanitygaps-layouts"><img src="https://img.shields.io/badge/layouts-14%20Vanitygaps-9ece6a?style=flat-square" alt="Layouts" /></a>
   </p>
 
   <p>
+    <a href="./docs/USER-GUIDE.md"><strong>📖 User Guide & Manual</strong></a> •
+    <a href="./docs/SMOKE-TEST.md"><strong>🧪 Smoke Test Matrix</strong></a> •
     <a href="#key-features">Key Features</a> •
-    <a href="#visual-showcase">Showcase</a> •
     <a href="#keyboard-mastery">Keybindings</a> •
-    <a href="#centered-dmenu-ecosystem">Dmenu Suite</a> •
     <a href="#installation--quickstart">Installation</a> •
     <a href="./docs/ARCHITECTURE.md">Architecture</a> •
-    <a href="#architectural-lineage">Lineage</a>
+    <a href="https://github.com/oomaya/quickshell-oomaya">Quickshell Companion</a>
   </p>
 </div>
 
@@ -26,20 +26,21 @@
 
 ## What is DWM-Oomaya?
 
-**DWM-Oomaya** combines the microsecond speed of suckless `dwm` with the modern UI ergonomics of **ChadDWM**, the robust Fedora & Quickshell integration of **DWM-Titus**, and the sharp-cornered brutalist visual grammar of **Omarchy / OMACOM**. 
+**DWM-Oomaya** combines the microsecond speed of suckless `dwm` with the modern UI ergonomics of **ChadDWM**, the multi-distro resilience of **DWM-Titus**, and the sharp-cornered brutalist visual grammar of **Omarchy / OMACOM**. 
 
 It eliminates desktop friction:
-- **Zero bloat**: Pure C99 compiled with `-Os` (~150KB core binary).
+- **Zero bloat**: Pure C99 compiled with `-Os` (~150KB core binary) and zero Qt6 runtime dependencies.
 - **Zero daemon overhead**: Sub-2ms POSIX shell utilities replacing heavy background daemons.
 - **Zero restart friction**: Hot-reload dwm in RAM under the same PID without tearing down your X session or dropping open windows.
-- **Universal compatibility**: Built and tested on **Fedora Linux**, with 100% native build parity across **Arch Linux**, **Debian**, and any standard X11 environment.
+- **Universal compatibility**: 100% native build parity across **Fedora Linux**, **Arch Linux / CachyOS**, and the **Debian family** (Debian, Ubuntu, Linux Mint, Peppermint OS).
+- **Optional Companion**: Pure suckless status2d topbar by default, with rich Qt6/QML widgets available via [`oomaya/quickshell-oomaya`](https://github.com/oomaya/quickshell-oomaya).
 
 ---
 
 ## Key Features
 
 ### 🌀 1. 14 Vanitygaps Layouts & Live Topbar Indicator
-Dynamic window tiling with independent inner and outer pixel gaps (`gappih`, `gappiv`, `gappoh`, `gappov`). Cycle layouts dynamically with instant visual feedback exported via the `_DWM_CURRENT_LAYOUT` atom to the Quickshell topbar.
+Dynamic window tiling with independent inner and outer pixel gaps (`gappih`, `gappiv`, `gappoh`, `gappov`). Cycle layouts dynamically with instant visual feedback exported via the `_DWM_CURRENT_LAYOUT` atom to the topbar.
 
 | Symbol | Layout | Description | Gap-Aware |
 | :---: | :--- | :--- | :---: |
@@ -128,20 +129,22 @@ DWM-Oomaya pairs with [`dmenu-oomaya`](https://github.com/oomaya/dmenu-oomaya), 
 
 ## Keyboard Mastery
 
-### Launchers & Terminals
-| Action | Keybinding | Command |
+### Launchers, Controls & Terminals
+| Action | Keybinding | Command / Description |
 | :--- | :--- | :--- |
 | **Primary Terminal** | <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>Enter</kbd> | `ghostty` \|\| `kitty` |
 | **File Manager** | <kbd>Super</kbd> + <kbd>E</kbd> | `xdg-open ~` \|\| `thunar` \|\| `pcmanfm` |
-| **Antigravity IDE** | <kbd>Super</kbd> + <kbd>A</kbd> | `antigravity` (GUI IDE) |
-| **Sovereign Flow Cockpit** | <kbd>Super</kbd> + <kbd>C</kbd> / <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>C</kbd> | `dwm-flow` (`agy` master + `nvim` stack) |
+| **Native Control Center** | <kbd>Super</kbd> + <kbd>F1</kbd> / <kbd>Super</kbd> + <kbd>C</kbd> | `dwm-controlcenter` (Wi-Fi, BT, Audio, Power) |
+| **Settings Hub** | <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> | `dwm-settings-hub` (Appearance, Display, Fonts) |
+| **Keybindings Palette** | <kbd>Super</kbd> + <kbd>/</kbd> | `dwm-keybinds` (Searchable Cheatsheet) |
 | **Application Launcher** | <kbd>Super</kbd> + <kbd>D</kbd> | `dmenu-desktop` |
-| **Scratchpad Terminal** | <kbd>Super</kbd> + <kbd>S</kbd> | `dwm-scratchpad` |
+| **Scratchpad Terminal** | <kbd>Super</kbd> + <kbd>S</kbd> | `dwm-scratchpad` (Floating pop-up) |
 | **Command Runner** | <kbd>Alt</kbd> + <kbd>P</kbd> | `dmenu-run` |
 | **Interactive Window Switcher** | <kbd>Alt</kbd> + <kbd>Tab</kbd> | `dmenu-windows` |
-| **Power Menu** | <kbd>Alt</kbd> + <kbd>X</kbd> | `dmenu-power` |
+| **Power Menu** | <kbd>Alt</kbd> + <kbd>X</kbd> / <kbd>Super</kbd> + <kbd>Ctrl</kbd> + <kbd>Q</kbd> | `dmenu-power` |
 | **Master Action Hub** | <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>H</kbd> | `dmenu-hub` |
-| **Keybindings Palette** | <kbd>Super</kbd> + <kbd>/</kbd> | Quickshell Keybinds / `dwm-keybinds` |
+| **Toggle Shell Mode** | <kbd>Super</kbd> + <kbd>Ctrl</kbd> + <kbd>R</kbd> | `dwm-shell-mode toggle` (Suckless ↔ Quickshell) |
+| **In-Place DWM Self-Restart** | <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd> | Atomic restart without closing windows |
 
 ### Window Management & Tiling
 | Action | Keybinding |
@@ -350,7 +353,7 @@ DWM-Oomaya stands on the shoulders of the suckless and open-source Unix communit
 
 - **[suckless.org](https://suckless.org/)**: The elegant, minimal C core and dynamic window management foundation.
 - **[ChadDWM](https://github.com/siduck/chadwm)**: Vanitygaps architecture, layout matrix, and ergonomic mouse drag resize controls.
-- **[DWM-Titus](https://github.com/ChrisTitusTech/dwm-oomaya)**: Chris Titus's desktop framework, Quickshell status orchestration, and live TOML parser.
+- **[DWM-Titus](https://github.com/ChrisTitusTech/dwm-titus)**: Chris Titus's desktop framework, multi-distro setup orchestration, and live TOML parser.
 - **[Omarchy](https://omarchy.org/)**: DHH & 37signals' brutalist visual grammar, sharp-corner discipline, and elegant window-launcher conventions.
 - **[Tony Banters Dmenu](https://github.com/tonybanters/dmenu)**: Centered geometry, crisp border patch, and Tokyo Night aesthetic.
 
