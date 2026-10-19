@@ -1,7 +1,5 @@
 # DWM-Oomaya Live Smoke Test Checklist
 
-[English](SMOKE-TEST.md) | [한국어](SMOKE-TEST.ko.md)
-
 A structured 10-step verification matrix designed to validate the live host X11 session and desktop ergonomics of `dwm-oomaya`.
 
 ---

@@ -1,7 +1,5 @@
 # DWM-Oomaya Comprehensive User Guide & Manual
 
-[English](USER-GUIDE.md) | [한국어](USER-GUIDE.ko.md)
-
 **DWM-Oomaya** is a sovereign, ultra-fast, and keyboard-driven dynamic window manager and desktop ecosystem built on pure Suckless C (C99/C11) foundations.
 
 This guide provides comprehensive end-to-end instructions from initial installation and keybinding mastery to deep customization, maintenance, and seamless updates.
