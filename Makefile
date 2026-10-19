@@ -525,6 +525,9 @@ check-fedora-platform:
 check-fedora-packages:
 	tests/test-fedora-packages.sh
 
+check-packaging:
+	tests/test-packaging.sh
+
 check-install: check-install-manifest
 
 check-install-manifest: all
@@ -635,6 +638,7 @@ check-core: all
 	$(MAKE) check-screenshot
 	$(MAKE) check-release-helper
 	$(MAKE) check-fedora-packages
+	$(MAKE) check-packaging
 	$(MAKE) check-install
 	$(MAKE) check-install-preservation
 	$(MAKE) check-test-runner
@@ -655,7 +659,7 @@ check:
 
 .PHONY: clean all check check-core check-all check-appearance check-system check-accessibility check-build-config check-build-deps check-default-apps check-xdg-autostart check-dev-sync-install \
 	check-test-runner \
-	check-display-profile check-display-setup check-fedora-packages check-fedora-platform check-format check-install \
+	check-display-profile check-display-setup check-fedora-packages check-packaging check-fedora-platform check-format check-install \
 	check-herdr-install check-install-manifest check-install-preservation check-lock \
 	check-session-guards check-session-migration check-screenshot check-release-helper check-shell check-webapp-launch check-diagnostics check-status check-system-health check-system-management check-settings \
 	check-lightdm-config check-terminal check-hotkeys check-xvfb-runtime check-deps deps install-deps install install-system install-user install-scripts \

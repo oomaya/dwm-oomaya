@@ -1,0 +1,78 @@
+# Maintainer: oomaya <jack.gsit@gmail.com>
+pkgname=dwm-oomaya
+pkgver=0.8.0
+pkgrel=1
+pkgdesc="Sovereign, ultra-fast dynamic window manager and desktop ecosystem"
+arch=('x86_64')
+url="https://github.com/oomaya/dwm-oomaya"
+license=('MIT' 'GPL-3.0-or-later')
+depends=(
+  'libx11'
+  'libxft'
+  'libxinerama'
+  'libxrender'
+  'imlib2'
+  'libxcb'
+  'xcb-util'
+  'fontconfig'
+  'freetype2'
+  'xorg-server'
+  'xorg-xinit'
+  'xorg-xrandr'
+  'xorg-xset'
+  'xorg-xsetroot'
+  'xorg-xinput'
+  'xorg-setxkbmap'
+  'xclip'
+  'xdotool'
+  'xorg-xprop'
+  'dunst'
+  'picom'
+  'feh'
+  'dex'
+  'mate-polkit'
+  'xsettingsd'
+)
+makedepends=(
+  'gcc'
+  'make'
+  'pkgconf'
+)
+optdepends=(
+  'quickshell-oomaya: Optional Qt6/QML desktop shell and widgets companion'
+  'dmenu-oomaya: Fast sovereign dynamic menu'
+  'brightnessctl: Brightness controls'
+  'playerctl: Media playback controls'
+  'pavucontrol: Audio mixer GUI'
+  'bluez: Bluetooth service'
+  'blueman: Bluetooth GUI'
+  'upower: Battery and power statistics'
+  'power-profiles-daemon: Dynamic power profile switcher'
+)
+source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+  cd "$pkgname-$pkgver"
+  make all PREFIX=/usr
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  make install-system \
+    DESTDIR="$pkgdir" \
+    PREFIX=/usr \
+    XSESSIONSDIR=/usr/share/xsessions \
+    SYSTEMDUSERDIR=/usr/lib/systemd/user \
+    DATADIR=/usr/share \
+    MANPREFIX=/usr/share/man
+
+  # Seed system default configs
+  install -dm0755 "$pkgdir/usr/share/$pkgname/config"
+  install -pm0644 config/hotkeys.toml "$pkgdir/usr/share/$pkgname/config/"
+  install -pm0644 config/themes.toml "$pkgdir/usr/share/$pkgname/config/"
+  install -pm0644 config/window-rules.toml "$pkgdir/usr/share/$pkgname/config/"
+
+  # Install license
+  install -Dm0644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
