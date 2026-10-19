@@ -737,6 +737,7 @@ check-core: all
 	$(MAKE) check-xdg-autostart
 	$(MAKE) check-diagnostics
 	$(MAKE) check-status
+	$(MAKE) check-settings
 	$(MAKE) check-display-profile
 	$(MAKE) check-display-setup
 	$(MAKE) check-monitor-tags
@@ -788,14 +789,21 @@ check-system: all
 	$(MAKE) check-quickshell-system-management
 	$(MAKE) check-settings
 
-check:
-	$(MAKE) clean
-	$(MAKE) all
+check-quickshell: all
+	$(MAKE) check-shell-appearance
+	$(MAKE) check-quickshell-system-management
+
+check-all:
 	$(MAKE) check-core
 	$(MAKE) check-shell-appearance
 	$(MAKE) check-system
 
-.PHONY: clean all check check-core check-shell-appearance check-system check-accessibility check-appearance check-phase5-optional-components check-build-config check-build-deps check-default-apps check-xdg-autostart check-dev-sync-install \
+check:
+	$(MAKE) clean
+	$(MAKE) all
+	$(MAKE) check-core
+
+.PHONY: clean all check check-core check-quickshell check-all check-shell-appearance check-system check-accessibility check-appearance check-phase5-optional-components check-build-config check-build-deps check-default-apps check-xdg-autostart check-dev-sync-install \
 	check-test-runner \
 	check-display-profile check-display-setup check-fedora-packages check-fedora-platform check-format check-install \
 	check-herdr-install check-install-manifest check-install-preservation check-lock \
