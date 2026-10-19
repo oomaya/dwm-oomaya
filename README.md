@@ -12,8 +12,8 @@
   </p>
 
   <p>
-    <a href="./docs/USER-GUIDE.md"><strong>📖 User Guide & Manual</strong></a> •
-    <a href="./docs/SMOKE-TEST.md"><strong>🧪 Smoke Test</strong></a> •
+    <a href="./docs/USER-GUIDE.md"><strong>📖 User Guide</strong></a> (<a href="./docs/USER-GUIDE.ko.md">한국어</a>) •
+    <a href="./docs/SMOKE-TEST.md"><strong>🧪 Smoke Test</strong></a> (<a href="./docs/SMOKE-TEST.ko.md">한국어</a>) •
     <a href="#key-features">Key Features</a> •
     <a href="#keyboard-mastery">Keybindings</a> •
     <a href="#installation--quickstart">Installation</a> •
