@@ -335,7 +335,7 @@ resume_theme_preview() {
 	fi
 }
 
-PICOM_BACKEND=${PICOM_BACKEND:-xrender}
+PICOM_BACKEND=${PICOM_BACKEND:-glx}
 WM_GRAPHICAL_SESSION=wm-graphical-session.service
 
 # ── Phase 1: Blocking ──────────────────────────────────────────────────────────
@@ -545,7 +545,7 @@ if command -v feh >/dev/null 2>&1; then
 fi
 
 # Compositor
-start_detached_once picom picom --backend "$PICOM_BACKEND"
+start_detached_once picom picom --backend "$PICOM_BACKEND" --no-use-damage
 
 # dwm root-window status publisher for Quickshell's event-driven panel.
 start_detached_display_command_once dwm-status
