@@ -127,6 +127,64 @@ DWM-Oomaya pairs with [`dmenu-oomaya`](https://github.com/oomaya/dmenu-oomaya), 
 
 ---
 
+## Quickshell Companion (Optional Add-on)
+
+**DWM-Oomaya** is a pure suckless C core — zero Qt6 runtime dependencies by
+design. All rich desktop-shell widgets (panels, QML chrome) live in a
+separate repository:
+
+👉 **[oomaya/quickshell-oomaya](https://github.com/oomaya/quickshell-oomaya)**
+— *Optional Qt6/QML Desktop Shell and Widgets Companion for dwm-oomaya.*
+
+- **Default**: a pure suckless `status2d` topbar. No Qt6 required.
+- **With the companion**: install quickshell-oomaya, then toggle shell modes
+  at runtime with <kbd>Super</kbd> + <kbd>Ctrl</kbd> + <kbd>R</kbd>
+  (Suckless ↔ Quickshell).
+- **Philosophy**: the core stays lean and sovereign; decoration is opt-in,
+  never bundled.
+
+### Why separate?
+
+Previously, dwm-oomaya shipped quickshell support in-tree: the installer
+probed the distro and fell back to the dwm core where quickshell was
+unavailable. That worked — but every install carried the full weight of
+both stacks, wanted or not.
+
+The split fixes that:
+
+- **Lighter installs**: the core is pure suckless C with zero Qt6
+  dependencies. Users on distros without quickshell support — notably
+  **Linux Mint** (Ubuntu 24.04 base ships Qt 6.4, below quickshell's Qt 6.6
+  minimum) and **Peppermint / Debian stable** (no quickshell package in
+  stable repos) — get a clean, fast install with no dead weight.
+- **Cleaner maintenance**: core and companion evolve independently.
+  Quickshell-side fixes ship without touching the core, and vice versa —
+  faster response on both sides.
+
+### Compatibility
+
+**Core ↔ companion.** The companion follows the core's IPC contract (the
+`_DWM_CURRENT_LAYOUT` X atom and the `dwm-shell-mode` CLI). Match versions
+across both repos:
+
+| dwm-oomaya | quickshell-oomaya       |
+|:----------:|:-----------------------:|
+| v0.8.x     | *first release pending* |
+
+**Distro support for quickshell-oomaya.** What matters is the distro's Qt
+version (≥ 6.6) and package availability — not the kernel version:
+
+| Distro                       | Qt in repos | Install             |
+|:-----------------------------|:-----------:|:-------------------:|
+| Fedora (recent)              | 6.8+        | ✅ `dnf` / COPR     |
+| Arch Linux                   | rolling     | ✅ `pacman` / AUR   |
+| Debian testing / unstable    | 6.8+        | ✅ `apt`            |
+| Debian 13 stable (Peppermint)| 6.8.2       | ⚠️ OBS / manual build |
+| Ubuntu 24.04 / Linux Mint 22 | 6.4         | ❌ Qt too old       |
+| NixOS / Gentoo / openSUSE    | —          | ✅ nixpkgs / GURU / OBS |
+
+---
+
 ## Keyboard Mastery
 
 ### Launchers, Controls & Terminals
