@@ -155,8 +155,9 @@ The split fixes that:
 - **Lighter installs**: the core is pure suckless C with zero Qt6
   dependencies. Users on distros without quickshell support — notably
   **Linux Mint** (Ubuntu 24.04 base ships Qt 6.4, below quickshell's Qt 6.6
-  minimum) and **Peppermint / Debian stable** (no quickshell package in
-  stable repos) — get a clean, fast install with no dead weight.
+  minimum) and **Peppermint / Debian stable** (quickshell only via
+  trixie-backports, not in default stable repos) — get a clean, fast
+  install with no dead weight.
 - **Cleaner maintenance**: core and companion evolve independently.
   Quickshell-side fixes ship without touching the core, and vice versa —
   faster response on both sides.
@@ -179,7 +180,7 @@ version (≥ 6.6) and package availability — not the kernel version:
 | Fedora (recent)              | 6.8+        | ✅ `dnf` / COPR     |
 | Arch Linux                   | rolling     | ✅ `pacman` / AUR   |
 | Debian testing / unstable    | 6.8+        | ✅ `apt`            |
-| Debian 13 stable (Peppermint)| 6.8.2       | ⚠️ OBS / manual build |
+| Debian 13 stable (Peppermint)| 6.8.2       | ✅ via trixie-backports |
 | Ubuntu 24.04 / Linux Mint 22 | 6.4         | ❌ Qt too old       |
 | NixOS / Gentoo / openSUSE    | —          | ✅ nixpkgs / GURU / OBS |
 
