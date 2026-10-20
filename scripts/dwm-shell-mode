@@ -130,6 +130,14 @@ set_quickshell_mode() {
 		fi
 	fi
 
+	# Wait for quickshell IPC to be ready so notify_user does not D-Bus autostart dunst
+	for _ in 1 2 3 4 5 6 7 8 9 10; do
+		if quickshell ipc --path "$quickshell_config" call tray count >/dev/null 2>&1; then
+			break
+		fi
+		sleep 0.2
+	done
+
 	notify_user "Shell Mode" "Activated Quickshell Qt6/QML Desktop Shell"
 	printf 'Switched to quickshell mode.\n'
 }
