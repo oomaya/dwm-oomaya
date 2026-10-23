@@ -1,6 +1,6 @@
 # Task Packet #009: omarchy-ctl DEGRADED Remediation — AUDIT DIRECTIVE
 
-## Status: AUDITED — DO NOT EXECUTE THE DRAFT PLAN AS WRITTEN
+## Status: ✅ CLOSED — executed per directive, remotely verified by the auditor (2026-10-23)
 - **Auditor**: DD (Architect in Chief), by order of the human gate
 - **Subject**: Draft plan "`omarchy-ctl` DEGRADED Fallback Mode Remediation Plan" (Phase 1 diagnostic, authored by Antigravity)
 - **Audit basis**: Line-by-line comparison against master code — `dotfiles/omarchy/src/omarchy-ctl.c`, `dwm-oomaya/src/daemon/reactor.c`, `dwm-oomaya/src/ipc/protocol.c`, `dwm-oomaya/src/ipc/negotiate.c`, `dwm-oomaya/include/oomaya_ipc.h`
@@ -68,3 +68,10 @@ This audit verified **GitHub master**. Before deploying on the target VM, confir
 
 - Task 1 wire probe (with Correction 2 applied), incl
 ...[truncated 1253 chars]
+---
+
+## 6. Closure — Auditor Sign-off (2026-10-23)
+
+- Execution walkthrough received and cross-checked: latency 0.141–0.253 ms, `verify.sh` and end-to-end `fleet-sync` both **86 Passed, 0 Failed, 0 Warnings**; pre-flight response frame (msg_type=2, payload_len=20) consistent with a live daemon speaking `CURRENT_VER 0x0100`.
+- Dotfiles commit `4c4405d` pushed to `origin/master`. Auditor re-fetched `omarchy/src/omarchy-ctl.c` from GitHub and verified: blob sha changed `0fbfb6d15ab3` → `bf65bc8ab38c`; the `"ping\n"` probe is gone; the stream accumulation loop is present (`while (got < sizeof(resp_hdr))`); `#include <stdint.h>` present; `find_dwm_socket()` still performs existence-only discovery (zero connect calls — Task 2 stayed struck).
+- **Verdict: CLOSED.** The DEGRADED fallback warning is resolved at the source, and the fix now lives in the canonical repo, not only on one VM.
