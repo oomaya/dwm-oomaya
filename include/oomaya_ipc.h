@@ -96,10 +96,10 @@ typedef enum {
 } oomaya_ipc_err_t;
 
 /* ── Payload size limits ─────────────────────────────────────────────────── */
-#define OOMAYA_MAX_PAYLOAD_LEN  UINT32_C(4096)
-
-/* Stack-allocated in-band frame (header + bounded body). */
 #define OOMAYA_FRAME_BODY_MAX   512u
+
+/* v1 wire limit; a frame larger than the in-band body buffer is a contract violation and disconnects the client (see docs/DAEMON-IMPROVEMENT-PLAN.md PR-1). */
+#define OOMAYA_MAX_PAYLOAD_LEN  OOMAYA_FRAME_BODY_MAX
 
 typedef struct {
     oomaya_ipc_header_t hdr;
