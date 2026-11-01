@@ -303,9 +303,13 @@ handle_client_readable(struct oomaya_reactor *r, reactor_client_t *c)
         /*
          * v1 disconnects clients whose header violates the frame contract;
          * rejected-frame body bytes may still be in flight and would desync
-         * the stream.
+         * the stream. validate() exempts ERROR frames from the payload cap
+         * for outbound err-in-payload_len semantics, so inbound enforces it
+         * here: a probe's 600 B ERROR frame left 88 residual bytes as a header.
          */
         int vr = oomaya_frame_validate(&c->hdr);
+        if (vr == OOMAYA_IPC_OK && c->hdr.payload_len > OOMAYA_MAX_PAYLOAD_LEN)
+            vr = OOMAYA_IPC_ERR_PAYLOAD;
         if (vr != OOMAYA_IPC_OK) {
             oomaya_ipc_header_t err;
             oomaya_frame_init_error(&err, &c->hdr, vr);
