@@ -14,6 +14,10 @@ versions from `config.mk`.
   also disconnects, where it used to report `ERR_MALFORMED` and stay open.
   When a header breaks several rules, magic is reported before version, and
   version before payload length.
+- `dwm-oomayad` treats `DWM_TAG_UPDATE` as a change signal and re-reads
+  `_NET_CURRENT_DESKTOP`, so a client tag change no longer corrupts the reported
+  tag mask. The daemon no longer writes `DWM_TAG_UPDATE`; it publishes its mask
+  on the new private root atom `_OOMAYA_TAG_MASK`.
 
 ## [0.7.0] - 2026-09-10
 
