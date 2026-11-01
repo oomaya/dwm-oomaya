@@ -429,6 +429,24 @@ static void f04_negotiate_transformer_513_rejected(void)
               OOMAYA_IPC_ERR_PAYLOAD);
 }
 
+static void f05_frame_validate_511_ok(void)
+{
+    oomaya_ipc_header_t hdr;
+    TEST("F05: frame_validate_511_ok");
+    oomaya_frame_init_request(&hdr, IPC_CMD_WM_GET_STATE, 0x0001u, 0u);
+    hdr.payload_len = OOMAYA_FRAME_BODY_MAX - 1u;
+    ASSERT_EQ("511 accepted", oomaya_frame_validate(&hdr), OOMAYA_IPC_OK);
+}
+
+static void f06_frame_validate_error_keeps_outbound_semantics(void)
+{
+    oomaya_ipc_header_t hdr;
+    TEST("F06: frame_validate_error_keeps_outbound_semantics");
+    oomaya_frame_init_error(&hdr, NULL, OOMAYA_IPC_ERR_PAYLOAD);
+    ASSERT_EQ("err code in payload_len accepted", oomaya_frame_validate(&hdr),
+              OOMAYA_IPC_OK);
+}
+
 /* ══════════════════════════════════════════════════════════════════════════ */
 
 int main(void)
@@ -452,6 +470,7 @@ int main(void)
     printf("\n─── IPC Frame Payload Boundary ───\n");
     f01_frame_validate_512_ok(); f02_frame_validate_513_rejected();
     f03_frame_validate_4096_rejected(); f04_negotiate_transformer_513_rejected();
+    f05_frame_validate_511_ok(); f06_frame_validate_error_keeps_outbound_semantics();
 
     printf("\n=== Results: %d passed, %d failed ===\n", g_pass, g_fail);
     return (g_fail == 0) ? EXIT_SUCCESS : EXIT_FAILURE;

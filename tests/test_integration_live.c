@@ -140,14 +140,25 @@ get_state_mask(int fd, uint16_t msg_id)
     return recv_state_mask(fd, msg_id);
 }
 
+/* Build a request header that a test then corrupts as needed. */
+static oomaya_ipc_header_t
+violation_req(uint16_t msg_type, uint32_t payload_len, uint16_t msg_id)
+{
+    oomaya_ipc_header_t req;
+
+    oomaya_frame_init_request(&req, 0, msg_id, payload_len);
+    req.msg_type = msg_type;
+    return req;
+}
+
 /* A frame-contract violation gets one error frame, then a closed connection. */
 static void
 check_violation(const char *name, const struct sockaddr_un *addr,
-                uint16_t msg_type, uint32_t payload_len, size_t body_len,
-                uint16_t msg_id)
+                const oomaya_ipc_header_t *req, size_t body_len,
+                int32_t exp_code)
 {
     static uint8_t body[TEST_BODY_MAX];
-    oomaya_ipc_header_t req, err;
+    oomaya_ipc_header_t err;
     char lbl[96];
     int fd = client_connect(addr);
 
@@ -157,19 +168,17 @@ check_violation(const char *name, const struct sockaddr_un *addr,
 
     memset(body, 0xAB, sizeof(body));
     memset(&err, 0, sizeof(err));
-    oomaya_frame_init_request(&req, 0, msg_id, payload_len);
-    req.msg_type = msg_type;
 
     snprintf(lbl, sizeof(lbl), "%s: send", name);
-    ASSERT_EQ(lbl, send_frame(fd, &req, body, body_len), 0);
+    ASSERT_EQ(lbl, send_frame(fd, req, body, body_len), 0);
     snprintf(lbl, sizeof(lbl), "%s: error frame received", name);
     ASSERT_EQ(lbl, recv_exact(fd, &err, sizeof(err)), 0);
     snprintf(lbl, sizeof(lbl), "%s: msg_type", name);
     ASSERT_EQ(lbl, err.msg_type, (uint16_t)OOMAYA_MSG_ERROR);
     snprintf(lbl, sizeof(lbl), "%s: msg_id echoed", name);
-    ASSERT_EQ(lbl, err.msg_id, msg_id);
-    snprintf(lbl, sizeof(lbl), "%s: ERR_PAYLOAD", name);
-    ASSERT_EQ(lbl, (int32_t)err.payload_len, OOMAYA_IPC_ERR_PAYLOAD);
+    ASSERT_EQ(lbl, err.msg_id, req->msg_id);
+    snprintf(lbl, sizeof(lbl), "%s: error code", name);
+    ASSERT_EQ(lbl, (int32_t)err.payload_len, exp_code);
     snprintf(lbl, sizeof(lbl), "%s: connection closed", name);
     ASSERT_EQ(lbl, peer_closed(fd), 1);
     close(fd);
@@ -231,6 +240,48 @@ test_unknown_opcode_stays_connected(const struct sockaddr_un *addr)
     close(fd);
 }
 
+/*
+ * T08: good, oversize, and good frames queued in one write. The first is
+ * answered, the second ends the connection, and the third is never parsed.
+ */
+static void
+test_pipeline_oversize_never_desyncs(const struct sockaddr_un *addr)
+{
+    static uint8_t rest[TEST_BODY_MAX];
+    oomaya_ipc_header_t first, bad, last, err;
+    uint16_t op = IPC_CMD_WM_GET_STATE;
+    uint32_t oversize = OOMAYA_FRAME_BODY_MAX + 1u;
+    size_t len = 0;
+    int fd = client_connect(addr);
+
+    ASSERT_EQ("T08 connect", fd >= 0, 1);
+    if (fd < 0) return;
+
+    oomaya_frame_init_request(&first, op, 0x5001, sizeof(op));
+    oomaya_frame_init_request(&last, op, 0x5003, sizeof(op));
+    bad = violation_req(OOMAYA_MSG_REQUEST, oversize, 0x5002);
+
+    memcpy(rest + len, &op, sizeof(op));
+    len += sizeof(op);
+    memcpy(rest + len, &bad, sizeof(bad));
+    len += sizeof(bad);
+    memset(rest + len, 0xAB, oversize);
+    len += oversize;
+    memcpy(rest + len, &last, sizeof(last));
+    len += sizeof(last);
+    memcpy(rest + len, &op, sizeof(op));
+    len += sizeof(op);
+
+    memset(&err, 0, sizeof(err));
+    ASSERT_EQ("T08 send", send_frame(fd, &first, rest, len), 0);
+    ASSERT_EQ("T08 first frame answered", recv_state_mask(fd, 0x5001), 0x1234);
+    ASSERT_EQ("T08 error frame received", recv_exact(fd, &err, sizeof(err)), 0);
+    ASSERT_EQ("T08 msg_id echoed", err.msg_id, 0x5002);
+    ASSERT_EQ("T08 ERR_PAYLOAD", (int32_t)err.payload_len, OOMAYA_IPC_ERR_PAYLOAD);
+    ASSERT_EQ("T08 third frame dropped, connection closed", peer_closed(fd), 1);
+    close(fd);
+}
+
 int main(void)
 {
     char sock_path[100];
@@ -240,6 +291,7 @@ int main(void)
     oomaya_worker_pool_t workers;
     struct oomaya_reactor reactor;
     pthread_t r_tid;
+    oomaya_ipc_header_t bad;
     ssize_t rw;
 
     /* The daemon ignores SIGPIPE in main(); the in-process reactor must too. */
@@ -315,14 +367,30 @@ int main(void)
 
     /* 3. Frame contract: boundary, oversize disconnects, no inherited desync */
     test_getstate_512_boundary_ok(&addr);
-    check_violation("T02 oversize header only", &addr, OOMAYA_MSG_REQUEST,
-                    OOMAYA_FRAME_BODY_MAX + 1u, 0, 0x4001);
-    check_violation("T02 oversize with body", &addr, OOMAYA_MSG_REQUEST,
-                    OOMAYA_FRAME_BODY_MAX + 1u, OOMAYA_FRAME_BODY_MAX + 1u, 0x4002);
+    bad = violation_req(OOMAYA_MSG_REQUEST, OOMAYA_FRAME_BODY_MAX + 1u, 0x4001);
+    check_violation("T02 oversize header only", &addr, &bad, 0,
+                    OOMAYA_IPC_ERR_PAYLOAD);
+    bad.msg_id = 0x4002;
+    check_violation("T02 oversize with body", &addr, &bad, bad.payload_len,
+                    OOMAYA_IPC_ERR_PAYLOAD);
     test_reconnect_after_oversize_is_healthy(&addr);
     test_unknown_opcode_stays_connected(&addr);
-    check_violation("T05 oversize ERROR frame", &addr, OOMAYA_MSG_ERROR,
-                    600, 600, 0x4003);
+    bad = violation_req(OOMAYA_MSG_ERROR, 600, 0x4003);
+    check_violation("T05 oversize ERROR frame", &addr, &bad, bad.payload_len,
+                    OOMAYA_IPC_ERR_PAYLOAD);
+    bad = violation_req(OOMAYA_MSG_REQUEST, 2, 0x4004);
+    bad.magic ^= 1u;
+    check_violation("T06 bad magic", &addr, &bad, bad.payload_len,
+                    OOMAYA_IPC_ERR_MALFORMED);
+    bad = violation_req(OOMAYA_MSG_REQUEST, 2, 0x4005);
+    bad.client_ver = 0;
+    check_violation("T07 unknown client_ver", &addr, &bad, bad.payload_len,
+                    OOMAYA_IPC_ERR_VERSION);
+    bad = violation_req(OOMAYA_MSG_REQUEST, 2, 0x4006);
+    bad.target_ver = 0;
+    check_violation("T07 unknown target_ver", &addr, &bad, bad.payload_len,
+                    OOMAYA_IPC_ERR_VERSION);
+    test_pipeline_oversize_never_desyncs(&addr);
 
     /* Shutdown */
     oomaya_reactor_stop(&reactor);
