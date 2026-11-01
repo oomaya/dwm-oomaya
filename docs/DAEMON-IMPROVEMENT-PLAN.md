@@ -1,6 +1,8 @@
 # Daemon Improvement Plan — dwm-oomayad (Reactor, X11 Bridge, IPC)
 
-Status: planning document. No code changes are included yet.
+Status: planning document. No code changes are included yet. All open
+questions from the initial proposal are resolved and the work is sequenced
+into a prioritized PR list (see Resolved decisions and the Execution plan).
 Scope: `src/daemon/`, `src/ipc/`, `include/`, and the dwm <-> daemon root-atom
 contract. Derived from a static review of `src/daemon/reactor.c`,
 `src/daemon/x11_bridge.c`, `src/daemon/main.c`, `src/daemon/worker_pool.c`,
@@ -67,7 +69,7 @@ review-boundary rules.
 | A3 | C3 | Unify the payload contract on a single constant: make `OOMAYA_MAX_PAYLOAD_LEN` equal `OOMAYA_FRAME_BODY_MAX` (512), referenced by `frame_validate`, reactor receive logic, task payload, ring slots, and the negotiate transformer. | Boundary unit tests for validate (511/512/513) plus a pipeline desync integration test. |
 | A4 | C4 | Add `slot_idx` + per-slot `generation` to the task/completion and validate completions at slot granularity instead of fd equality; increment the generation in `client_slot_free()`. | Daemon integration stress test: repeated connect/disconnect cycles with pending offload tasks. |
 
-Phase A sub-items (small, may piggyback on A4):
+Phase A sub-items (small, may ride along with the bridge cluster PR-4):
 
 - M5: set `monitor_count = nmons` in the `_DWM_MONITOR_DESKTOPS` handler
   (five-minute fix with user-visible impact).
@@ -116,16 +118,79 @@ changes) must be verified in a real or nested X11 session before being
 declared fixed; anything not tested in a given environment is stated
 explicitly in the corresponding PR.
 
-## Open questions
+## Resolved decisions
 
-1. A2 semantics: was `DWM_TAG_UPDATE` intended as a dwm -> daemon change
-   signal, or is `sync_state()` writing it for external observers only?
-   dwm.c never reads it, so defense currently has two writers with two
-   different meanings to one atom. Proposal: dwm keeps it as a signal;
-   the daemon publishes its own mirror on a distinct atom (or reuses
-   `_NET_CURRENT_DESKTOP` consumers directly).
-2. C3 target: is there a reason to keep the 4096 limit (future large
-   frames arriving in v2), or should 512 become authoritative everywhere?
-3. A4: adding `generation` grows the completion record; confirm the ring
-   slot size (currently 512B payload + fixed fields) accommodates two more
-   32-bit fields without enlarging slots.
+The three open questions raised above were resolved against code and spec
+evidence; their conclusions shape the PR sequence below.
+
+### OQ1 resolved - DWM_TAG_UPDATE is a change signal, not data
+
+Evidence: `DWM_TAG_UPDATE` has exactly two writers and zero readers-as-mask
+in the tree. `dwm.c:3413-3420` writes `data[0] = ++tagupdatesequence` (a
+monotonic counter telling observers "WM state changed"), and dwm itself never
+reads the property. No script consumes `DWM_TAG_UPDATE` either. The bridge is
+the only reader, and it currently misreads the counter as a tag mask.
+
+Decision:
+
+1. dwm keeps the atom as a one-way change signal; no dwm.c changes needed.
+2. The bridge stops subscribing to `DWM_TAG_UPDATE` as a mask source. Any
+   notification of it (if subscribed at all) merely triggers a re-read of
+   `_NET_CURRENT_DESKTOP`.
+3. The daemon's outbound mirror (`oomaya_x11_sync_state()`) stops writing
+   `DWM_TAG_UPDATE` and publishes on a new private atom `_OOMAYA_TAG_MASK`,
+   mirroring the existing `_OOMAYA_LAYOUT` pattern. One-writer-per-atom is
+   restored and the self-echo round-trip disappears.
+
+### OQ2 resolved - 512 becomes the single authoritative payload limit
+
+Evidence: `SPEC.md` contains no payload-size contract at all (no mention of
+4096 or 512), so the 4096 limit has no recorded rationale. Every consuming
+buffer - client `body[]`, `task.payload`, both ring slot payloads, and the
+negotiate transformer bound - is 512-sized. The `ERR_PAYLOAD` (-4) error code
+already exists for exactly the over-limit rejection.
+
+Decision: set `OOMAYA_MAX_PAYLOAD_LEN` to `OOMAYA_FRAME_BODY_MAX` (512) in
+the v1 protocol so validate, receive logic, task sizing, and negotiation
+share one constant. Larger frames, if ever needed, come with the Phase C v2
+header redesign, not as a silent buffer mismatch. Document the v1 wire limit
+in `SPEC.md` alongside the Phase C protocol documentation.
+
+### OQ3 resolved - no ring changes needed for the generation fix
+
+Evidence: `oomaya_ring_slot_t` embeds the full `oomaya_task_t` (~1,040 B), so
+adding `slot_idx` + a 32-bit client-generation (8 B per slot) across both
+rings (2 x 256 slots) costs ~4 KB total; no capacity, wrap, or padding
+changes. The per-client generation counter belongs to the reactor client
+array (bumped in `client_slot_free()`), not to ring slots, so the ring's
+generation-tagged ABA scheme is untouched.
+
+Decision: proceed with A4 as scoped. No ring geometry changes.
+
+## Execution plan - prioritized PR sequence
+
+Priority is by severity x blast radius: first the defect that kills the IPC
+channel under ordinary traffic, then the one that corrupts reported state,
+then the one that misroutes responses; same-file clusters share a PR to keep
+review boundaries coherent.
+
+| Order | PR | Scope | Fixes |
+|-------|----|-------|-------|
+| 1 | PR-1 payload contract | One constant, all consumers aligned; boundary unit tests (511/512/513) and a pipeline desync integration test. | C3 |
+| 2 | PR-2 tag-update semantics | Bridge-only change (`x11_bridge.c`): signal re-read, private `_OOMAYA_TAG_MASK` mirror. No dwm.c changes. | C2 |
+| 3 | PR-3 completion routing | `slot_idx` + generation through task/completion; slot-granular liveness check. | C4 |
+| 4 | PR-4 WM-state correctness cluster | Layout table order fix, NUL-safe symbol read, `monitor_count` update; single file (`x11_bridge.c`), visible through `GET_STATE`. | C1, M7, M5 |
+| 5 | PR-5 response-delivery robustness | `oomaya_reactor_remove_x11()`, partial-write policy with close-on-undeliverable, `resp_ring` drain on shutdown. | M6, M11, M12 |
+| 6 | PR-6 lifecycle and diagnostics | Listener `flock` collision guard, dedicated rate-limit error code, `EINTR` retry. | M8, M9, M10 |
+
+Phase C (IPC v2 header redesign, shared contract header, `SPEC.md`
+protocol documentation, slow-reader/fd-reuse test hardening) follows after
+the six PRs above merge.
+
+Each PR: `codex/<short-topic>` branch, one independently testable boundary,
+its own failing-then-passing test, and the managed workspace gate:
+
+```sh
+scripts/run-tests make clean all
+scripts/run-tests
+```
