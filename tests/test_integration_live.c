@@ -276,6 +276,7 @@ test_pipeline_oversize_never_desyncs(const struct sockaddr_un *addr)
     ASSERT_EQ("T08 send", send_frame(fd, &first, rest, len), 0);
     ASSERT_EQ("T08 first frame answered", recv_state_mask(fd, 0x5001), 0x1234);
     ASSERT_EQ("T08 error frame received", recv_exact(fd, &err, sizeof(err)), 0);
+    ASSERT_EQ("T08 msg_type", err.msg_type, (uint16_t)OOMAYA_MSG_ERROR);
     ASSERT_EQ("T08 msg_id echoed", err.msg_id, 0x5002);
     ASSERT_EQ("T08 ERR_PAYLOAD", (int32_t)err.payload_len, OOMAYA_IPC_ERR_PAYLOAD);
     ASSERT_EQ("T08 third frame dropped, connection closed", peer_closed(fd), 1);
