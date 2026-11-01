@@ -5,6 +5,7 @@
  *   WORKER W01–W05  pthread pool + eventfd
  *   REACT  R01–R04  Handler responses via socketpair()
  *   PATH   P01–P02  Socket path resolution
+ *   FRAME  F01-F04  IPC frame payload boundary
  *
  * Zero dynamic allocations. No X11 required.
  */
@@ -387,6 +388,48 @@ static void p02_uid_fallback(void)
 }
 
 /* ══════════════════════════════════════════════════════════════════════════ */
+/* IPC FRAME PAYLOAD BOUNDARY                                                */
+/* ══════════════════════════════════════════════════════════════════════════ */
+
+static void f01_frame_validate_512_ok(void)
+{
+    oomaya_ipc_header_t hdr;
+    TEST("F01: frame_validate_512_ok");
+    oomaya_frame_init_request(&hdr, IPC_CMD_WM_GET_STATE, 0x0001u, 0u);
+    hdr.payload_len = OOMAYA_FRAME_BODY_MAX;
+    ASSERT_EQ("512 accepted", oomaya_frame_validate(&hdr), OOMAYA_IPC_OK);
+}
+
+static void f02_frame_validate_513_rejected(void)
+{
+    oomaya_ipc_header_t hdr;
+    TEST("F02: frame_validate_513_rejected");
+    oomaya_frame_init_request(&hdr, IPC_CMD_WM_GET_STATE, 0x0001u, 0u);
+    hdr.payload_len = OOMAYA_FRAME_BODY_MAX + 1u;
+    ASSERT_EQ("513 rejected", oomaya_frame_validate(&hdr), OOMAYA_IPC_ERR_PAYLOAD);
+}
+
+static void f03_frame_validate_4096_rejected(void)
+{
+    oomaya_ipc_header_t hdr;
+    TEST("F03: frame_validate_4096_rejected");
+    oomaya_frame_init_request(&hdr, IPC_CMD_WM_GET_STATE, 0x0001u, 0u);
+    hdr.payload_len = 4096u;
+    ASSERT_EQ("4096 rejected", oomaya_frame_validate(&hdr), OOMAYA_IPC_ERR_PAYLOAD);
+}
+
+static void f04_negotiate_transformer_513_rejected(void)
+{
+    uint8_t src[OOMAYA_FRAME_BODY_MAX + 1u];
+    uint8_t dst[OOMAYA_FRAME_BODY_MAX];
+    uint32_t dst_len = 0u;
+    memset(src, 0, sizeof(src));
+    TEST("F04: negotiate_transformer_513_rejected");
+    ASSERT_EQ("513 rejected", oomaya_neg_v1_to_v2_req(src, 513u, dst, &dst_len),
+              OOMAYA_IPC_ERR_PAYLOAD);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════ */
 
 int main(void)
 {
@@ -405,6 +448,10 @@ int main(void)
 
     printf("\n─── Socket Path Resolution ───\n");
     p01_xdg_path(); p02_uid_fallback();
+
+    printf("\n─── IPC Frame Payload Boundary ───\n");
+    f01_frame_validate_512_ok(); f02_frame_validate_513_rejected();
+    f03_frame_validate_4096_rejected(); f04_negotiate_transformer_513_rejected();
 
     printf("\n=== Results: %d passed, %d failed ===\n", g_pass, g_fail);
     return (g_fail == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
