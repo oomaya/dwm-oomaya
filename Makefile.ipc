@@ -135,7 +135,19 @@ test_live: $(DAEMON_OBJS)
 	@echo "Running Live Reactor Integration test..."
 	tests/test_integration_live
 
-test_all: test test3 test_live
+# Skips unless OOMAYA_TEST_X11_DISPLAY names a disposable server such as Xvfb.
+test_x11: src/daemon/state_cache.o src/daemon/x11_bridge.o
+	$(CC) $(C11FLAGS) $(X11_CFLAGS) $(X11_DEFINES) \
+	    -o tests/test_x11_bridge \
+	    tests/test_x11_bridge.c \
+	    src/daemon/state_cache.o src/daemon/x11_bridge.o \
+	    $(X11_LIBS)
+	@echo "Running X11 bridge test..."
+	status=0; tests/test_x11_bridge || status=$$?; \
+		if [ "$$status" -eq 77 ]; then exit 0; fi; \
+		exit "$$status"
+
+test_all: test test3 test_live test_x11
 	@echo ""
 	@echo "=================================================="
 	@echo "  ALL UNIT & INTEGRATION TESTS PASSED CLEANLY!   "
@@ -152,7 +164,7 @@ bench: $(DAEMON_OBJS)
 	@echo "Running Benchmark Suite..."
 	tests/bench_ipc_roundtrip
 
-.PHONY: phase3 daemon test3 test_live test_all bench ctl tools
+.PHONY: phase3 daemon test3 test_live test_x11 test_all bench ctl tools
 
 # CLI Client
 tools/oomaya-ctl: tools/oomaya-ctl.c src/ipc/protocol.o

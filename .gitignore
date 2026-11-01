@@ -47,5 +47,6 @@ program.log
 /tests/profile_suite_b
 /tests/test_daemon_core
 /tests/test_integration_live
+/tests/test_x11_bridge
 /tests/test_ipc_protocol
 /tests/test_phase2_core
