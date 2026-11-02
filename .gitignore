@@ -42,7 +42,6 @@ program.log
 /liboomaya_ipc.a
 /liboomaya_daemon_core.a
 /tools/oomaya-ctl
-/tools/dwm-quickshell-state-bin
 /tests/bench_ipc_roundtrip
 /tests/profile_suite_b
 /tests/test_daemon_core

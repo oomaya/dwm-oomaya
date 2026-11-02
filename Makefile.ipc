@@ -54,7 +54,7 @@ test: $(TEST_BIN)
 	@$(TEST_BIN) && echo "ALL TESTS PASSED" || (echo "TESTS FAILED" && exit 1)
 
 clean:
-	rm -f $(IPC_OBJS) $(LIB_IPC) $(TEST_BIN)
+	rm -f $(IPC_OBJS) $(LIB_IPC) $(TEST_BIN) tools/oomaya-ctl
 	@echo "  CLEAN done"
 
 # ── Phase 3 targets ──────────────────────────────────────────────────────────
@@ -173,11 +173,4 @@ tools/oomaya-ctl: tools/oomaya-ctl.c src/ipc/protocol.o
 	@echo "Built: tools/oomaya-ctl"
 
 ctl: tools/oomaya-ctl
-tools: tools/oomaya-ctl tools/dwm-quickshell-state-bin
-
-# High-Performance Quickshell State Companion
-tools/dwm-quickshell-state-bin: tools/dwm-quickshell-state.c
-	$(CC) $(CFLAGS) $(X11_CFLAGS) -o $@ $< $(X11_LIBS)
-	@echo "Built: tools/dwm-quickshell-state-bin"
-
-qs-bin: tools/dwm-quickshell-state-bin
+tools: tools/oomaya-ctl
