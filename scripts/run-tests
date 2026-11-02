@@ -104,6 +104,11 @@ trap 'interrupt HUP 129' HUP
 trap 'interrupt INT 130' INT
 trap 'interrupt TERM 143' TERM
 
+# Tests must not reach the invoking session: no X display, no user bus, and no
+# user service manager or audio server through the inherited runtime directory.
+unset DISPLAY XAUTHORITY WAYLAND_DISPLAY DBUS_SESSION_BUS_ADDRESS
+mkdir -m 0700 "$work/runtime"
+export XDG_RUNTIME_DIR=$work/runtime
 export TMPDIR=$work
 export DWM_TEST_WORKSPACE=$work
 export DWM_TEST_RUNNER_TOKEN=$runner_token
