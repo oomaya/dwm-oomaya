@@ -151,7 +151,7 @@ test_x11: src/daemon/state_cache.o src/daemon/x11_bridge.o
 test_all: test test3 test_live
 	@echo ""
 	@echo "=================================================="
-	@echo "  ALL UNIT & INTEGRATION TESTS PASSED CLEANLY!   "
+	@echo "  IPC UNIT & LIVE REACTOR TESTS PASSED CLEANLY!  "
 	@echo "=================================================="
 
 bench: $(DAEMON_OBJS)

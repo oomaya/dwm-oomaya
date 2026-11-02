@@ -190,8 +190,9 @@ int main(void)
 
     /*
      * Any client can write root properties, and a short format is not a long.
-     * Four bytes fill what a 1-long read returns, so an unchecked read gets the
-     * small value below rather than an out-of-range one it would drop anyway.
+     * Four bytes fill what a 1-long read returns. An unchecked read also takes
+     * uninitialized bytes after them, which are zero on default glibc, so this
+     * is a best-effort regression pin: a missing check can still pass elsewhere.
      */
     {
         unsigned char bytes[4] = { 5, 0, 0, 0 };
