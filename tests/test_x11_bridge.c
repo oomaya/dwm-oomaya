@@ -206,6 +206,20 @@ int main(void)
     ASSERT_EQ("X08 format-8 property is ignored",
               oomaya_state_get_tag_mask(&g_state), 1u << (DESKTOP + 1));
 
+    /* Format 32 alone is not enough: dwm publishes this atom as CARDINAL. */
+    {
+        unsigned long value = 6;
+
+        XChangeProperty(g_wm, g_root,
+                        XInternAtom(g_wm, "_NET_CURRENT_DESKTOP", False),
+                        XA_ATOM, 32, PropModeReplace,
+                        (unsigned char *)&value, 1);
+        XSync(g_wm, False);
+    }
+    ASSERT_EQ("X09 fence", fence(), 0);
+    ASSERT_EQ("X09 non-CARDINAL property is ignored",
+              oomaya_state_get_tag_mask(&g_state), 1u << (DESKTOP + 1));
+
     oomaya_x11_bridge_destroy();
     XCloseDisplay(g_wm);
 

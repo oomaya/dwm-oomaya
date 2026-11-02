@@ -120,8 +120,8 @@ refresh_tag_mask(void)
         || data == NULL)
         return;
 
-    /* Any client can write this property; only format 32 yields a long. */
-    if (fmt == 32 && nitems > 0) {
+    /* Any client can write this property; dwm publishes a 32-bit CARDINAL. */
+    if (type == XA_CARDINAL && fmt == 32 && nitems > 0) {
         unsigned long val = *(unsigned long *)data;
         if (val < 32)
             oomaya_state_set_tag_mask(g_bridge.state, (1u << val));
