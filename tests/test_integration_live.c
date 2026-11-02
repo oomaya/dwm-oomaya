@@ -367,6 +367,101 @@ test_client_that_stops_reading_is_dropped(const struct sockaddr_un *addr)
     }
 }
 
+/* Send one fast-path request and consume its reply. */
+static int
+request_view(int fd, uint32_t mask, uint16_t msg_id)
+{
+    uint8_t body[6], reply[4];
+    uint16_t op = IPC_CMD_WM_VIEW_TAG;
+    oomaya_ipc_header_t req, resp;
+
+    memcpy(body, &op, 2);
+    memcpy(body + 2, &mask, 4);
+    oomaya_frame_init_request(&req, op, msg_id, sizeof(body));
+    if (send_frame(fd, &req, body, sizeof(body)) != 0) return -1;
+    if (recv_exact(fd, &resp, sizeof(resp)) != 0) return -1;
+    return recv_exact(fd, reply, sizeof(reply));
+}
+
+static int
+subscribe(int fd)
+{
+    uint16_t op = IPC_CMD_SUBSCRIBE;
+    int32_t st = -1;
+    oomaya_ipc_header_t req, resp;
+
+    oomaya_frame_init_request(&req, op, 0x5200, sizeof(op));
+    if (send_frame(fd, &req, &op, sizeof(op)) != 0) return -1;
+    if (recv_exact(fd, &resp, sizeof(resp)) != 0) return -1;
+    if (resp.msg_type != OOMAYA_MSG_RESPONSE) return -1;
+    if (recv_exact(fd, &st, sizeof(st)) != 0) return -1;
+    return st;
+}
+
+static void
+test_subscribers_receive_tag_signal(const struct sockaddr_un *addr)
+{
+    int sub = client_connect(addr), other = client_connect(addr);
+    oomaya_ipc_header_t hdr;
+    uint8_t body[6];
+    uint16_t sig = 0;
+    uint32_t mask = 0;
+
+    ASSERT_EQ("T11 subscribe", subscribe(sub), 0);
+    ASSERT_EQ("T11 view", request_view(other, 1u << 4, 0x5201), 0);
+    ASSERT_EQ("T11 frame", recv_exact(sub, &hdr, sizeof(hdr)), 0);
+    ASSERT_EQ("T11 type", hdr.msg_type, OOMAYA_MSG_SIGNAL);
+    ASSERT_EQ("T11 length", hdr.payload_len, sizeof(body));
+    ASSERT_EQ("T11 body", recv_exact(sub, body, sizeof(body)), 0);
+    memcpy(&sig, body, 2);
+    memcpy(&mask, body + 2, 4);
+    ASSERT_EQ("T11 opcode", sig, IPC_SIG_WM_TAG_CHANGED);
+    ASSERT_EQ("T11 mask", mask, 1u << 4);
+
+    /* The requester did not subscribe, so its stream stays request/response. */
+    {
+        struct pollfd pfd = { .fd = other, .events = POLLIN, .revents = 0 };
+        ASSERT_EQ("T11 no signal to a non-subscriber", poll(&pfd, 1, 20), 0);
+    }
+    close(sub);
+    close(other);
+}
+
+/* M11: a stalled subscriber is dropped while a healthy one keeps receiving. */
+static void
+test_slow_subscriber_is_dropped(const struct sockaddr_un *addr)
+{
+    int stalled = client_connect(addr), healthy = client_connect(addr);
+    int i, j, received = 0, closed = 0;
+    uint32_t mask = 1u;
+    oomaya_ipc_header_t hdr;
+    uint8_t body[16];
+
+    ASSERT_EQ("T12 subscribe stalled", subscribe(stalled), 0);
+    ASSERT_EQ("T12 subscribe healthy", subscribe(healthy), 0);
+
+    /* One connection stays inside the rate limit, so spread the load. */
+    for (i = 0; i < 40 && !closed; ++i) {
+        int sender = client_connect(addr);
+        for (j = 0; j < 90; ++j) {
+            mask = (mask == 1u) ? 2u : 1u;
+            if (request_view(sender, mask, 0x5300) != 0) break;
+            if (recv_exact(healthy, &hdr, sizeof(hdr)) != 0 ||
+                recv_exact(healthy, body, hdr.payload_len) != 0) break;
+            ++received;
+        }
+        close(sender);
+        {
+            struct pollfd pfd = { .fd = stalled, .events = 0, .revents = 0 };
+            if (poll(&pfd, 1, 0) > 0 && (pfd.revents & POLLHUP)) closed = 1;
+        }
+    }
+    ASSERT_EQ("T12 stalled subscriber dropped", closed, 1);
+    ASSERT_EQ("T12 healthy subscriber kept up", received > 100, 1);
+    close(stalled);
+    close(healthy);
+}
+
 int
 main(void)
 {
@@ -479,6 +574,8 @@ main(void)
     test_pipeline_oversize_never_desyncs(&addr);
     test_completion_not_delivered_to_reused_fd(&addr);
     test_client_that_stops_reading_is_dropped(&addr);
+    test_subscribers_receive_tag_signal(&addr);
+    test_slow_subscriber_is_dropped(&addr);
 
     /* Shutdown */
     oomaya_reactor_stop(&reactor);

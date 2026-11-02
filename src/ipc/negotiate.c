@@ -41,6 +41,7 @@ static const uint16_t s_fast_path_opcodes[] = {
     IPC_CMD_WM_VIEW_TAG,
     IPC_CMD_WM_TOGGLE_TAG,
     IPC_CMD_WM_SET_LAYOUT,
+    IPC_CMD_SUBSCRIBE,
     IPC_CMD_WM_FOCUS_CLIENT,
     IPC_CMD_WM_KILL_CLIENT,
 };

@@ -17,6 +17,7 @@
  *   cycle-monitor               Cycle active monitor
  *   power, get-power            Query system power status
  *   audio, get-audio            Query audio volume and mute state
+ *   watch [event...]            Print audio/tag/layout/focus events as JSON
  *   volume <0-100>              Set audio volume level
  *   help, --help, -h            Show this help message
  */
@@ -63,6 +64,7 @@ static void print_usage(const char *prog)
         "  cycle-monitor               Switch focus to next physical monitor\n"
         "  power, get-power            Query power / battery profile\n"
         "  audio, get-audio            Query system audio volume and mute\n"
+        "  watch [audio|tag|layout|focus]...  Print events as JSON lines\n"
         "  volume <0-100>              Set system audio volume\n",
         prog);
 }
@@ -97,6 +99,96 @@ static int parse_tag_arg(const char *arg, uint32_t *out_mask)
         *out_mask = (uint32_t)val;
     }
     return 0;
+}
+
+/* Event names for `watch`. Bits select what gets printed. */
+#define WATCH_AUDIO  (1u << 0)
+#define WATCH_TAG    (1u << 1)
+#define WATCH_LAYOUT (1u << 2)
+#define WATCH_FOCUS  (1u << 3)
+#define WATCH_ALL    (WATCH_AUDIO | WATCH_TAG | WATCH_LAYOUT | WATCH_FOCUS)
+
+static int parse_watch_filter(int argc, char **argv, int argi, unsigned *filter)
+{
+    *filter = 0;
+    for (; argi < argc; argi++) {
+        const char *name = argv[argi];
+        if (strcmp(name, "-j") == 0 || strcmp(name, "--json") == 0) continue;
+        if (strcmp(name, "audio") == 0) *filter |= WATCH_AUDIO;
+        else if (strcmp(name, "tag") == 0) *filter |= WATCH_TAG;
+        else if (strcmp(name, "layout") == 0) *filter |= WATCH_LAYOUT;
+        else if (strcmp(name, "focus") == 0) *filter |= WATCH_FOCUS;
+        else return -1;
+    }
+    if (*filter == 0) *filter = WATCH_ALL;
+    return 0;
+}
+
+static int read_exact(int fd, void *buf, size_t len)
+{
+    uint8_t *p = buf;
+    size_t got = 0;
+
+    while (got < len) {
+        ssize_t n = read(fd, p + got, len - got);
+        if (n == 0) return -1;
+        if (n < 0) {
+            if (errno == EINTR) continue;
+            return -1;
+        }
+        got += (size_t)n;
+    }
+    return 0;
+}
+
+/* Print one JSON line per signal until the daemon goes away. The exit status
+ * is a failure, so a caller knows to use its own event source. */
+static int run_watch(int sock, unsigned filter)
+{
+    struct timeval no_timeout = { .tv_sec = 0, .tv_usec = 0 };
+    oomaya_ipc_header_t hdr;
+    uint8_t body[OOMAYA_FRAME_BODY_MAX];
+
+    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &no_timeout, sizeof(no_timeout));
+
+    for (;;) {
+        uint16_t sig = 0;
+        int32_t values[2] = { 0, 0 };
+
+        if (read_exact(sock, &hdr, sizeof(hdr)) < 0) break;
+        if (hdr.magic != OOMAYA_IPC_MAGIC || hdr.payload_len > sizeof(body)) break;
+        if (read_exact(sock, body, hdr.payload_len) < 0) break;
+        if (hdr.msg_type != (uint16_t)OOMAYA_MSG_SIGNAL || hdr.payload_len < 6) continue;
+
+        memcpy(&sig, body, sizeof(sig));
+        memcpy(&values[0], body + 2, sizeof(values[0]));
+
+        switch (sig) {
+        case IPC_SIG_SYS_AUDIO_CHANGED:
+            if (!(filter & WATCH_AUDIO) || hdr.payload_len < 10) continue;
+            memcpy(&values[1], body + 6, sizeof(values[1]));
+            printf("{\"event\":\"audio\",\"volume\":%d,\"muted\":%s}\n",
+                   (int)values[0], values[1] ? "true" : "false");
+            break;
+        case IPC_SIG_WM_TAG_CHANGED:
+            if (!(filter & WATCH_TAG)) continue;
+            printf("{\"event\":\"tag\",\"mask\":%u}\n", (uint32_t)values[0]);
+            break;
+        case IPC_SIG_WM_LAYOUT_CHANGED:
+            if (!(filter & WATCH_LAYOUT)) continue;
+            printf("{\"event\":\"layout\",\"index\":%u}\n", (uint32_t)values[0]);
+            break;
+        case IPC_SIG_WM_FOCUS_CHANGED:
+            if (!(filter & WATCH_FOCUS)) continue;
+            printf("{\"event\":\"focus\",\"window\":%u}\n", (uint32_t)values[0]);
+            break;
+        default:
+            continue; /* a newer daemon's signal */
+        }
+        if (fflush(stdout) != 0) break;
+    }
+    close(sock);
+    return EXIT_FAILURE;
 }
 
 static const char *err_str(int32_t err)
@@ -201,6 +293,7 @@ int main(int argc, char **argv)
 
     /* Prepare command payload */
     uint16_t opcode = 0;
+    unsigned watch_filter = 0;
     uint8_t payload[64];
     uint32_t payload_len = 0;
 
@@ -270,6 +363,14 @@ int main(int argc, char **argv)
         payload_len = 2;
     } else if (strcmp(cmd, "audio") == 0 || strcmp(cmd, "get-audio") == 0) {
         opcode = IPC_CMD_SYS_GET_AUDIO;
+        memcpy(payload, &opcode, 2);
+        payload_len = 2;
+    } else if (strcmp(cmd, "watch") == 0) {
+        if (parse_watch_filter(argc, argv, argi, &watch_filter) < 0) {
+            fprintf(stderr, "oomaya-ctl: 'watch' takes audio, tag, layout, focus\n");
+            close(sock); return EXIT_FAILURE;
+        }
+        opcode = IPC_CMD_SUBSCRIBE;
         memcpy(payload, &opcode, 2);
         payload_len = 2;
     } else if (strcmp(cmd, "volume") == 0 || strcmp(cmd, "set-volume") == 0) {
@@ -345,6 +446,10 @@ int main(int argc, char **argv)
         ssize_t rn = read(sock, resp_buf + read_accum, to_read - read_accum);
         if (rn <= 0) break;
         read_accum += (uint32_t)rn;
+    }
+
+    if (opcode == IPC_CMD_SUBSCRIBE) {
+        return run_watch(sock, watch_filter);
     }
 
     close(sock);

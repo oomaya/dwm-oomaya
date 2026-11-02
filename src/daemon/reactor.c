@@ -27,6 +27,7 @@
 #include <sys/un.h>
 #include <sys/uio.h>
 #include <sys/eventfd.h>
+#include <sys/timerfd.h>
 
 #include "../../include/oomaya_ipc.h"
 #include "../../include/oomaya_rate.h"
@@ -35,11 +36,15 @@
 #include "../../include/oomaya_reactor.h"
 #include "../../include/oomaya_reactor_impl.h"
 #include "../../include/oomaya_x11_bridge.h"
+#include "../../include/oomaya_audio_watch.h"
 
 /* ── Constants ──────────────────────────────────────────────────────────── */
 #define EPOLL_MAX_EVENTS  64
 #define REACTOR_BACKLOG   16
 #define BODY_BUF_MAX      OOMAYA_FRAME_BODY_MAX
+#define AUDIO_RETRY_SEC   2
+/* client_slot of a task the reactor submits for itself. */
+#define TASK_SLOT_AUDIO   UINT32_MAX
 
 /* ── Fast-path response body ─────────────────────────────────────────────── */
 typedef struct __attribute__((packed)) {
@@ -51,6 +56,8 @@ typedef struct __attribute__((packed)) {
 } oomaya_state_resp_t;
 
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
+
+static void audio_source_stop(struct oomaya_reactor *r);
 
 static reactor_client_t *
 client_slot_alloc(struct oomaya_reactor *r, int fd, int rate_slot)
@@ -75,6 +82,10 @@ static void
 client_slot_free(struct oomaya_reactor *r, reactor_client_t *c)
 {
     if (c == NULL || c->fd < 0) return;
+    if (c->subscribed) {
+        c->subscribed = 0;
+        if (--r->subscribers == 0) audio_source_stop(r);
+    }
     epoll_ctl(r->epfd, EPOLL_CTL_DEL, c->fd, NULL);
     oomaya_rate_client_remove(&r->rate, c->rate_slot);
     close(c->fd);
@@ -119,7 +130,228 @@ send_response(struct oomaya_reactor *r, reactor_client_t *c,
         client_slot_free(r, c);
 }
 
+/* ── Signals ─────────────────────────────────────────────────────────────── */
+
+static void
+send_signal(struct oomaya_reactor *r, reactor_client_t *c, uint16_t sig,
+            const int32_t *values, uint32_t nvalues)
+{
+    uint8_t             body[2 + 2 * sizeof(int32_t)];
+    uint32_t            len = 2 + nvalues * (uint32_t)sizeof(int32_t);
+    oomaya_ipc_header_t hdr;
+
+    memcpy(body, &sig, sizeof(sig));
+    memcpy(body + 2, values, nvalues * sizeof(int32_t));
+
+    memset(&hdr, 0, sizeof(hdr));
+    hdr.magic       = OOMAYA_IPC_MAGIC;
+    hdr.client_ver  = OOMAYA_IPC_CURRENT_VER;
+    hdr.target_ver  = OOMAYA_IPC_CURRENT_VER;
+    hdr.msg_type    = (uint16_t)OOMAYA_MSG_SIGNAL;
+    hdr.payload_len = len;
+    send_response(r, c, &hdr, body, len);
+}
+
+/* A subscriber that cannot keep up is dropped by send_response, so one stalled
+ * reader never delays the others. */
+static void
+broadcast(struct oomaya_reactor *r, uint16_t sig,
+          const int32_t *values, uint32_t nvalues)
+{
+    int i;
+
+    for (i = 0; i < OOMAYA_RATE_MAX_CLIENTS; ++i) {
+        reactor_client_t *c = &r->clients[i];
+        if (c->fd >= 0 && c->subscribed)
+            send_signal(r, c, sig, values, nvalues);
+    }
+}
+
+static void
+broadcast_state_changes(struct oomaya_reactor *r)
+{
+    uint32_t tag, layout, focused;
+    int32_t  value;
+
+    if (r->subscribers == 0) return;
+
+    tag     = oomaya_state_get_tag_mask(r->state);
+    layout  = oomaya_state_get_layout(r->state);
+    focused = oomaya_state_get_focused(r->state);
+
+    if (tag != r->last_tag_mask) {
+        r->last_tag_mask = tag;
+        value = (int32_t)tag;
+        broadcast(r, IPC_SIG_WM_TAG_CHANGED, &value, 1);
+    }
+    if (layout != r->last_layout) {
+        r->last_layout = layout;
+        value = (int32_t)layout;
+        broadcast(r, IPC_SIG_WM_LAYOUT_CHANGED, &value, 1);
+    }
+    if (focused != r->last_focused) {
+        r->last_focused = focused;
+        value = (int32_t)focused;
+        broadcast(r, IPC_SIG_WM_FOCUS_CHANGED, &value, 1);
+    }
+}
+
+/* ── Audio source ────────────────────────────────────────────────────────── */
+
+/* Reading the sink runs a tool, so it goes to a worker. Changes that arrive
+ * while one read is pending collapse into a single follow-up read. */
+static void
+audio_query(struct oomaya_reactor *r)
+{
+    oomaya_task_t task;
+    uint16_t      opcode = IPC_CMD_SYS_GET_AUDIO;
+
+    if (r->audio_query_pending) {
+        r->audio_query_again = 1;
+        return;
+    }
+    memset(&task, 0, sizeof(task));
+    task.client_slot = TASK_SLOT_AUDIO;
+    task.opcode      = opcode;
+    task.payload_len = sizeof(opcode);
+    memcpy(task.payload, &opcode, sizeof(opcode));
+    if (oomaya_worker_pool_submit(r->workers, &task) == OOMAYA_RING_OK)
+        r->audio_query_pending = 1;
+}
+
+static void
+audio_source_start(struct oomaya_reactor *r)
+{
+    struct epoll_event ev;
+
+    if (r->audio_fd >= 0) return;
+    r->audio_fd = oomaya_audio_watch_start(&r->audio_pid);
+    if (r->audio_fd < 0) {
+        r->audio_pid = 0;
+        return;
+    }
+    memset(&ev, 0, sizeof(ev));
+    ev.events   = EPOLLIN;
+    ev.data.ptr = &r->audio_fd;
+    if (epoll_ctl(r->epfd, EPOLL_CTL_ADD, r->audio_fd, &ev) < 0) {
+        oomaya_audio_watch_stop(r->audio_fd, r->audio_pid);
+        r->audio_fd  = -1;
+        r->audio_pid = 0;
+    }
+}
+
+static void
+audio_source_close(struct oomaya_reactor *r)
+{
+    if (r->audio_fd < 0) return;
+    epoll_ctl(r->epfd, EPOLL_CTL_DEL, r->audio_fd, NULL);
+    oomaya_audio_watch_stop(r->audio_fd, r->audio_pid);
+    r->audio_fd  = -1;
+    r->audio_pid = 0;
+}
+
+static void
+audio_timer_set(struct oomaya_reactor *r, time_t seconds)
+{
+    struct itimerspec when;
+
+    if (r->audio_timer_fd < 0) return;
+    memset(&when, 0, sizeof(when));
+    when.it_value.tv_sec = seconds;
+    timerfd_settime(r->audio_timer_fd, 0, &when, NULL);
+}
+
+static void
+audio_source_stop(struct oomaya_reactor *r)
+{
+    audio_timer_set(r, 0);
+    audio_source_close(r);
+    r->audio_known = 0;
+}
+
+static void
+handle_audio_readable(struct oomaya_reactor *r)
+{
+    int rc = oomaya_audio_watch_read(r->audio_fd);
+
+    if (rc > 0) {
+        audio_query(r);
+    } else if (rc < 0) {
+        /* The audio server restarted or is missing. Try again while someone
+         * is listening; a failed start costs one process per retry. */
+        audio_source_close(r);
+        audio_timer_set(r, AUDIO_RETRY_SEC);
+    }
+}
+
+static void
+handle_audio_timer(struct oomaya_reactor *r)
+{
+    uint64_t expirations;
+    ssize_t  s = read(r->audio_timer_fd, &expirations, sizeof(expirations));
+
+    (void)s;
+    if (r->subscribers == 0) return;
+    audio_source_start(r);
+    if (r->audio_fd < 0) {
+        audio_timer_set(r, AUDIO_RETRY_SEC);
+        return;
+    }
+    audio_query(r); /* changes during the gap went unseen */
+}
+
+static void
+handle_audio_completion(struct oomaya_reactor *r, const oomaya_task_t *task)
+{
+    int32_t values[2];
+
+    r->audio_query_pending = 0;
+    if (r->subscribers > 0 && task->status == 0 &&
+        task->resp_len >= sizeof(values)) {
+        memcpy(values, task->resp_data, sizeof(values));
+        if (!r->audio_known || values[0] != r->audio_volume ||
+            values[1] != r->audio_muted) {
+            r->audio_known  = 1;
+            r->audio_volume = values[0];
+            r->audio_muted  = values[1];
+            broadcast(r, IPC_SIG_SYS_AUDIO_CHANGED, values, 2);
+        }
+    }
+    if (r->audio_query_again) {
+        r->audio_query_again = 0;
+        if (r->subscribers > 0) audio_query(r);
+    }
+}
+
 /* ── Fast-path handlers ──────────────────────────────────────────────────── */
+
+static void
+handle_subscribe(struct oomaya_reactor *r, reactor_client_t *c)
+{
+    oomaya_ipc_header_t resp;
+    int32_t             st = 0;
+
+    oomaya_frame_init_response(&resp, &c->hdr, sizeof(st));
+    send_response(r, c, &resp, &st, sizeof(st));
+    if (c->fd < 0 || c->subscribed) return;
+
+    c->subscribed = 1;
+    if (r->subscribers++ == 0) {
+        r->last_tag_mask = oomaya_state_get_tag_mask(r->state);
+        r->last_layout   = oomaya_state_get_layout(r->state);
+        r->last_focused  = oomaya_state_get_focused(r->state);
+        audio_source_start(r);
+        if (r->audio_fd < 0) audio_timer_set(r, AUDIO_RETRY_SEC);
+    }
+
+    /* Start every subscriber from the current audio state. */
+    if (r->audio_known) {
+        int32_t values[2] = { r->audio_volume, r->audio_muted };
+        send_signal(r, c, IPC_SIG_SYS_AUDIO_CHANGED, values, 2);
+    } else {
+        audio_query(r);
+    }
+}
 
 static void
 handle_wm_get_state(struct oomaya_reactor *r, reactor_client_t *c)
@@ -174,6 +406,9 @@ dispatch_fast_path(struct oomaya_reactor *r,
         break;
     case IPC_CMD_WM_VIEW_TAG:
         handle_wm_view_tag(r, c);
+        break;
+    case IPC_CMD_SUBSCRIBE:
+        handle_subscribe(r, c);
         break;
     case IPC_CMD_WM_FOCUS_CLIENT: {
         uint32_t xid = 0;
@@ -360,6 +595,11 @@ handle_eventfd(struct oomaya_reactor *r, int evfd)
     while (oomaya_ring_dequeue(&r->workers->resp_ring, &completed) == OOMAYA_RING_OK) {
         reactor_client_t *c;
 
+        if (completed.client_slot == TASK_SLOT_AUDIO) {
+            handle_audio_completion(r, &completed);
+            continue;
+        }
+
         /* The slot and generation, not the fd number, name the client: a closed
          * client's fd can be reused by an unrelated one before this drains. */
         if (completed.client_slot >= OOMAYA_RATE_MAX_CLIENTS) continue;
@@ -442,6 +682,9 @@ oomaya_reactor_init(struct oomaya_reactor   *r,
     r->workers   = workers;
     r->state     = state;
     r->running   = 1;
+    r->stop_fd   = -1;
+    r->audio_fd  = -1;
+    r->audio_timer_fd = -1;
 
     for (i = 0; i < OOMAYA_RATE_MAX_CLIENTS; ++i)
         r->clients[i].fd = -1;
@@ -467,6 +710,31 @@ oomaya_reactor_init(struct oomaya_reactor   *r,
         close(r->epfd); return -1;
     }
 
+    /* The loop sleeps until something happens, so stop needs its own wakeup. */
+    r->stop_fd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
+    if (r->stop_fd < 0) {
+        close(r->epfd); return -1;
+    }
+    memset(&ev, 0, sizeof(ev));
+    ev.events   = EPOLLIN;
+    ev.data.ptr = &r->stop_fd;
+    if (epoll_ctl(r->epfd, EPOLL_CTL_ADD, r->stop_fd, &ev) < 0) {
+        close(r->stop_fd); close(r->epfd); return -1;
+    }
+
+    /* Without a timer the audio source still works; it just cannot restart. */
+    r->audio_timer_fd = timerfd_create(CLOCK_MONOTONIC,
+                                       TFD_NONBLOCK | TFD_CLOEXEC);
+    if (r->audio_timer_fd >= 0) {
+        memset(&ev, 0, sizeof(ev));
+        ev.events   = EPOLLIN;
+        ev.data.ptr = &r->audio_timer_fd;
+        if (epoll_ctl(r->epfd, EPOLL_CTL_ADD, r->audio_timer_fd, &ev) < 0) {
+            close(r->audio_timer_fd);
+            r->audio_timer_fd = -1;
+        }
+    }
+
     return 0;
 }
 
@@ -489,7 +757,7 @@ oomaya_reactor_run(struct oomaya_reactor *r)
     int                nfds, i;
 
     while (r->running) {
-        nfds = epoll_wait(r->epfd, events, EPOLL_MAX_EVENTS, 200 /* ms */);
+        nfds = epoll_wait(r->epfd, events, EPOLL_MAX_EVENTS, -1);
         if (nfds < 0) {
             if (errno == EINTR) continue;
             break;
@@ -504,6 +772,12 @@ oomaya_reactor_run(struct oomaya_reactor *r)
                 handle_eventfd(r, r->workers->eventfd);
             } else if (r->x11_fd >= 0 && ev->data.ptr == &r->x11_fd) {
                 oomaya_x11_process_events();
+            } else if (ev->data.ptr == &r->stop_fd) {
+                continue; /* running was cleared before the wakeup */
+            } else if (ev->data.ptr == &r->audio_fd) {
+                if (r->audio_fd >= 0) handle_audio_readable(r);
+            } else if (ev->data.ptr == &r->audio_timer_fd) {
+                handle_audio_timer(r);
             } else {
                 reactor_client_t *c = (reactor_client_t *)ev->data.ptr;
                 /* Process readable data first even if peer signalled disconnect */
@@ -517,13 +791,23 @@ oomaya_reactor_run(struct oomaya_reactor *r)
                 }
             }
         }
+        broadcast_state_changes(r);
     }
 }
 
+/* Called from signal handlers: only async-signal-safe work here. */
 void
 oomaya_reactor_stop(struct oomaya_reactor *r)
 {
-    if (r) r->running = 0;
+    uint64_t one = 1;
+    ssize_t  s;
+
+    if (r == NULL) return;
+    r->running = 0;
+    if (r->stop_fd >= 0) {
+        s = write(r->stop_fd, &one, sizeof(one));
+        (void)s;
+    }
 }
 
 void
@@ -535,5 +819,8 @@ oomaya_reactor_destroy(struct oomaya_reactor *r)
         if (r->clients[i].fd >= 0)
             client_slot_free(r, &r->clients[i]);
     }
+    audio_source_close(r);
+    if (r->audio_timer_fd >= 0) { close(r->audio_timer_fd); r->audio_timer_fd = -1; }
+    if (r->stop_fd >= 0) { close(r->stop_fd); r->stop_fd = -1; }
     if (r->epfd >= 0) { close(r->epfd); r->epfd = -1; }
 }

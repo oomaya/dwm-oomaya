@@ -80,7 +80,7 @@ endif
 DAEMON_OBJS := src/daemon/state_cache.o src/daemon/worker_pool.o \
                src/daemon/reactor.o     src/daemon/rate.o \
                src/daemon/ring.o        src/daemon/x11_bridge.o \
-               src/daemon/worker_dispatch.o \
+               src/daemon/worker_dispatch.o src/daemon/audio_watch.o \
                src/ipc/protocol.o       src/ipc/negotiate.o
 
 # A header change must rebuild every object: mixed sizes corrupt the task ring.
@@ -109,6 +109,9 @@ src/daemon/ring.o: src/daemon/ring.c
 src/daemon/worker_dispatch.o: src/daemon/worker_dispatch.c
 	$(CC) $(C11FLAGS) -c $< -o $@
 
+src/daemon/audio_watch.o: src/daemon/audio_watch.c
+	$(CC) $(C11FLAGS) -c $< -o $@
+
 daemon: phase3 src/daemon/main.c
 	$(CC) $(C11FLAGS) $(X11_CFLAGS) $(X11_DEFINES) \
 	    -o dwm-oomayad \
@@ -133,7 +136,7 @@ test_live: $(DAEMON_OBJS)
 	    tests/test_integration_live.c \
 	    src/daemon/reactor.o src/daemon/worker_pool.o src/daemon/state_cache.o \
 	    src/daemon/ring.o src/daemon/rate.o src/ipc/protocol.o src/ipc/negotiate.o \
-	    src/daemon/x11_bridge.o \
+	    src/daemon/x11_bridge.o src/daemon/audio_watch.o \
 	    -lpthread -lrt $(X11_LIBS)
 	@echo "Running Live Reactor Integration test..."
 	tests/test_integration_live
@@ -163,7 +166,7 @@ bench: $(DAEMON_OBJS)
 	    tests/bench_ipc_roundtrip.c \
 	    src/daemon/reactor.c src/daemon/worker_pool.c src/daemon/state_cache.c \
 	    src/daemon/ring.c src/daemon/rate.c src/ipc/protocol.c src/ipc/negotiate.c \
-	    src/daemon/x11_bridge.c \
+	    src/daemon/x11_bridge.c src/daemon/audio_watch.c \
 	    -lpthread -lrt $(X11_LIBS) -lm
 	@echo "Running Benchmark Suite..."
 	tests/bench_ipc_roundtrip
