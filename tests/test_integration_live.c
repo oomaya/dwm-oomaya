@@ -12,6 +12,8 @@
 #include <sys/uio.h>
 #include <sys/un.h>
 #include <errno.h>
+#include <poll.h>
+#include <time.h>
 
 #include "../include/oomaya_ipc.h"
 #include "../include/oomaya_state.h"
@@ -31,6 +33,11 @@ static void
 test_dispatch(oomaya_task_t *task, oomaya_wm_state_t *state)
 {
     (void)state;
+    /* A slow offload keeps a completion pending across a client's exit. */
+    if (task->opcode == IPC_CMD_SYS_SET_POWER) {
+        struct timespec ts = { .tv_sec = 0, .tv_nsec = 3000000 };
+        nanosleep(&ts, NULL);
+    }
     /* Simulate worker processing SYS_GET_POWER (battery % = 95) */
     int32_t val = 95;
     task->status = 0;
@@ -283,7 +290,85 @@ test_pipeline_oversize_never_desyncs(const struct sockaddr_un *addr)
     close(fd);
 }
 
-int main(void)
+/*
+ * C4: a client exits with an offload pending, and the next client reuses its
+ * fd number. The completion belongs to the first client and must not reach
+ * the second.
+ */
+static void
+test_completion_not_delivered_to_reused_fd(const struct sockaddr_un *addr)
+{
+    int misdelivered = 0, reused = 0, i;
+
+    for (i = 0; i < 300; ++i) {
+        uint16_t op = IPC_CMD_SYS_SET_POWER;
+        oomaya_ipc_header_t req;
+        struct pollfd pfd;
+        int first = client_connect(addr), second;
+
+        if (first < 0) break;
+        oomaya_frame_init_request(&req, op, 0x5000, sizeof(op));
+        if (send_frame(first, &req, &op, sizeof(op)) != 0) {
+            close(first);
+            break;
+        }
+        close(first);
+        second = client_connect(addr);
+        if (second < 0) break;
+        ++reused;
+
+        pfd.fd = second;
+        pfd.events = POLLIN;
+        pfd.revents = 0;
+        if (poll(&pfd, 1, 6) > 0 && (pfd.revents & POLLIN)) ++misdelivered;
+        close(second);
+    }
+    ASSERT_EQ("T09 ran every cycle", reused, 300);
+    ASSERT_EQ("T09 no frame reached an unrelated client", misdelivered, 0);
+}
+
+/* M11: a client that stops reading is dropped; the reactor never blocks on it
+ * and never leaves half a frame in its stream. */
+static void
+test_client_that_stops_reading_is_dropped(const struct sockaddr_un *addr)
+{
+    uint8_t buf[256];
+    uint16_t op = IPC_CMD_WM_GET_STATE;
+    oomaya_ipc_header_t req;
+    int fd = client_connect(addr), i, closed = 0;
+    long frames = 0;
+
+    if (fd < 0) { ASSERT_EQ("T10 connect", fd >= 0, 1); return; }
+    oomaya_frame_init_request(&req, op, 0x5100, sizeof(op));
+    memcpy(buf, &req, sizeof(req));
+    memcpy(buf + sizeof(req), &op, sizeof(op));
+    for (i = 0; i < 4000; ++i) {
+        if (send(fd, buf, sizeof(req) + sizeof(op), MSG_NOSIGNAL) < 0) break;
+    }
+    for (;;) {
+        ssize_t n = recv(fd, buf, sizeof(buf), 0);
+        if (n == 0 || (n < 0 && errno == ECONNRESET)) { closed = 1; break; }
+        if (n < 0) break;
+        frames += n;
+    }
+    ASSERT_EQ("T10 stalled client disconnected", closed, 1);
+    ASSERT_EQ("T10 stream ended on a frame boundary",
+              frames % 16 == 0 || frames % 36 == 0 || frames % 52 == 0, 1);
+    close(fd);
+
+    fd = client_connect(addr);
+    ASSERT_EQ("T10 reactor still accepts", fd >= 0, 1);
+    if (fd >= 0) {
+        oomaya_ipc_header_t resp;
+        oomaya_frame_init_request(&req, op, 0x5101, sizeof(op));
+        ASSERT_EQ("T10 send", send_frame(fd, &req, &op, sizeof(op)), 0);
+        ASSERT_EQ("T10 reply", recv_exact(fd, &resp, sizeof(resp)), 0);
+        close(fd);
+    }
+}
+
+int
+main(void)
 {
     char sock_path[100];
     int listen_fd, client_fd;
@@ -392,6 +477,8 @@ int main(void)
     check_violation("T07 unknown target_ver", &addr, &bad, bad.payload_len,
                     OOMAYA_IPC_ERR_VERSION);
     test_pipeline_oversize_never_desyncs(&addr);
+    test_completion_not_delivered_to_reused_fd(&addr);
+    test_client_that_stops_reading_is_dropped(&addr);
 
     /* Shutdown */
     oomaya_reactor_stop(&reactor);

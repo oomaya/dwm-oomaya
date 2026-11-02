@@ -58,10 +58,13 @@ client_slot_alloc(struct oomaya_reactor *r, int fd, int rate_slot)
     int i;
     for (i = 0; i < OOMAYA_RATE_MAX_CLIENTS; ++i) {
         if (r->clients[i].fd == -1) {
+            /* A new generation retires completions owed to the previous client. */
+            uint32_t generation = r->clients[i].generation + 1u;
             memset(&r->clients[i], 0, sizeof(r->clients[i]));
-            r->clients[i].fd        = fd;
-            r->clients[i].rate_slot = rate_slot;
-            r->clients[i].cstate    = CS_WANT_HDR;
+            r->clients[i].fd         = fd;
+            r->clients[i].rate_slot  = rate_slot;
+            r->clients[i].cstate     = CS_WANT_HDR;
+            r->clients[i].generation = generation;
             return &r->clients[i];
         }
     }
@@ -78,26 +81,51 @@ client_slot_free(struct oomaya_reactor *r, reactor_client_t *c)
     c->fd = -1;
 }
 
+/* Send one whole frame, or report failure. A client socket never blocks the
+ * reactor, and a short write would leave half a frame in the stream, so the
+ * only safe answer to either is to drop that client. */
 static int
-send_response(int fd, const oomaya_ipc_header_t *hdr,
-              const void *body, uint32_t body_len)
+send_frame(int fd, const oomaya_ipc_header_t *hdr,
+           const void *body, uint32_t body_len)
 {
-    struct iovec iov[2];
+    struct iovec  iov[2];
+    struct msghdr msg;
+    size_t        total = sizeof(*hdr) + (size_t)body_len;
+    ssize_t       n;
+
     iov[0].iov_base = (void *)hdr;
     iov[0].iov_len  = sizeof(*hdr);
     iov[1].iov_base = (void *)body;
     iov[1].iov_len  = (size_t)body_len;
-    /* writev is atomic for small payloads on UDS */
-    return (int)writev(fd, iov, (body_len > 0) ? 2 : 1);
+
+    memset(&msg, 0, sizeof(msg));
+    msg.msg_iov    = iov;
+    msg.msg_iovlen = (body_len > 0) ? 2 : 1;
+
+    do {
+        n = sendmsg(fd, &msg, MSG_DONTWAIT | MSG_NOSIGNAL);
+    } while (n < 0 && errno == EINTR);
+
+    return (n == (ssize_t)total) ? 0 : -1;
+}
+
+static void
+send_response(struct oomaya_reactor *r, reactor_client_t *c,
+              const oomaya_ipc_header_t *hdr,
+              const void *body, uint32_t body_len)
+{
+    if (c->fd < 0) return;
+    if (send_frame(c->fd, hdr, body, body_len) != 0)
+        client_slot_free(r, c);
 }
 
 /* ── Fast-path handlers ──────────────────────────────────────────────────── */
 
 static void
-handle_wm_get_state(const oomaya_ipc_header_t *req,
-                    oomaya_wm_state_t *state,
-                    int client_fd)
+handle_wm_get_state(struct oomaya_reactor *r, reactor_client_t *c)
 {
+    const oomaya_ipc_header_t *req = &c->hdr;
+    oomaya_wm_state_t *state = r->state;
     oomaya_ipc_header_t resp;
     oomaya_state_resp_t body;
 
@@ -108,15 +136,15 @@ handle_wm_get_state(const oomaya_ipc_header_t *req,
     body.monitor_count = oomaya_state_get_monitor_count(state);
 
     oomaya_frame_init_response(&resp, req, (uint32_t)sizeof(body));
-    send_response(client_fd, &resp, &body, (uint32_t)sizeof(body));
+    send_response(r, c, &resp, &body, (uint32_t)sizeof(body));
 }
 
 static void
-handle_wm_view_tag(const oomaya_ipc_header_t *req,
-                   const uint8_t *body_bytes,
-                   oomaya_wm_state_t *state,
-                   int client_fd)
+handle_wm_view_tag(struct oomaya_reactor *r, reactor_client_t *c)
 {
+    const oomaya_ipc_header_t *req = &c->hdr;
+    const uint8_t *body_bytes = c->body;
+    oomaya_wm_state_t *state = r->state;
     uint32_t            new_mask;
     oomaya_ipc_header_t resp;
     int32_t             status = 0;
@@ -132,7 +160,7 @@ handle_wm_view_tag(const oomaya_ipc_header_t *req,
     }
 
     oomaya_frame_init_response(&resp, req, sizeof(status));
-    send_response(client_fd, &resp, &status, sizeof(status));
+    send_response(r, c, &resp, &status, sizeof(status));
 }
 
 static void
@@ -142,10 +170,10 @@ dispatch_fast_path(struct oomaya_reactor *r,
 {
     switch (opcode) {
     case IPC_CMD_WM_GET_STATE:
-        handle_wm_get_state(&c->hdr, r->state, c->fd);
+        handle_wm_get_state(r, c);
         break;
     case IPC_CMD_WM_VIEW_TAG:
-        handle_wm_view_tag(&c->hdr, c->body, r->state, c->fd);
+        handle_wm_view_tag(r, c);
         break;
     case IPC_CMD_WM_FOCUS_CLIENT: {
         uint32_t xid = 0;
@@ -155,7 +183,7 @@ dispatch_fast_path(struct oomaya_reactor *r,
         oomaya_ipc_header_t resp;
         int32_t st = 0;
         oomaya_frame_init_response(&resp, &c->hdr, sizeof(st));
-        send_response(c->fd, &resp, &st, sizeof(st));
+        send_response(r, c, &resp, &st, sizeof(st));
         break;
     }
     case IPC_CMD_WM_KILL_CLIENT: {
@@ -164,7 +192,7 @@ dispatch_fast_path(struct oomaya_reactor *r,
         oomaya_ipc_header_t resp;
         int32_t st = 0;
         oomaya_frame_init_response(&resp, &c->hdr, sizeof(st));
-        send_response(c->fd, &resp, &st, sizeof(st));
+        send_response(r, c, &resp, &st, sizeof(st));
         break;
     }
     /* IPC_CMD_WM_TOGGLE_TAG and IPC_CMD_WM_SET_LAYOUT land here on purpose. dwm
@@ -173,7 +201,7 @@ dispatch_fast_path(struct oomaya_reactor *r,
     default: {
         oomaya_ipc_header_t err;
         oomaya_frame_init_error(&err, &c->hdr, OOMAYA_IPC_ERR_OPCODE);
-        send_response(c->fd, &err, NULL, 0);
+        send_response(r, c, &err, NULL, 0);
         break;
     }
     }
@@ -191,7 +219,7 @@ dispatch_frame(struct oomaya_reactor *r, reactor_client_t *c)
     if (oomaya_frame_validate(&c->hdr) != OOMAYA_IPC_OK) {
         oomaya_ipc_header_t err;
         oomaya_frame_init_error(&err, &c->hdr, OOMAYA_IPC_ERR_MALFORMED);
-        send_response(c->fd, &err, NULL, 0);
+        send_response(r, c, &err, NULL, 0);
         return;
     }
 
@@ -199,7 +227,7 @@ dispatch_frame(struct oomaya_reactor *r, reactor_client_t *c)
     if (!oomaya_rate_check(&r->rate, c->rate_slot)) {
         oomaya_ipc_header_t err;
         oomaya_frame_init_error(&err, &c->hdr, OOMAYA_IPC_ERR_MALFORMED);
-        send_response(c->fd, &err, NULL, 0);
+        send_response(r, c, &err, NULL, 0);
         return;
     }
 
@@ -221,6 +249,8 @@ dispatch_frame(struct oomaya_reactor *r, reactor_client_t *c)
         /* Offload path: submit task to worker pool */
         memset(&task, 0, sizeof(task));
         task.client_fd   = (uint32_t)c->fd;
+        task.client_slot = (uint32_t)(c - r->clients);
+        task.client_gen  = c->generation;
         task.msg_id      = c->hdr.msg_id;
         task.target_ver  = c->hdr.target_ver;
         task.opcode      = opcode;
@@ -232,13 +262,13 @@ dispatch_frame(struct oomaya_reactor *r, reactor_client_t *c)
         if (oomaya_worker_pool_submit(r->workers, &task) != OOMAYA_RING_OK) {
             oomaya_ipc_header_t err;
             oomaya_frame_init_error(&err, &c->hdr, OOMAYA_IPC_ERR_INTERNAL);
-            send_response(c->fd, &err, NULL, 0);
+            send_response(r, c, &err, NULL, 0);
         }
         /* Response will arrive asynchronously via eventfd wakeup */
     } else {
         oomaya_ipc_header_t err;
         oomaya_frame_init_error(&err, &c->hdr, OOMAYA_IPC_ERR_OPCODE);
-        send_response(c->fd, &err, NULL, 0);
+        send_response(r, c, &err, NULL, 0);
     }
 }
 
@@ -254,7 +284,8 @@ handle_client_readable(struct oomaya_reactor *r, reactor_client_t *c)
         uint8_t *dst = (uint8_t *)&c->hdr;
         n = recv(c->fd, dst, sizeof(c->hdr), MSG_DONTWAIT);
         if (n <= 0) {
-            if (n < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) return;
+            if (n < 0 && (errno == EAGAIN || errno == EWOULDBLOCK ||
+                          errno == EINTR)) return;
             client_slot_free(r, c);
             return;
         }
@@ -277,7 +308,7 @@ handle_client_readable(struct oomaya_reactor *r, reactor_client_t *c)
         if (vr != OOMAYA_IPC_OK) {
             oomaya_ipc_header_t err;
             oomaya_frame_init_error(&err, &c->hdr, vr);
-            send_response(c->fd, &err, NULL, 0);
+            send_response(r, c, &err, NULL, 0);
             client_slot_free(r, c);
             return;
         }
@@ -297,7 +328,8 @@ handle_client_readable(struct oomaya_reactor *r, reactor_client_t *c)
         n = recv(c->fd, c->body + c->body_read,
                  want - c->body_read, MSG_DONTWAIT);
         if (n <= 0) {
-            if (n < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) return;
+            if (n < 0 && (errno == EAGAIN || errno == EWOULDBLOCK ||
+                          errno == EINTR)) return;
             client_slot_free(r, c);
             return;
         }
@@ -326,20 +358,13 @@ handle_eventfd(struct oomaya_reactor *r, int evfd)
 
     /* Drain all completed responses from the completion ring */
     while (oomaya_ring_dequeue(&r->workers->resp_ring, &completed) == OOMAYA_RING_OK) {
-        int fd = (int)completed.client_fd;
-        int active = 0;
-        int i;
+        reactor_client_t *c;
 
-        if (fd < 0) continue;
-
-        /* Verify client is still connected */
-        for (i = 0; i < OOMAYA_RATE_MAX_CLIENTS; ++i) {
-            if (r->clients[i].fd == fd) {
-                active = 1;
-                break;
-            }
-        }
-        if (!active) continue;
+        /* The slot and generation, not the fd number, name the client: a closed
+         * client's fd can be reused by an unrelated one before this drains. */
+        if (completed.client_slot >= OOMAYA_RATE_MAX_CLIENTS) continue;
+        c = &r->clients[completed.client_slot];
+        if (c->fd < 0 || c->generation != completed.client_gen) continue;
 
         oomaya_ipc_header_t resp;
         resp.magic       = OOMAYA_IPC_MAGIC;
@@ -351,7 +376,7 @@ handle_eventfd(struct oomaya_reactor *r, int evfd)
         resp.msg_id      = completed.msg_id;
         resp.payload_len = completed.resp_len;
 
-        send_response(fd, &resp, completed.resp_data, completed.resp_len);
+        send_response(r, c, &resp, completed.resp_data, completed.resp_len);
     }
 }
 

@@ -63,6 +63,8 @@ typedef char _oomaya_ring_pow2_check[
 #define OOMAYA_TASK_DEFINED
 typedef struct {
     uint32_t client_fd;
+    uint32_t client_slot; /* reactor slot that owns the completion */
+    uint32_t client_gen;  /* that slot's generation at submit time */
     uint16_t msg_id;
     uint16_t target_ver;
     uint16_t opcode;

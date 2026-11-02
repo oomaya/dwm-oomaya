@@ -54,7 +54,7 @@ test: $(TEST_BIN)
 	@$(TEST_BIN) && echo "ALL TESTS PASSED" || (echo "TESTS FAILED" && exit 1)
 
 clean:
-	rm -f $(IPC_OBJS) $(LIB_IPC) $(TEST_BIN) tools/oomaya-ctl
+	rm -f $(IPC_OBJS) $(DAEMON_OBJS) $(LIB_IPC) $(TEST_BIN) tools/oomaya-ctl
 	@echo "  CLEAN done"
 
 # ── Phase 3 targets ──────────────────────────────────────────────────────────
@@ -82,6 +82,9 @@ DAEMON_OBJS := src/daemon/state_cache.o src/daemon/worker_pool.o \
                src/daemon/ring.o        src/daemon/x11_bridge.o \
                src/daemon/worker_dispatch.o \
                src/ipc/protocol.o       src/ipc/negotiate.o
+
+# A header change must rebuild every object: mixed sizes corrupt the task ring.
+$(IPC_OBJS) $(DAEMON_OBJS) tools/oomaya-ctl: $(wildcard include/*.h)
 
 phase3: $(DAEMON_OBJS)
 

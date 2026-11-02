@@ -19,6 +19,7 @@ typedef struct {
     oomaya_ipc_header_t hdr;
     uint8_t           body[OOMAYA_FRAME_BODY_MAX];
     uint32_t          body_read;
+    uint32_t          generation; /* bumped each time the slot is reused */
 } reactor_client_t;
 
 struct oomaya_reactor {
