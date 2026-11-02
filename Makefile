@@ -495,6 +495,9 @@ check-status:
 check-ipc-tools:
 	tests/test-ipc-tools-build.sh
 
+check-audio-consumers: ipc tools
+	tests/test-audio-consumers.sh
+
 check-monitor-tags:
 	tests/test-monitor-tag-switching.sh
 
@@ -639,6 +642,7 @@ check-core: all
 	$(MAKE) check-diagnostics
 	$(MAKE) check-status
 	$(MAKE) check-ipc-tools
+	$(MAKE) check-audio-consumers
 	$(MAKE) check-settings
 	$(MAKE) check-appearance
 	$(MAKE) check-display-profile
@@ -672,7 +676,7 @@ check:
 	$(MAKE) all
 	$(MAKE) check-core
 
-.PHONY: clean all tools check check-core check-ipc check-ipc-tools check-all check-appearance check-system check-accessibility check-build-config check-build-deps check-default-apps check-xdg-autostart check-dev-sync-install \
+.PHONY: clean all tools check check-core check-ipc check-ipc-tools check-audio-consumers check-all check-appearance check-system check-accessibility check-build-config check-build-deps check-default-apps check-xdg-autostart check-dev-sync-install \
 	check-test-runner \
 	check-display-profile check-display-setup check-fedora-packages check-packaging check-fedora-platform check-format check-install \
 	check-herdr-install check-install-manifest check-install-preservation check-lock \

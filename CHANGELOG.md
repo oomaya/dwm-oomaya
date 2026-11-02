@@ -14,6 +14,19 @@ versions from `config.mk`.
   also disconnects, where it used to report `ERR_MALFORMED` and stay open.
   When a header breaks several rules, magic is reported before version, and
   version before payload length.
+- `make all` now builds `oomaya-ctl`, and `install-system` and `install-user`
+  fail when it is missing. It was skipped silently before, so scripts never
+  reached the daemon.
+- `oomaya-ctl -j audio` reports `{"volume":N,"muted":true|false}`. It exits
+  nonzero when the daemon cannot read the sink, where it used to report volume 0.
+  The `muted` field is absent with an older daemon. `IPC_CMD_SYS_GET_AUDIO` keeps
+  volume in its first four bytes.
+- `dwm-status` and `dwm-volume` read volume and mute from the daemon, and fall
+  back to `pactl` or `wpctl` when it is stopped or fails.
+- `oomaya-ctl` gives up after 1 second on a stalled daemon.
+- The `dwm-keybind-exec` palette keeps `toggleview`, `setlayout`, and `focusmon`
+  on their key bindings, because `dwm-oomayad` reports success for them without
+  performing them.
 - `dwm-oomayad` treats `DWM_TAG_UPDATE` as a change signal and re-reads
   `_NET_CURRENT_DESKTOP`, so a client tag change no longer corrupts the reported
   tag mask. The daemon no longer writes `DWM_TAG_UPDATE`; it records the mask of

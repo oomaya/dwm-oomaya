@@ -7,10 +7,35 @@ set -euo pipefail
 action="${1:-status}"
 step="${2:-5%}"
 
+# Sets daemon_vol and daemon_muted. daemon_muted stays empty for an older daemon.
+daemon_audio() {
+	local json
+	daemon_vol=
+	daemon_muted=
+	command -v oomaya-ctl >/dev/null 2>&1 || return 1
+	json=$(oomaya-ctl -j audio 2>/dev/null) || return 1
+	[[ $json =~ \"volume\":([0-9]+)(,\"muted\":(true|false))? ]] || return 1
+	daemon_vol=${BASH_REMATCH[1]}
+	daemon_muted=${BASH_REMATCH[3]}
+}
+
+# Change the volume through the daemon. A failure leaves the sink untouched, so
+# the caller can use its audio tool. Its 0-100 range would pull down a boosted
+# sink, so leave those to the audio tool as well.
+daemon_step() {
+	local new_vol
+	daemon_audio || return 1
+	((daemon_vol <= 100)) || return 1
+	new_vol=$((daemon_vol + $1))
+	((new_vol > 100)) && new_vol=100
+	((new_vol < 0)) && new_vol=0
+	oomaya-ctl volume "$new_vol" >/dev/null 2>&1
+}
+
 get_volume() {
 	local vol=""
-	if command -v oomaya-ctl >/dev/null 2>&1; then
-		vol=$(oomaya-ctl -j audio 2>/dev/null | awk -F':|}' '{print $2}')
+	if daemon_audio; then
+		vol=$daemon_vol
 	fi
 	if [[ -z $vol ]] && command -v pactl >/dev/null 2>&1; then
 		vol=$(pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null |
@@ -37,9 +62,15 @@ is_muted() {
 }
 
 notify_volume() {
-	local vol
-	vol=$(get_volume)
-	if is_muted; then
+	local vol muted=1
+	if daemon_audio && [[ -n $daemon_muted ]]; then
+		vol=$daemon_vol
+		[[ $daemon_muted == true ]] && muted=0
+	else
+		vol=$(get_volume)
+		is_muted && muted=0
+	fi
+	if ((muted == 0)); then
 		notify-send \
 			-a "Volume" \
 			-u low \
@@ -63,11 +94,8 @@ notify_volume() {
 case "$action" in
 	up)
 		step_num=${step%%%}
-		if command -v oomaya-ctl >/dev/null 2>&1; then
-			vol=$(get_volume)
-			new_vol=$((vol + step_num))
-			(( new_vol > 100 )) && new_vol=100
-			oomaya-ctl volume "$new_vol" >/dev/null 2>&1 || true
+		if daemon_step "$step_num"; then
+			:
 		elif command -v pactl >/dev/null 2>&1; then
 			pactl set-sink-volume @DEFAULT_SINK@ "+${step}"
 		elif command -v wpctl >/dev/null 2>&1; then
@@ -77,11 +105,8 @@ case "$action" in
 		;;
 	down)
 		step_num=${step%%%}
-		if command -v oomaya-ctl >/dev/null 2>&1; then
-			vol=$(get_volume)
-			new_vol=$((vol - step_num))
-			(( new_vol < 0 )) && new_vol=0
-			oomaya-ctl volume "$new_vol" >/dev/null 2>&1 || true
+		if daemon_step "-$step_num"; then
+			:
 		elif command -v pactl >/dev/null 2>&1; then
 			pactl set-sink-volume @DEFAULT_SINK@ "-${step}"
 		elif command -v wpctl >/dev/null 2>&1; then
