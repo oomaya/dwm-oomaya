@@ -58,10 +58,10 @@ dispatch_oomaya_ctl() {
             oomaya-ctl view "$ARG"
             ;;
         toggleview)
-            oomaya-ctl toggleview "$ARG"
+            oomaya-ctl toggleview "$ARG" || exit 1
             ;;
         setlayout)
-            oomaya-ctl setlayout "$ARG"
+            oomaya-ctl setlayout "$ARG" || exit 1
             ;;
         focusclient|focus)
             oomaya-ctl focus "$ARG"
@@ -113,8 +113,6 @@ if daemon_up; then
 
     case "$CMD" in
         view)         send_raw_ipc 0x0102 "$ARG" ;;
-        toggleview)   send_raw_ipc 0x0103 "$ARG" ;;
-        setlayout)    send_raw_ipc 0x0104 "$ARG" ;;
         focusclient)  send_raw_ipc 0x0105 "$ARG" ;;
         killclient)   send_raw_ipc 0x0106 0       ;;
         getstate)     send_raw_ipc 0x0101 0       ;;

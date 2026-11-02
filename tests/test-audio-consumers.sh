@@ -66,6 +66,21 @@ printf 'Volume: 0.42 [MUTED]\n' >"$work/wpctl.output"
 expect 'muted json' "$("$ctl" -j audio)" '{"volume":42,"muted":true}'
 expect 'muted text' "$("$ctl" audio)" 'Volume: 42% (muted)'
 
+# The daemon cannot perform these, so it must refuse them, not report success.
+for command in 'toggleview 2' 'setlayout 1'; do
+	# shellcheck disable=SC2086
+	if out=$("$ctl" $command 2>&1); then
+		fail "$command reported success: $out"
+	fi
+done
+for command in 'toggleview 2' 'setlayout 1'; do
+	# shellcheck disable=SC2086
+	if out=$(PATH="$repo/tools:$PATH" sh "$repo/tools/dwm-msg-compat.sh" $command 2>&1); then
+		fail "dwm-msg $command reported success: $out"
+	fi
+done
+expect 'refused layout left state alone' "$("$ctl" -j state | grep -o '"layout_idx":[0-9]*')" '"layout_idx":0'
+
 # A stalled daemon must not hang the caller.
 kill -STOP "$daemon_pid"
 if timeout 5 "$ctl" -j audio >/dev/null 2>&1; then
@@ -269,8 +284,8 @@ grep -q 'VOL muted' "$DWM_STATUS_TEST_LOG" || fail 'bar did not fall back to pac
 
 # ── dwm-keybind-exec ─────────────────────────────────────────────────────────
 
-# dwm-oomayad cannot perform these, and it reports success anyway. They must
-# keep using the real key binding until dwm accepts them over IPC.
+# dwm-oomayad cannot perform these. They must keep using the real key binding
+# until dwm accepts them over IPC.
 for spec in 'toggleview:tag:2:super+ctrl+2' 'setlayout:i:1:super+m' 'focusmon:i:-1:super+comma'; do
 	func=${spec%%:*}
 	rest=${spec#*:}

@@ -23,10 +23,12 @@ versions from `config.mk`.
   volume in its first four bytes.
 - `dwm-status` and `dwm-volume` read volume and mute from the daemon, and fall
   back to `pactl` or `wpctl` when it is stopped or fails.
+- `dwm-oomayad` refuses `IPC_CMD_WM_TOGGLE_TAG` and `IPC_CMD_WM_SET_LAYOUT` with
+  `ERR_OPCODE`. It used to report success without changing dwm, so `oomaya-ctl
+  toggleview`, `oomaya-ctl setlayout`, and `dwm-msg` now fail for these.
 - `oomaya-ctl` gives up after 1 second on a stalled daemon.
 - The `dwm-keybind-exec` palette keeps `toggleview`, `setlayout`, and `focusmon`
-  on their key bindings, because `dwm-oomayad` reports success for them without
-  performing them.
+  on their key bindings, because `dwm-oomayad` cannot perform them.
 - `dwm-oomayad` treats `DWM_TAG_UPDATE` as a change signal and re-reads
   `_NET_CURRENT_DESKTOP`, so a client tag change no longer corrupts the reported
   tag mask. The daemon no longer writes `DWM_TAG_UPDATE`; it records the mask of

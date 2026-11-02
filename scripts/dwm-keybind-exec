@@ -58,8 +58,8 @@ dispatch_spawn() {
 }
 
 # Only functions dwm-oomayad really performs belong here. It cannot toggle a tag
-# into the view, change dwm's layout, or pick a monitor direction, and it reports
-# success for all three, so those must stay on the key binding.
+# into the view, change dwm's layout, or pick a monitor direction, so those stay
+# on the key binding.
 dispatch_ipc() {
 	_func=$1
 	_act=$2

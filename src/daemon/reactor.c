@@ -136,28 +136,6 @@ handle_wm_view_tag(const oomaya_ipc_header_t *req,
 }
 
 static void
-handle_wm_set_layout(const oomaya_ipc_header_t *req,
-                     const uint8_t *body_bytes,
-                     oomaya_wm_state_t *state,
-                     int client_fd)
-{
-    uint32_t            new_idx;
-    oomaya_ipc_header_t resp;
-    int32_t             status = 0;
-
-    if (req->payload_len >= 6) {
-        memcpy(&new_idx, body_bytes + 2, sizeof(new_idx));
-        oomaya_state_set_layout(state, new_idx);
-        oomaya_x11_sync_state();
-    } else {
-        status = -1;
-    }
-
-    oomaya_frame_init_response(&resp, req, sizeof(status));
-    send_response(client_fd, &resp, &status, sizeof(status));
-}
-
-static void
 dispatch_fast_path(struct oomaya_reactor *r,
                    reactor_client_t *c,
                    uint16_t opcode)
@@ -168,23 +146,6 @@ dispatch_fast_path(struct oomaya_reactor *r,
         break;
     case IPC_CMD_WM_VIEW_TAG:
         handle_wm_view_tag(&c->hdr, c->body, r->state, c->fd);
-        break;
-    case IPC_CMD_WM_TOGGLE_TAG: {
-        /* Toggle: XOR current mask with requested bit */
-        uint32_t mask = 0, cur;
-        if (c->hdr.payload_len >= 6) memcpy(&mask, c->body + 2, 4);
-        cur = oomaya_state_get_tag_mask(r->state);
-        oomaya_state_set_tag_mask(r->state, cur ^ mask);
-        oomaya_x11_view_tag(cur ^ mask);
-        oomaya_x11_sync_state();
-        oomaya_ipc_header_t resp;
-        int32_t st = 0;
-        oomaya_frame_init_response(&resp, &c->hdr, sizeof(st));
-        send_response(c->fd, &resp, &st, sizeof(st));
-        break;
-    }
-    case IPC_CMD_WM_SET_LAYOUT:
-        handle_wm_set_layout(&c->hdr, c->body, r->state, c->fd);
         break;
     case IPC_CMD_WM_FOCUS_CLIENT: {
         uint32_t xid = 0;
@@ -206,6 +167,9 @@ dispatch_fast_path(struct oomaya_reactor *r,
         send_response(c->fd, &resp, &st, sizeof(st));
         break;
     }
+    /* IPC_CMD_WM_TOGGLE_TAG and IPC_CMD_WM_SET_LAYOUT land here on purpose. dwm
+     * has no message for either yet: EWMH carries one desktop index, and layout
+     * has no inbound path. Refusing lets callers use the key binding. */
     default: {
         oomaya_ipc_header_t err;
         oomaya_frame_init_error(&err, &c->hdr, OOMAYA_IPC_ERR_OPCODE);
