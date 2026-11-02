@@ -3,8 +3,8 @@
  * A second X connection plays dwm, writing root properties a live window
  * manager owns. It must never reach a real session, so it ignores the
  * inherited DISPLAY: only OOMAYA_TEST_X11_DISPLAY selects a server, and a
- * server with a window manager running is refused before anything is written.
- * Exits 77 when no test display is named. Run it under Xvfb.
+ * server advertising an EWMH window manager is refused before anything is
+ * written. Exits 77 when no test display is named. Use tests/test-x11-bridge.sh.
  */
 #include <stdio.h>
 #include <stdint.h>
@@ -150,6 +150,8 @@ int main(void)
     }
     oomaya_state_init(&g_state);
 
+    /* A value left on a reused server must not satisfy X04. */
+    XDeleteProperty(g_wm, g_root, XInternAtom(g_wm, "_OOMAYA_TAG_MASK", False));
     set_cardinal("DWM_TAG_UPDATE", COUNTER_A - 1);
     set_cardinal("_NET_CURRENT_DESKTOP", DESKTOP);
     ASSERT_EQ("X01 bridge init", oomaya_x11_bridge_init(&g_state, &x11_fd), 0);
@@ -184,6 +186,23 @@ int main(void)
     set_cardinal("_NET_CURRENT_DESKTOP", DESKTOP + 1);
     ASSERT_EQ("X07 fence", fence(), 0);
     ASSERT_EQ("X07 desktop switch updates tag_mask",
+              oomaya_state_get_tag_mask(&g_state), 1u << (DESKTOP + 1));
+
+    /*
+     * Any client can write root properties, and a short format is not a long.
+     * Four bytes fill what a 1-long read returns, so an unchecked read gets the
+     * small value below rather than an out-of-range one it would drop anyway.
+     */
+    {
+        unsigned char bytes[4] = { 5, 0, 0, 0 };
+
+        XChangeProperty(g_wm, g_root,
+                        XInternAtom(g_wm, "_NET_CURRENT_DESKTOP", False),
+                        XA_CARDINAL, 8, PropModeReplace, bytes, 4);
+        XSync(g_wm, False);
+    }
+    ASSERT_EQ("X08 fence", fence(), 0);
+    ASSERT_EQ("X08 format-8 property is ignored",
               oomaya_state_get_tag_mask(&g_state), 1u << (DESKTOP + 1));
 
     oomaya_x11_bridge_destroy();

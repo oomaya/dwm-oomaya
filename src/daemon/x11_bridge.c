@@ -120,7 +120,8 @@ refresh_tag_mask(void)
         || data == NULL)
         return;
 
-    if (nitems > 0) {
+    /* Any client can write this property; only format 32 yields a long. */
+    if (fmt == 32 && nitems > 0) {
         unsigned long val = *(unsigned long *)data;
         if (val < 32)
             oomaya_state_set_tag_mask(g_bridge.state, (1u << val));
@@ -370,8 +371,9 @@ oomaya_x11_kill_window(uint32_t xid)
 }
 
 /*
- * oomaya_x11_sync_state() — Mirror current state_cache values into X11 root atoms.
- * Called after every fast-path IPC mutation so legacy tools see fresh values.
+ * oomaya_x11_sync_state() — Mirror state_cache into private _OOMAYA_* root atoms.
+ * Runs only after fast-path IPC mutations, so it records the last IPC request,
+ * not dwm's live state. Read _NET_CURRENT_DESKTOP for the current tag.
  */
 void
 oomaya_x11_sync_state(void)

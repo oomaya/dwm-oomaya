@@ -16,8 +16,8 @@ versions from `config.mk`.
   version before payload length.
 - `dwm-oomayad` treats `DWM_TAG_UPDATE` as a change signal and re-reads
   `_NET_CURRENT_DESKTOP`, so a client tag change no longer corrupts the reported
-  tag mask. The daemon no longer writes `DWM_TAG_UPDATE`; it publishes its mask
-  on the new private root atom `_OOMAYA_TAG_MASK`.
+  tag mask. The daemon no longer writes `DWM_TAG_UPDATE`; it records the mask of
+  its last IPC change on the new private root atom `_OOMAYA_TAG_MASK`.
 
 ## [0.7.0] - 2026-09-10
 
