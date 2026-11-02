@@ -47,11 +47,12 @@ case "${1:-status}" in
         if [ -f "$cache_file" ]; then
             age=$(( $(date +%s) - $(stat -c %Y "$cache_file" 2>/dev/null || echo 0) ))
             if [ "$age" -gt "$ttl" ]; then
-                ( fetch_compact ) &
+                # The bar reads this output; holding the pipe would make it wait.
+                ( fetch_compact ) >/dev/null 2>&1 &
             fi
             sed 's/\xef\xb8\x8f//g; s/\xef\xb8\x8e//g' "$cache_file"
         else
-            ( fetch_compact ) &
+            ( fetch_compact ) >/dev/null 2>&1 &
             printf '\342\230\201 --\n'
         fi
         ;;
