@@ -26,6 +26,12 @@ versions from `config.mk`.
 - `dwm-oomayad` refuses `IPC_CMD_WM_TOGGLE_TAG` and `IPC_CMD_WM_SET_LAYOUT` with
   `ERR_OPCODE`. It used to report success without changing dwm, so `oomaya-ctl
   toggleview`, `oomaya-ctl setlayout`, and `dwm-msg` now fail for these.
+- `oomaya-ctl watch [audio|tag|layout|focus]...` prints daemon events as JSON
+  lines. `dwm-status` uses it for audio when the daemon can read the sink, and
+  otherwise runs `pactl subscribe` as before.
+- `dwm-oomayad` drops a client that stops reading, keeps a reused fd from
+  receiving another client's reply, survives `EINTR` on client reads, and no
+  longer wakes every 200 ms when idle.
 - `dwm-status` no longer waits for `dwm-weather` to fetch. With a stale cache, every
   bar update waited for `curl`, about 300 ms here and up to 3 seconds offline.
 - `oomaya-ctl` gives up after 1 second on a stalled daemon.

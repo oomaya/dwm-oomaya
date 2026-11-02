@@ -145,6 +145,10 @@ volume\ *)
 	[ ! -f "$AUDIO_TEST_DIR/ctl.volume-fails" ] || exit 1
 	echo OK
 	;;
+"watch audio")
+	[ -f "$AUDIO_TEST_DIR/ctl.watch" ] || exit 1
+	exec tail -n +1 -f "$AUDIO_TEST_DIR/ctl.watch"
+	;;
 esac
 SH
 cat >"$work/bin/pactl" <<'SH'
@@ -172,7 +176,7 @@ printf '#!/bin/sh\nexec sleep 60\n' >"$work/bin/udevadm"
 chmod +x "$work"/bin/*
 
 reset_calls() {
-	rm -f "$work/ctl.audio" "$work/ctl.volume-fails"
+	rm -f "$work/ctl.audio" "$work/ctl.volume-fails" "$work/ctl.watch"
 	: >"$work/ctl.calls"
 	: >"$work/pactl.calls"
 	: >"$work/notify.calls"
@@ -281,6 +285,49 @@ grep -q 'VOL muted' "$DWM_STATUS_TEST_LOG" || fail 'bar lost mute with an older 
 reset_calls
 status_once
 grep -q 'VOL muted' "$DWM_STATUS_TEST_LOG" || fail 'bar did not fall back to pactl'
+
+# The daemon's event stream replaces pactl subscribe and per-event reads.
+reset_calls
+printf '{"volume":64,"muted":false}\n' >"$work/ctl.audio"
+printf '{"event":"audio","volume":33,"muted":false}\n' >"$work/ctl.watch"
+: >"$DWM_STATUS_TEST_LOG"
+DISPLAY=:199 PATH="$work/bin:/usr/bin:/bin" "$repo/scripts/dwm-status" &
+status_pid=$!
+wait_for_bar() {
+	for _ in {1..300}; do
+		grep -q "$1" "$DWM_STATUS_TEST_LOG" && return 0
+		sleep 0.01
+	done
+	fail "bar never showed $1"
+}
+wait_for_bar 'VOL 33%'
+audio_reads=$(grep -c -- '-j audio' "$work/ctl.calls")
+printf '{"event":"audio","volume":34,"muted":true}\n' >>"$work/ctl.watch"
+wait_for_bar 'VOL muted'
+printf '{"event":"audio","volume":35,"muted":false}\n' >>"$work/ctl.watch"
+wait_for_bar 'VOL 35%'
+[[ $(grep -c -- '-j audio' "$work/ctl.calls") -eq $audio_reads ]] ||
+	fail 'bar read audio again despite the event stream'
+if grep -q subscribe "$work/pactl.calls"; then
+	fail 'bar ran pactl subscribe beside the event stream'
+fi
+kill -TERM "$status_pid" 2>/dev/null || true
+wait "$status_pid" 2>/dev/null || true
+status_pid=
+
+# An older daemon answers audio but cannot watch: the bar must still get events.
+reset_calls
+printf '{"volume":64,"muted":false}\n' >"$work/ctl.audio"
+DISPLAY=:199 PATH="$work/bin:/usr/bin:/bin" "$repo/scripts/dwm-status" &
+status_pid=$!
+for _ in {1..300}; do
+	grep -q subscribe "$work/pactl.calls" && break
+	sleep 0.01
+done
+grep -q subscribe "$work/pactl.calls" || fail 'no pactl subscribe after watch failed'
+kill -TERM "$status_pid" 2>/dev/null || true
+wait "$status_pid" 2>/dev/null || true
+status_pid=
 
 # ── dwm-keybind-exec ─────────────────────────────────────────────────────────
 
