@@ -16,7 +16,7 @@
  *   kill                        Close focused client window
  *   cycle-monitor               Cycle active monitor
  *   power, get-power            Query system power status
- *   audio, get-audio            Query audio volume level
+ *   audio, get-audio            Query audio volume and mute state
  *   volume <0-100>              Set audio volume level
  *   help, --help, -h            Show this help message
  */
@@ -29,6 +29,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <sys/un.h>
 #include <sys/uio.h>
 
@@ -61,7 +62,7 @@ static void print_usage(const char *prog)
         "  kill                        Close currently focused window\n"
         "  cycle-monitor               Switch focus to next physical monitor\n"
         "  power, get-power            Query power / battery profile\n"
-        "  audio, get-audio            Query system audio volume\n"
+        "  audio, get-audio            Query system audio volume and mute\n"
         "  volume <0-100>              Set system audio volume\n",
         prog);
 }
@@ -171,6 +172,11 @@ int main(int argc, char **argv)
         perror("oomaya-ctl: socket");
         return EXIT_FAILURE;
     }
+
+    /* A stalled daemon must not freeze a volume key or the status bar. */
+    struct timeval io_timeout = { .tv_sec = 1, .tv_usec = 0 };
+    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &io_timeout, sizeof(io_timeout));
+    setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &io_timeout, sizeof(io_timeout));
 
     struct sockaddr_un addr;
     memset(&addr, 0, sizeof(addr));
@@ -368,11 +374,19 @@ int main(int argc, char **argv)
         }
     } else if (opcode == IPC_CMD_SYS_GET_AUDIO) {
         int32_t aud = 0;
+        int32_t muted = -1; /* an older daemon sends volume only */
         if (read_accum >= sizeof(aud)) memcpy(&aud, resp_buf, sizeof(aud));
-        if (json_mode) {
+        if (read_accum >= 2 * sizeof(aud)) {
+            memcpy(&muted, resp_buf + sizeof(aud), sizeof(muted));
+        }
+        if (json_mode && muted >= 0) {
+            fprintf(stdout, "{\"volume\":%d,\"muted\":%s}\n", (int)aud,
+                    muted ? "true" : "false");
+        } else if (json_mode) {
             fprintf(stdout, "{\"volume\":%d}\n", (int)aud);
         } else {
-            fprintf(stdout, "Volume: %d%%\n", (int)aud);
+            fprintf(stdout, "Volume: %d%%%s\n", (int)aud,
+                    muted > 0 ? " (muted)" : "");
         }
     } else {
         /* Generic mutation success */

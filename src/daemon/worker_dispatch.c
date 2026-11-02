@@ -62,19 +62,23 @@ static int32_t query_power(void) {
     return (ret >= 0) ? ret : 100;
 }
 
-static int32_t query_audio_volume(void) {
+/* Reads the default sink. Returns -1 when there is no answer, so that clients
+ * can fall back instead of showing volume 0. */
+static int query_audio(int32_t *vol, int32_t *muted) {
     FILE *p = popen("wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null", "r");
     if (!p) return -1;
     char buf[128];
-    int32_t vol = -1;
+    int rc = -1;
     if (fgets(buf, sizeof(buf), p)) {
         float fval = 0.0f;
         if (sscanf(buf, "Volume: %f", &fval) == 1) {
-            vol = (int32_t)(fval * 100.0f + 0.5f);
+            *vol = (int32_t)(fval * 100.0f + 0.5f);
+            *muted = (strstr(buf, "[MUTED]") != NULL) ? 1 : 0;
+            rc = 0;
         }
     }
     pclose(p);
-    return (vol >= 0) ? vol : 0;
+    return rc;
 }
 
 static int32_t set_audio_volume(int32_t vol) {
@@ -102,9 +106,11 @@ oomaya_default_dispatch(oomaya_task_t *task, oomaya_wm_state_t *state)
         break;
     }
     case IPC_CMD_SYS_GET_AUDIO: {
-        int32_t aud = query_audio_volume();
+        /* [volume:4][muted:4]. Volume stays first for older clients. */
+        int32_t aud[2] = { -1, 0 };
+        if (query_audio(&aud[0], &aud[1]) != 0) task->status = -1;
         task->resp_len = sizeof(aud);
-        memcpy(task->resp_data, &aud, sizeof(aud));
+        memcpy(task->resp_data, aud, sizeof(aud));
         break;
     }
     case IPC_CMD_SYS_SET_VOLUME: {
