@@ -88,6 +88,34 @@ kill -TERM "$daemon_pid"
 wait "$daemon_pid" 2>/dev/null || true
 daemon_pid=
 
+# A response without a body must fail, so that scripts fall back.
+if command -v python3 >/dev/null 2>&1; then
+	mkdir -p "$work/fake"
+	python3 -I - "$work/fake/ipc.sock" >"$work/fake.ready" <<'PY' &
+import socket
+import sys
+
+server = socket.socket(socket.AF_UNIX)
+server.bind(sys.argv[1])
+server.listen(1)
+print("ready", flush=True)
+client, _ = server.accept()
+request = client.recv(64)
+client.sendall(request[:12] + bytes(4))
+client.close()
+PY
+	daemon_pid=$!
+	for _ in {1..200}; do
+		[[ -s $work/fake.ready ]] && break
+		sleep 0.01
+	done
+	if out=$("$ctl" --socket "$work/fake/ipc.sock" -j audio 2>/dev/null); then
+		fail "empty audio response succeeded: $out"
+	fi
+	wait "$daemon_pid" 2>/dev/null || true
+	daemon_pid=
+fi
+
 # ── Stubs for script consumers ───────────────────────────────────────────────
 
 cat >"$work/bin/oomaya-ctl" <<'SH'

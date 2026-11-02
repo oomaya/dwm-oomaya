@@ -375,7 +375,11 @@ int main(int argc, char **argv)
     } else if (opcode == IPC_CMD_SYS_GET_AUDIO) {
         int32_t aud = 0;
         int32_t muted = -1; /* an older daemon sends volume only */
-        if (read_accum >= sizeof(aud)) memcpy(&aud, resp_buf, sizeof(aud));
+        if (read_accum < sizeof(aud)) {
+            fprintf(stderr, "oomaya-ctl: incomplete audio response\n");
+            return EXIT_FAILURE;
+        }
+        memcpy(&aud, resp_buf, sizeof(aud));
         if (read_accum >= 2 * sizeof(aud)) {
             memcpy(&muted, resp_buf + sizeof(aud), sizeof(muted));
         }
