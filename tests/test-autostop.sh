@@ -166,7 +166,22 @@ while :; do
 done
 EOF
 
-chmod +x "$work/bin/systemctl" "$work/bin/loginctl" "$work/bin/id" "$work/bin/dwm-status"
+# autostop.sh signals real processes by name, so keep it away from the invoking
+# user's live daemons and record the request. Other names stay real because
+# these cases rely on status processes they started.
+cat >"$work/bin/pkill" <<'EOF'
+#!/bin/sh
+case " $* " in
+*" -x dwm-oomayad "* | *" -x dunst "*)
+	printf '%s\n' "$*" >>"${TEST_LOG%.log}.pkill"
+	exit 0
+	;;
+esac
+exec /usr/bin/pkill "$@"
+EOF
+
+chmod +x "$work/bin/systemctl" "$work/bin/loginctl" "$work/bin/id" "$work/bin/dwm-status" \
+	"$work/bin/pkill"
 
 run_case() {
 	case_name=$1
@@ -178,6 +193,10 @@ run_case() {
 }
 
 run_case normal env XDG_SESSION_ID=42
+if ! grep -Fq -- '-x dwm-oomayad' "$work/normal.pkill"; then
+	printf '%s\n' 'autostop must stop dwm-oomayad on session exit' >&2
+	exit 1
+fi
 cat >"$work/normal.expected" <<EOF
 loginctl show-session self -p Id --value
 loginctl show-session 42 -p Name -p Type -p Class -p Active -p Display
