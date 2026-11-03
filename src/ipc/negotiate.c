@@ -10,7 +10,8 @@
  *   ────────────  ─────────  ──────────────────────────────────────────────
  *   0x0101–0x0106  WM        Main thread fast-path  (<35 µs)
  *   0x0107         WM/RandR  Worker pool offload     (1–5 ms)
- *   0x0201–0x0204  SYS       Worker pool offload     (1–15 ms)
+ *   0x0201–0x0202  SYS       Worker pool offload     (1–15 ms)
+ *   0x0203–0x0204  SYS       Retired (audio) — fast-path ERR_OPCODE
  *   0x0301–0x0303  SIG       N/A (server-emitted signals)
  *
  * V1 <-> V2 transformer notes (Phase 1 — single-version system):
@@ -124,9 +125,9 @@ oomaya_neg_classify(const oomaya_ipc_header_t *hdr)
         switch (hdr->msg_id) {
         case IPC_CMD_SYS_GET_POWER:
         case IPC_CMD_SYS_SET_POWER:
-        case IPC_CMD_SYS_GET_AUDIO:
-        case IPC_CMD_SYS_SET_VOLUME:
             return 1;
+        /* 0x0203/0x0204 (retired audio) fall through to -1 so the reactor
+         * refuses them on the fast path without waking a worker. */
         default:
             return -1;
         }

@@ -92,6 +92,18 @@ kill "$tag_pid" 2>/dev/null || true
 wait "$tag_pid" 2>/dev/null || true
 tag_pid=
 
+# Bare watch (no filter) defaults to WATCH_ALL: tag and focus both arrive.
+"$repo/tools/oomaya-ctl" watch >"$work/all.out" 2>&1 &
+tag_pid=$!
+sleep 0.05
+"$repo/tools/oomaya-ctl" view 2 >/dev/null
+"$repo/tools/oomaya-ctl" focus 7 >/dev/null
+wait_for_line '{"event":"tag","mask":2}' "$work/all.out"
+wait_for_line '{"event":"focus","window":7}' "$work/all.out"
+kill "$tag_pid" 2>/dev/null || true
+wait "$tag_pid" 2>/dev/null || true
+tag_pid=
+
 # Stop from idle must be prompt, and watch must report the loss.
 kill -TERM "$daemon_pid"
 wait "$daemon_pid" 2>/dev/null || true

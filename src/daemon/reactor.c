@@ -461,10 +461,16 @@ handle_eventfd(struct oomaya_reactor *r, int evfd)
         resp.magic       = OOMAYA_IPC_MAGIC;
         resp.client_ver  = OOMAYA_IPC_CURRENT_VER;
         resp.target_ver  = completed.target_ver;
-        resp.msg_type    = (completed.status == 0)
-                           ? (uint16_t)OOMAYA_MSG_RESPONSE
-                           : (uint16_t)OOMAYA_MSG_ERROR;
         resp.msg_id      = completed.msg_id;
+        if (completed.status != 0) {
+            /* Wire rule: an error frame carries its oomaya_ipc_err_t in
+             * payload_len and has no body. */
+            resp.msg_type    = (uint16_t)OOMAYA_MSG_ERROR;
+            resp.payload_len = (uint32_t)completed.status;
+            send_response(r, c, &resp, NULL, 0);
+            continue;
+        }
+        resp.msg_type    = (uint16_t)OOMAYA_MSG_RESPONSE;
         resp.payload_len = completed.resp_len;
 
         send_response(r, c, &resp, completed.resp_data, completed.resp_len);

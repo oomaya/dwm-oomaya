@@ -254,12 +254,6 @@ t09_worker_pool_opcodes(void)
     h.msg_id = IPC_CMD_SYS_SET_POWER;
     ASSERT_EQ("SYS_SET_POWER → offload",   oomaya_neg_classify(&h), 1);
 
-    h.msg_id = IPC_CMD_SYS_GET_AUDIO;
-    ASSERT_EQ("SYS_GET_AUDIO → offload",   oomaya_neg_classify(&h), 1);
-
-    h.msg_id = IPC_CMD_SYS_SET_VOLUME;
-    ASSERT_EQ("SYS_SET_VOLUME → offload",  oomaya_neg_classify(&h), 1);
-
     /* Fast-path ops must return 0 */
     h.msg_id = IPC_CMD_WM_VIEW_TAG;
     ASSERT_EQ("WM_VIEW_TAG → fast (0)",    oomaya_neg_classify(&h), 0);
@@ -281,6 +275,13 @@ t10_unknown_opcode(void)
 
     h.msg_id = 0x0000u;
     ASSERT_EQ("unknown 0x0000 → -1", oomaya_neg_classify(&h), -1);
+
+    /* Retired audio opcodes are refused, never offloaded to a worker. */
+    h.msg_id = 0x0203u;
+    ASSERT_EQ("retired 0x0203 (GET_AUDIO) → -1",  oomaya_neg_classify(&h), -1);
+
+    h.msg_id = 0x0204u;
+    ASSERT_EQ("retired 0x0204 (SET_VOLUME) → -1", oomaya_neg_classify(&h), -1);
 }
 
 static void

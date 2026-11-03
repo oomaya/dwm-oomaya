@@ -38,6 +38,12 @@ test_dispatch(oomaya_task_t *task, oomaya_wm_state_t *state)
         struct timespec ts = { .tv_sec = 0, .tv_nsec = 3000000 };
         nanosleep(&ts, NULL);
     }
+    /* A worker that fails reports an oomaya_ipc_err_t and no body. */
+    if (task->opcode == IPC_CMD_WM_CYCLE_MONITOR) {
+        task->status   = OOMAYA_IPC_ERR_INTERNAL;
+        task->resp_len = 0;
+        return;
+    }
     /* Simulate worker processing SYS_GET_POWER (battery % = 95) */
     int32_t val = 95;
     task->status = 0;
@@ -244,6 +250,65 @@ test_unknown_opcode_stays_connected(const struct sockaddr_un *addr)
     ASSERT_EQ("T04 msg_id echoed", err.msg_id, 0x3004);
     ASSERT_EQ("T04 ERR_OPCODE", (int32_t)err.payload_len, OOMAYA_IPC_ERR_OPCODE);
     ASSERT_EQ("T04 connection still usable", get_state_mask(fd, 0x3005), 0x1234);
+    close(fd);
+}
+
+/* T13: retired audio opcodes are refused on the fast path. test_dispatch
+ * would answer them with success, so any reply but ERR_OPCODE means they
+ * reached a worker. */
+static void
+test_retired_audio_opcodes_refused(const struct sockaddr_un *addr)
+{
+    static const uint16_t ops[] = { 0x0203, 0x0204 };
+    oomaya_ipc_header_t req, err;
+    char lbl[64];
+    size_t i;
+    int fd = client_connect(addr);
+
+    ASSERT_EQ("T13 connect", fd >= 0, 1);
+    if (fd < 0) return;
+
+    for (i = 0; i < sizeof(ops) / sizeof(ops[0]); i++) {
+        uint16_t op = ops[i];
+        uint16_t id = (uint16_t)(0x3100u + i);
+
+        memset(&err, 0, sizeof(err));
+        oomaya_frame_init_request(&req, op, id, sizeof(op));
+        snprintf(lbl, sizeof(lbl), "T13 0x%04X send", op);
+        ASSERT_EQ(lbl, send_frame(fd, &req, &op, sizeof(op)), 0);
+        snprintf(lbl, sizeof(lbl), "T13 0x%04X error frame", op);
+        ASSERT_EQ(lbl, recv_exact(fd, &err, sizeof(err)), 0);
+        snprintf(lbl, sizeof(lbl), "T13 0x%04X msg_type", op);
+        ASSERT_EQ(lbl, err.msg_type, (uint16_t)OOMAYA_MSG_ERROR);
+        snprintf(lbl, sizeof(lbl), "T13 0x%04X msg_id echoed", op);
+        ASSERT_EQ(lbl, err.msg_id, id);
+        snprintf(lbl, sizeof(lbl), "T13 0x%04X ERR_OPCODE", op);
+        ASSERT_EQ(lbl, (int32_t)err.payload_len, OOMAYA_IPC_ERR_OPCODE);
+    }
+    ASSERT_EQ("T13 connection still usable", get_state_mask(fd, 0x3110), 0x1234);
+    close(fd);
+}
+
+/* T14: a worker failure becomes an error frame with the code in payload_len
+ * and no body, so the next reply on the connection stays in sync. */
+static void
+test_worker_error_frame(const struct sockaddr_un *addr)
+{
+    oomaya_ipc_header_t req, err;
+    uint16_t op = IPC_CMD_WM_CYCLE_MONITOR;
+    int fd = client_connect(addr);
+
+    ASSERT_EQ("T14 connect", fd >= 0, 1);
+    if (fd < 0) return;
+
+    memset(&err, 0, sizeof(err));
+    oomaya_frame_init_request(&req, op, 0x3200, sizeof(op));
+    ASSERT_EQ("T14 send", send_frame(fd, &req, &op, sizeof(op)), 0);
+    ASSERT_EQ("T14 error frame received", recv_exact(fd, &err, sizeof(err)), 0);
+    ASSERT_EQ("T14 msg_type", err.msg_type, (uint16_t)OOMAYA_MSG_ERROR);
+    ASSERT_EQ("T14 msg_id echoed", err.msg_id, 0x3200);
+    ASSERT_EQ("T14 ERR_INTERNAL", (int32_t)err.payload_len, OOMAYA_IPC_ERR_INTERNAL);
+    ASSERT_EQ("T14 no stray body", get_state_mask(fd, 0x3201), 0x1234);
     close(fd);
 }
 
@@ -482,11 +547,21 @@ main(void)
     unlink(sock_path);
 
     listen_fd = socket(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
+    if (listen_fd < 0) {
+        perror("socket");
+        return 1;
+    }
     memset(&addr, 0, sizeof(addr));
     addr.sun_family = AF_UNIX;
     snprintf(addr.sun_path, sizeof(addr.sun_path), "%s", sock_path);
-    bind(listen_fd, (struct sockaddr *)&addr, sizeof(addr));
-    listen(listen_fd, 4);
+    /* Every later test talks to this socket; without it they only hang. */
+    if (bind(listen_fd, (struct sockaddr *)&addr, sizeof(addr)) != 0 ||
+        listen(listen_fd, 4) != 0) {
+        perror("bind/listen");
+        close(listen_fd);
+        unlink(sock_path);
+        return 1;
+    }
 
     oomaya_state_init(&state);
     oomaya_state_set_tag_mask(&state, 0x1234);
@@ -556,6 +631,8 @@ main(void)
                     OOMAYA_IPC_ERR_PAYLOAD);
     test_reconnect_after_oversize_is_healthy(&addr);
     test_unknown_opcode_stays_connected(&addr);
+    test_retired_audio_opcodes_refused(&addr);
+    test_worker_error_frame(&addr);
     bad = violation_req(OOMAYA_MSG_ERROR, 600, 0x4003);
     check_violation("T05 oversize ERROR frame", &addr, &bad, bad.payload_len,
                     OOMAYA_IPC_ERR_PAYLOAD);

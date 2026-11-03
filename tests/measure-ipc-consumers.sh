@@ -6,6 +6,10 @@ set -euo pipefail
 # the real sink. The numbers compare process cost and event handling. They do
 # not include PipeWire's own latency.
 #
+# Historical: dwm-volume and dwm-status now call pactl directly and the daemon
+# carries no audio, so legacy and daemon modes run the same volume path. Kept
+# to record the PR #24 baseline, not to compare the two.
+#
 # Usage: tests/measure-ipc-consumers.sh legacy|daemon [trials] [idle-seconds]
 # Run through scripts/run-tests. It needs a built dwm-oomayad and tools/oomaya-ctl.
 

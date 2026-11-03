@@ -77,8 +77,8 @@ typedef enum {
     /* SYS namespace — worker-pool offload (1–15 ms) */
     IPC_CMD_SYS_GET_POWER     = 0x0201,
     IPC_CMD_SYS_SET_POWER     = 0x0202,
-    IPC_CMD_SYS_GET_AUDIO     = 0x0203,
-    IPC_CMD_SYS_SET_VOLUME    = 0x0204,
+    /* 0x0203, 0x0204: retired audio opcodes (GET_AUDIO, SET_VOLUME). Audio is
+     * not a WM concern; the daemon answers ERR_OPCODE. Do not reuse. */
 
     /* Signals emitted by daemon to subscribers. OOMAYA_MSG_SIGNAL frames with
      * msg_id 0 and body [opcode:2][value:4]. */

@@ -79,15 +79,20 @@ oomaya_default_dispatch(oomaya_task_t *task, oomaya_wm_state_t *state)
     }
     case IPC_CMD_WM_CYCLE_MONITOR: {
         int rc = system("xdotool key Super+period >/dev/null 2>&1");
-        task->status = (rc == 0) ? 0 : -1;
+        if (rc != 0) {
+            task->status   = OOMAYA_IPC_ERR_INTERNAL;
+            task->resp_len = 0;
+            break;
+        }
         task->resp_len = sizeof(int32_t);
         memcpy(task->resp_data, &task->status, sizeof(int32_t));
         break;
     }
+    /* A nonzero status is an oomaya_ipc_err_t; the reactor carries it in the
+     * error frame's payload_len with no body. */
     default: {
-        task->status   = -1;
-        task->resp_len = sizeof(int32_t);
-        memcpy(task->resp_data, &task->status, sizeof(int32_t));
+        task->status   = OOMAYA_IPC_ERR_OPCODE;
+        task->resp_len = 0;
         break;
     }
     }

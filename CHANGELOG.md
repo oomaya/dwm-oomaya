@@ -8,6 +8,11 @@ versions from `config.mk`.
 
 ### Changed
 
+- `dwm-oomayad` refuses the retired audio opcodes `0x0203` and `0x0204` with
+  `ERR_OPCODE` before they reach a worker thread. A failing worker request now
+  returns its error code in `payload_len` with no body, where it used to send
+  `payload_len` 4 and a body, so clients read a wrong error code.
+
 - IPC v1 frames are limited to 512 payload bytes. A larger `payload_len` now
   gets `ERR_PAYLOAD` and a disconnect instead of truncation and a desynced
   stream. A bad magic (`ERR_MALFORMED`) or unknown version (`ERR_VERSION`)
