@@ -106,6 +106,12 @@ done
 sleep 0.1
 [[ $(wc -l <"$work/watch.out") -eq 2 ]] || fail 'unchanged audio was reported'
 
+printf 'Volume: 0.41\n' >"$work/wpctl.output"
+printf "Event 'change' on si" >>"$work/events"
+sleep 0.2
+printf 'nk #1\n' >>"$work/events"
+wait_for_line '{"event":"audio","volume":41,"muted":false}'
+
 # A burst collapses instead of queueing one read per event.
 calls=$(wc -l <"$work/wpctl.calls")
 printf 'Volume: 0.43\n' >"$work/wpctl.output"

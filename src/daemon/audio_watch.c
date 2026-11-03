@@ -62,25 +62,39 @@ oomaya_audio_watch_stop(int fd, pid_t pid)
 }
 
 int
-oomaya_audio_watch_read(int fd)
+oomaya_audio_watch_read(int fd, char *carry)
 {
-    char    buf[1024];
-    int     changed = 0;
-    ssize_t n;
+    char        buf[OOMAYA_AUDIO_WATCH_CARRY + 1024];
+    const char *nl;
+    const char *tail;
+    size_t      clen, tlen;
+    int         changed = 0;
+    ssize_t     n;
 
     for (;;) {
-        n = read(fd, buf, sizeof(buf) - 1);
+        clen = strnlen(carry, OOMAYA_AUDIO_WATCH_CARRY - 1);
+        memcpy(buf, carry, clen);
+        n = read(fd, buf + clen, sizeof(buf) - clen - 1);
         if (n == 0) return -1;
         if (n < 0) {
             if (errno == EINTR) continue;
             if (errno == EAGAIN || errno == EWOULDBLOCK) return changed;
             return -1;
         }
-        buf[n] = '\0';
+        buf[clen + (size_t)n] = '\0';
         if (strstr(buf, " on sink") != NULL ||
             strstr(buf, " on server") != NULL ||
             strstr(buf, " on card") != NULL) {
             changed = 1;
         }
+        nl   = strrchr(buf, '\n');
+        tail = (nl != NULL) ? (nl + 1) : buf;
+        tlen = strlen(tail);
+        if (tlen >= OOMAYA_AUDIO_WATCH_CARRY) {
+            tail += tlen - (OOMAYA_AUDIO_WATCH_CARRY - 1);
+            tlen  = OOMAYA_AUDIO_WATCH_CARRY - 1;
+        }
+        memcpy(carry, tail, tlen);
+        carry[tlen] = '\0';
     }
 }

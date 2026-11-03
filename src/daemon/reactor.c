@@ -225,6 +225,7 @@ audio_source_start(struct oomaya_reactor *r)
     struct epoll_event ev;
 
     if (r->audio_fd >= 0) return;
+    r->audio_carry[0] = '\0';
     r->audio_fd = oomaya_audio_watch_start(&r->audio_pid);
     if (r->audio_fd < 0) {
         r->audio_pid = 0;
@@ -272,7 +273,7 @@ audio_source_stop(struct oomaya_reactor *r)
 static void
 handle_audio_readable(struct oomaya_reactor *r)
 {
-    int rc = oomaya_audio_watch_read(r->audio_fd);
+    int rc = oomaya_audio_watch_read(r->audio_fd, r->audio_carry);
 
     if (rc > 0) {
         audio_query(r);
