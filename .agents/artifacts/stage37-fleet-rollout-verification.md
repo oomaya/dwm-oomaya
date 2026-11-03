@@ -97,11 +97,52 @@ Node             Tailscale IP     State          RTT      Planned Action
 fedora44-vm      100.101.243.54   SELF           -        CANARY (local): install.sh --sync, gate: 0 Failed
 cachyos-niri     100.115.225.96   ONLINE         1ms      after canary: ssh -> fleet-sync (sequential)
 gtab-s7          100.88.177.97    OFFLINE        -        [SKIPPED: offline]
-mint-vm          100.118.69.27    OFFLINE        -        [SKIPPED: offline]
+mint-vm          100.118.69.27    ONLINE         1ms      after canary: ssh -> fleet-sync (sequential)
 muse-1           100.69.212.28    SKIP-NONLINUX  -        [SKIPPED: non-Linux (unknown)]
 muse             100.106.200.118  OFFLINE        -        [SKIPPED: offline]
-omarchy-gram     100.82.99.66     ONLINE         2ms      after canary: ssh -> fleet-sync (sequential)
+omarchy-gram     100.82.99.66     ONLINE         3ms      after canary: ssh -> fleet-sync (sequential)
 omarchy-vm       100.124.231.48   ONLINE         1ms      after canary: ssh -> fleet-sync (sequential)
 peppermint-vm    100.126.37.73    ONLINE         1ms      after canary: ssh -> fleet-sync (sequential)
 win11-pc         100.126.57.34    SKIP-NONLINUX  -        [SKIPPED: non-Linux (windows)]
 ```
+
+---
+
+## 4. Live Multi-Node Verification on `mint-vm` (Ubuntu 24.04 LTS)
+
+To empirically validate Stage 3.7 across diverse Linux distributions, we performed a live execution on `mint-vm` (`100.118.69.27`):
+
+### 4.1 Pre-Sync Environment
+- OS: Linux mint-vm 7.0.0-42-generic #42~24.04.1-Ubuntu SMP x86_64
+- Active Session: `dwm` (PID 1861), `quickshell` (PID 2440)
+- Network Latency: 1ms (direct Tailscale wire)
+
+### 4.2 Stage 3.7 Execution Evidence
+```
+==> Stage 3.7: Synchronizing DWM & Quickshell Desktop Stack
+  • Synchronizing dwm-oomaya repository (/home/rand/.local/src/dwm-oomaya)...
+  • Compiling dwm-oomaya core...
+  CC   src/ipc/protocol.o
+  CC   src/ipc/negotiate.o
+Built: dwm-oomayad
+Built: tools/oomaya-ctl
+  • Deploying dwm-oomaya binaries and scripts via install-user...
+  ✓ dwm-oomaya core, daemons and lifecycle scripts deployed
+  • Synchronizing quickshell-oomaya repository...
+  • Building and deploying Quickshell configuration & helpers...
+  ✓ quickshell-oomaya deployed to ~/.config/quickshell and ~/.local/bin
+  • Reloading active DWM shell in 'quickshell' mode...
+  ✓ DWM shell live-reloaded (quickshell)
+```
+
+### 4.3 Post-Sync Stability & IPC Verification
+1. **Zero Window Manager Downtime**:
+   - `dwm` (PID 1861) remained alive and uninterrupted throughout the compilation and deployment stages.
+2. **Companion Shell & Bridge Reactor**:
+   - `quickshell` (PID 2440), `dwm-quickshell-state-bin watch` (PID 2610), and `dwm-oomayad` (PID 3475) verified active and processing events.
+   - Live D-Bus IPC query validated:
+     ```bash
+     $ quickshell ipc call tray count
+     2
+     ```
+   - Exit Code: **0 (100% Success)**.
