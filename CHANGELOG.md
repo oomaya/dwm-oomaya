@@ -6,6 +6,15 @@ versions from `config.mk`.
 
 ## [Unreleased]
 
+### Changed
+
+- IPC v1 frames are limited to 512 payload bytes. A larger `payload_len` now
+  gets `ERR_PAYLOAD` and a disconnect instead of truncation and a desynced
+  stream. A bad magic (`ERR_MALFORMED`) or unknown version (`ERR_VERSION`)
+  also disconnects, where it used to report `ERR_MALFORMED` and stay open.
+  When a header breaks several rules, magic is reported before version, and
+  version before payload length.
+
 ## [0.7.0] - 2026-09-10
 
 ### Changed

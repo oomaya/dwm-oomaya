@@ -42,6 +42,7 @@
 
 #include <stdint.h>
 #include <stdatomic.h>
+#include "oomaya_ipc.h"
 
 /* ── Ring geometry ──────────────────────────────────────────────────────── */
 
@@ -66,11 +67,11 @@ typedef struct {
     uint16_t target_ver;
     uint16_t opcode;
     uint32_t payload_len;
-    uint8_t  payload[512];
+    uint8_t  payload[OOMAYA_FRAME_BODY_MAX];
     /* Result container written by worker */
     int32_t  status;
     uint32_t resp_len;
-    uint8_t  resp_data[512];
+    uint8_t  resp_data[OOMAYA_FRAME_BODY_MAX];
 } oomaya_task_t;
 #endif /* OOMAYA_TASK_DEFINED */
 
