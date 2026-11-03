@@ -175,6 +175,7 @@ for object in drw.o dwm.o util.o tomlparser.o; do
 	install -Dm644 /dev/null "$TEST_REPO/$object"
 done
 install -Dm755 /bin/true "$TEST_REPO/dwm"
+install -Dm755 /bin/true "$TEST_REPO/tools/oomaya-ctl"
 mv "$TEST_REPO/config.h" "$TEST_REPO/config.h.saved"
 if make -C "$TEST_REPO" install-system \
 	DESTDIR="$WORK_DIR/stale-stage" >"$WORK_DIR/missing-input-install.log" 2>&1; then

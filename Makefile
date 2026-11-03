@@ -275,11 +275,11 @@ install-scripts:
 
 install-user:
 	@test -n "${USER_HOME}" || { echo "USER_HOME could not be determined." >&2; exit 1; }
-	@test "$$(id -u)" -ne 0 || { echo "Refusing to install user files as root. Run install-user as the target user." >&2; exit 1; }
 	@if [ -f dwm ] && [ ! -x tools/oomaya-ctl ]; then \
 		echo "oomaya-ctl is not built. Run make before install-user." >&2; \
 		exit 1; \
 	fi
+	@test "$$(id -u)" -ne 0 || { echo "Refusing to install user files as root. Run install-user as the target user." >&2; exit 1; }
 	@echo "==> Installing user files for ${OWNER}..."
 	@mkdir -p "${USER_HOME}/.local/bin"
 	@if [ -f dwm ]; then \

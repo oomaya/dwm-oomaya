@@ -43,7 +43,7 @@ jobs:
             "${required_packages[@]}" \
             diffutils inotify-tools jq \
             pkgconf-pkg-config ShellCheck shfmt \
-            xorg-x11-server-Xvfb
+            xorg-x11-server-Xvfb python3
 
       - name: Validate Fedora package map
         run: scripts/run-tests make check-fedora-packages
