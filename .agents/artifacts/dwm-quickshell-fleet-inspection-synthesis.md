@@ -18,6 +18,7 @@
 | **Task 3: 플릿 파이프라인 연계** | `dotfiles/install.sh` (3.7) | **0** | **Green** (master 푸시 완료) | Git Worktree 감지 버그(`-d` $\to$ `-e`) 해결(`1252842`) |
 | **플릿 실증 A (Ubuntu 24.04)** | `mint-vm` (`100.118.69.27`) | **0** | **LIVE PASS** (RTT 1ms) | `dwm` PID 1861 무중단, Quickshell 리로드, IPC 응답 정상 |
 | **플릿 실증 B (CachyOS/Arch)** | `cachyos-niri` (`100.115.225.96`) | **0** | **LIVE PASS** (RTT 1ms) | `dwm` PID 2309 무중단, `suckless` $\leftrightarrow$ `quickshell` 양방향 토글 완료 |
+| **플릿 실증 C (Debian 13)** | `peppermint-vm` (`100.126.37.73`) | **0** | **LIVE PASS** (RTT 1ms) | `dwm` PID 2057 무중단, `suckless` $\leftrightarrow$ `quickshell` 양방향 토글 완료 |
 
 ---
 
@@ -38,8 +39,9 @@
 ```mermaid
 flowchart TD
     Host["fedora44-vm (Dispatcher / Canary)\nFedora 44 / Local PR1 Worktree\nCI #197 100% Green"]
-    Host -->|"SSH (1ms)"| Mint["mint-vm\nUbuntu 24.04 LTS (Debian계열)\nActive: dwm (PID 1861) + Quickshell (PID 2440)\nStatus: 0s Downtime, IPC tray count 2"]
-    Host -->|"SSH (1ms)"| Cachy["cachyos-niri\nCachyOS Rolling (Arch계열)\nActive: dwm (PID 2309) + suckless\nStatus: 0s Downtime, Dual-Shell Toggle Verified"]
+    Host -->|"SSH (1ms)"| Mint["mint-vm\nUbuntu 24.04 LTS (Debian/Ubuntu 계열)\nActive: dwm (PID 1861) + Quickshell (PID 2440)\nStatus: 0s Downtime, IPC tray count 2"]
+    Host -->|"SSH (1ms)"| Cachy["cachyos-niri\nCachyOS Rolling (Arch 계열)\nActive: dwm (PID 2309) + suckless\nStatus: 0s Downtime, Dual-Shell Toggle Verified"]
+    Host -->|"SSH (1ms)"| Peppermint["peppermint-vm\nPeppermintOS / Debian 13 Trixie\nActive: dwm (PID 2057) + suckless\nStatus: 0s Downtime, Dual-Shell Toggle Verified"]
 ```
 
 1. **`mint-vm` (Debian/Ubuntu 계열)**:
@@ -50,11 +52,15 @@ flowchart TD
    - 누락되어 있던 동반 리포지토리 `quickshell-oomaya` 클론 및 `dotfiles` 동기화.
    - 활성 모드인 `suckless` 모드 감지 및 안전 리로드 확인.
    - `dwm-shell-mode quickshell` (PID 735899 구동, tray count 1) $\leftrightarrow$ `suckless` 양방향 무중단 전환 실증.
+3. **`peppermint-vm` (Debian 13 Trixie 계열)**:
+   - 동반 리포지토리 `quickshell-oomaya` 클론 및 `dotfiles` 최신화.
+   - 스테이지 3.7 컴파일 및 배포 실증: `dwm` (PID 2057) 무중단 세션 지속 확인.
+   - `dwm-shell-mode quickshell` (PID 1728264, tray count 1) $\leftrightarrow$ `suckless` (PID 1729102 Dunst 복구) 양방향 토글 완료.
 
 ---
 
 ## 4. 최종 결론 및 프로덕션 배포 준비 상태
 
-- **안정성 (Reliability)**: 로컬 멱등성, 원격 CI, 이기종 실기 노드(Ubuntu/Arch) 모두에서 Exit Code 0 달성.
+- **안정성 (Reliability)**: 로컬 멱등성, 원격 CI, 4대 주요 배포판 패밀리(Fedora, Ubuntu, Arch, Debian) 실기 노드 모두에서 Exit Code 0 달성.
 - **연속성 (Continuity)**: 라이브 세션 중 배포가 수행되어도 X11 윈도우 매니저(`dwm`)가 종료되지 않는 Sovereign 무중단 라이프사이클 확보.
-- **준비 상태**: 플릿 전체 노드(`omarchy-gram`, `omarchy-vm`, `peppermint-vm`)를 대상으로 한 전체 롤아웃(`fleet-sync --fleet`) 즉시 수행 가능.
+- **준비 상태**: 플릿 전체 노드(`omarchy-gram`, `omarchy-vm` 등) 대상 전체 무중단 롤아웃(`fleet-sync --fleet`) 즉시 수행 가능.

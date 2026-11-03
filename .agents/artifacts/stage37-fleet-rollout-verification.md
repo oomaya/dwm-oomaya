@@ -149,6 +149,48 @@ Built: tools/oomaya-ctl
 
 ---
 
+## 6. Live Multi-Node Verification on `peppermint-vm` (Debian 13 Trixie / PeppermintOS)
+
+To finalize cross-distro coverage, we performed live Stage 3.7 verification on `peppermint-vm` (`100.126.37.73`):
+
+### 6.1 Pre-Sync Environment
+- OS: Linux peppermint-vm 6.12.107+deb13-amd64 Debian x86_64
+- Active Session: `dwm` (PID 2057, running continuously since Oct 23)
+- Initial Shell Mode: `suckless`
+- Repository Setup: Cloned `quickshell-oomaya` (`~/.local/src/quickshell-oomaya`) and synchronized `dotfiles` (`1252842`).
+
+### 6.2 Stage 3.7 Execution Evidence
+```
+==> Stage 3.7: Synchronizing DWM & Quickshell Desktop Stack
+  • Synchronizing dwm-oomaya repository (/home/rand/.local/src/dwm-oomaya)...
+  • Compiling dwm-oomaya core...
+  CC   src/ipc/protocol.o
+  CC   src/ipc/negotiate.o
+Built: dwm-oomayad
+Built: tools/oomaya-ctl
+  • Deploying dwm-oomaya binaries and scripts via install-user...
+  ✓ dwm-oomaya core, daemons and lifecycle scripts deployed
+  • Synchronizing quickshell-oomaya repository...
+  • Building and deploying Quickshell configuration & helpers...
+  ✓ quickshell-oomaya deployed to ~/.config/quickshell and ~/.local/bin
+  • Reloading active DWM shell in 'suckless' mode...
+  ✓ DWM shell live-reloaded (suckless)
+```
+
+### 6.3 Post-Sync Stability & Dual-Shell Toggle Verification
+1. **Zero Window Manager Downtime**:
+   - `dwm` (PID 2057) maintained 100% session continuity throughout the compilation and installation stages.
+2. **Bi-Directional Shell Switching & IPC Continuity**:
+   - `dwm-shell-mode quickshell`: Spawned Quickshell (PID 1728264), D-Bus IPC query verified:
+     ```bash
+     $ quickshell ipc call tray count
+     1
+     ```
+   - `dwm-shell-mode suckless`: Gracefully unmapped and terminated Quickshell loop via the new reaping polling loop; restored Dunst (PID 1729102).
+   - Exit Code: **0 (100% Success)**.
+
+---
+
 ## 5. Live Multi-Node Verification on `cachyos-niri` (CachyOS Linux Rolling)
 
 Following `mint-vm`, we performed identical Stage 3.7 live verification on `cachyos-niri` (`100.115.225.96`):
@@ -189,4 +231,46 @@ Built: tools/oomaya-ctl
      1
      ```
    - `dwm-shell-mode suckless`: Gracefully unmapped and terminated Quickshell loop; restored suckless mode.
+   - Exit Code: **0 (100% Success)**.
+
+---
+
+## 6. Live Multi-Node Verification on `peppermint-vm` (Debian 13 Trixie / PeppermintOS)
+
+To finalize cross-distro coverage, we performed live Stage 3.7 verification on `peppermint-vm` (`100.126.37.73`):
+
+### 6.1 Pre-Sync Environment
+- OS: Linux peppermint-vm 6.12.107+deb13-amd64 Debian x86_64
+- Active Session: `dwm` (PID 2057, running continuously since Oct 23)
+- Initial Shell Mode: `suckless`
+- Repository Setup: Cloned `quickshell-oomaya` (`~/.local/src/quickshell-oomaya`) and synchronized `dotfiles` (`1252842`).
+
+### 6.2 Stage 3.7 Execution Evidence
+```
+==> Stage 3.7: Synchronizing DWM & Quickshell Desktop Stack
+  • Synchronizing dwm-oomaya repository (/home/rand/.local/src/dwm-oomaya)...
+  • Compiling dwm-oomaya core...
+  CC   src/ipc/protocol.o
+  CC   src/ipc/negotiate.o
+Built: dwm-oomayad
+Built: tools/oomaya-ctl
+  • Deploying dwm-oomaya binaries and scripts via install-user...
+  ✓ dwm-oomaya core, daemons and lifecycle scripts deployed
+  • Synchronizing quickshell-oomaya repository...
+  • Building and deploying Quickshell configuration & helpers...
+  ✓ quickshell-oomaya deployed to ~/.config/quickshell and ~/.local/bin
+  • Reloading active DWM shell in 'suckless' mode...
+  ✓ DWM shell live-reloaded (suckless)
+```
+
+### 6.3 Post-Sync Stability & Dual-Shell Toggle Verification
+1. **Zero Window Manager Downtime**:
+   - `dwm` (PID 2057) maintained 100% session continuity throughout the compilation and installation stages.
+2. **Bi-Directional Shell Switching & IPC Continuity**:
+   - `dwm-shell-mode quickshell`: Spawned Quickshell (PID 1728264), D-Bus IPC query verified:
+     ```bash
+     $ quickshell ipc call tray count
+     1
+     ```
+   - `dwm-shell-mode suckless`: Gracefully unmapped and terminated Quickshell loop via the new reaping polling loop; restored Dunst (PID 1729102).
    - Exit Code: **0 (100% Success)**.
