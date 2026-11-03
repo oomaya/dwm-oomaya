@@ -1,9 +1,9 @@
 # BLOCKER — Packet #011: Stale audio entries in `CHANGELOG.md` `[Unreleased]`
 
-- **Status**: OPEN — Tech Lead decision needed
-- **Raised**: 2026-11-03 KST (Packet #011 implementation)
+- **Status**: RESOLVED (Option A adopted by Tech Lead on 2026-11-03)
+- **Resolved**: 2026-11-03 KST (Packet #011 cleanup)
 - **Branch**: `codex/ipc-event-stream` (PR #24)
-- **Blocks**: Merging PR #24 with accurate release notes. This does **not** block the Packet #011 code commit.
+- **Resolution**: Stale unreleased audio daemon entries removed; `oomaya-ctl watch` entry scoped strictly to pure WM domains (`[tag|layout|focus]`).
 
 ---
 

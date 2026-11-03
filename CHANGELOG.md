@@ -22,18 +22,11 @@ versions from `config.mk`.
 - `make all` now builds `oomaya-ctl`, and `install-system` and `install-user`
   fail when it is missing. It was skipped silently before, so scripts never
   reached the daemon.
-- `oomaya-ctl -j audio` reports `{"volume":N,"muted":true|false}`. It exits
-  nonzero when the daemon cannot read the sink, where it used to report volume 0.
-  The `muted` field is absent with an older daemon. `IPC_CMD_SYS_GET_AUDIO` keeps
-  volume in its first four bytes.
-- `dwm-status` and `dwm-volume` read volume and mute from the daemon, and fall
-  back to `pactl` or `wpctl` when it is stopped or fails.
 - `dwm-oomayad` refuses `IPC_CMD_WM_TOGGLE_TAG` and `IPC_CMD_WM_SET_LAYOUT` with
   `ERR_OPCODE`. It used to report success without changing dwm, so `oomaya-ctl
   toggleview`, `oomaya-ctl setlayout`, and `dwm-msg` now fail for these.
-- `oomaya-ctl watch [audio|tag|layout|focus]...` prints daemon events as JSON
-  lines. `dwm-status` uses it for audio when the daemon can read the sink, and
-  otherwise runs `pactl subscribe` as before.
+- `oomaya-ctl watch [tag|layout|focus]...` prints daemon WM events as JSON
+  lines. With no filter arguments, it defaults to watching all three domains.
 - `dwm-oomayad` drops a client that stops reading, keeps a reused fd from
   receiving another client's reply, survives `EINTR` on client reads, and no
   longer wakes every 200 ms when idle.
