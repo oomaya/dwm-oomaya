@@ -136,6 +136,11 @@ tools:
 test-ipc:
 	$(MAKE) -f Makefile.ipc test_all
 
+check-ipc: test-ipc
+	status=0; tests/test-x11-bridge.sh || status=$$?; \
+		if [ "$$status" -eq 77 ]; then exit 0; fi; \
+		exit "$$status"
+
 clean:
 	rm -f dwm ${OBJ} *.orig *.rej
 	$(MAKE) -f Makefile.ipc clean || true
@@ -614,6 +619,7 @@ release-check: all
 	echo "==> Release archive validated."
 
 check-core: all
+	$(MAKE) check-ipc
 	$(MAKE) check-shell
 	$(MAKE) check-format
 	$(MAKE) check-build-config
@@ -657,7 +663,7 @@ check:
 	$(MAKE) all
 	$(MAKE) check-core
 
-.PHONY: clean all check check-core check-all check-appearance check-system check-accessibility check-build-config check-build-deps check-default-apps check-xdg-autostart check-dev-sync-install \
+.PHONY: clean all check check-core check-ipc check-all check-appearance check-system check-accessibility check-build-config check-build-deps check-default-apps check-xdg-autostart check-dev-sync-install \
 	check-test-runner \
 	check-display-profile check-display-setup check-fedora-packages check-packaging check-fedora-platform check-format check-install \
 	check-herdr-install check-install-manifest check-install-preservation check-lock \

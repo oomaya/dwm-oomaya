@@ -10,14 +10,16 @@
  *       _NET_ACTIVE_WINDOW    → update state_cache.focused_win
  *       _DWM_CURRENT_LAYOUT   → update state_cache.layout_idx
  *       _DWM_MONITOR_DESKTOPS → update state_cache.monitor_tags[]
- *       DWM_TAG_UPDATE        → update state_cache.tag_mask
+ *       DWM_TAG_UPDATE        → re-read _NET_CURRENT_DESKTOP (dwm's change
+ *                               counter is a signal, never a mask)
  *
  *   Outbound (IPC → X11):
  *     Direct sub-millisecond dispatch of EWMH ClientMessages to dwm:
  *       oomaya_x11_view_tag()      → _NET_CURRENT_DESKTOP
  *       oomaya_x11_focus_window()  → _NET_ACTIVE_WINDOW
  *       oomaya_x11_kill_window()   → WM_DELETE_WINDOW / XKillClient
- *       oomaya_x11_sync_state()    → Mirror state to root atoms
+ *       oomaya_x11_sync_state()    → Mirror state to private _OOMAYA_* atoms;
+ *                                    DWM_TAG_UPDATE has one writer: dwm
  *
  * Integration:
  *   XConnectionNumber(dpy) is added to the reactor's epoll set.
@@ -45,6 +47,7 @@ typedef struct {
     Atom              a_monitor_desktops;
     Atom              a_tag_update;
     Atom              a_oomaya_layout;
+    Atom              a_oomaya_tag_mask;
     Atom              a_net_current_desktop;
     Atom              a_net_active_window;
     Atom              a_wm_protocols;
@@ -99,6 +102,33 @@ layout_symbol_to_idx(const char *sym)
     return 0; /* unknown symbol → tile */
 }
 
+/* ── Root property readers ──────────────────────────────────────────────── */
+
+/* Refresh tag_mask from _NET_CURRENT_DESKTOP, dwm's published current tag. */
+static void
+refresh_tag_mask(void)
+{
+    Atom           type;
+    int            fmt;
+    unsigned long  nitems, after;
+    unsigned char *data = NULL;
+
+    if (XGetWindowProperty(g_bridge.dpy, g_bridge.root,
+                           g_bridge.a_net_current_desktop,
+                           0L, 1L, False, AnyPropertyType,
+                           &type, &fmt, &nitems, &after, &data) != Success
+        || data == NULL)
+        return;
+
+    /* Any client can write this property; dwm publishes a 32-bit CARDINAL. */
+    if (type == XA_CARDINAL && fmt == 32 && nitems > 0) {
+        unsigned long val = *(unsigned long *)data;
+        if (val < 32)
+            oomaya_state_set_tag_mask(g_bridge.state, (1u << val));
+    }
+    XFree(data);
+}
+
 /* ── Public API ─────────────────────────────────────────────────────────── */
 
 int
@@ -126,6 +156,7 @@ oomaya_x11_bridge_init(oomaya_wm_state_t *state, int *x11_fd_out)
     g_bridge.a_monitor_desktops    = XInternAtom(dpy, "_DWM_MONITOR_DESKTOPS", False);
     g_bridge.a_tag_update          = XInternAtom(dpy, "DWM_TAG_UPDATE",         False);
     g_bridge.a_oomaya_layout       = XInternAtom(dpy, "_OOMAYA_LAYOUT",         False);
+    g_bridge.a_oomaya_tag_mask     = XInternAtom(dpy, "_OOMAYA_TAG_MASK",       False);
     g_bridge.a_net_current_desktop = XInternAtom(dpy, "_NET_CURRENT_DESKTOP", False);
     g_bridge.a_net_active_window   = XInternAtom(dpy, "_NET_ACTIVE_WINDOW",   False);
     g_bridge.a_wm_protocols        = XInternAtom(dpy, "WM_PROTOCOLS",         False);
@@ -137,16 +168,7 @@ oomaya_x11_bridge_init(oomaya_wm_state_t *state, int *x11_fd_out)
     unsigned long nitems, after;
     unsigned char *data = NULL;
 
-    if (XGetWindowProperty(dpy, g_bridge.root, g_bridge.a_net_current_desktop,
-                           0L, 1L, False, AnyPropertyType,
-                           &type, &fmt, &nitems, &after, &data) == Success && data != NULL) {
-        unsigned long val = *(unsigned long *)data;
-        if (val < 32) {
-            oomaya_state_set_tag_mask(state, (1u << val));
-        }
-        XFree(data);
-        data = NULL;
-    }
+    refresh_tag_mask();
 
     if (XGetWindowProperty(dpy, g_bridge.root, g_bridge.a_net_active_window,
                            0L, 1L, False, AnyPropertyType,
@@ -200,20 +222,11 @@ oomaya_x11_process_events(void)
 
         pe = &ev.xproperty;
 
-        /* _NET_CURRENT_DESKTOP → update tag_mask */
-        if (pe->atom == g_bridge.a_net_current_desktop) {
-            if (XGetWindowProperty(g_bridge.dpy, g_bridge.root,
-                                   g_bridge.a_net_current_desktop,
-                                   0L, 1L, False, AnyPropertyType,
-                                   &type, &fmt, &nitems, &after, &data) == Success
-                && data != NULL) {
-                val = *(unsigned long *)data;
-                if (val < 32) {
-                    oomaya_state_set_tag_mask(g_bridge.state, (1u << val));
-                }
-                XFree(data);
-                data = NULL;
-            }
+        /* _NET_CURRENT_DESKTOP, or dwm's DWM_TAG_UPDATE change signal,
+         * whose value is a sequence counter → re-read the current tag */
+        if (pe->atom == g_bridge.a_net_current_desktop ||
+            pe->atom == g_bridge.a_tag_update) {
+            refresh_tag_mask();
         }
 
         /* _NET_ACTIVE_WINDOW → update focused_win */
@@ -239,20 +252,6 @@ oomaya_x11_process_events(void)
                 && data != NULL) {
                 oomaya_state_set_layout(g_bridge.state,
                     layout_symbol_to_idx((const char *)data));
-                XFree(data);
-                data = NULL;
-            }
-        }
-
-        /* DWM_TAG_UPDATE → update tag_mask */
-        else if (pe->atom == g_bridge.a_tag_update) {
-            if (XGetWindowProperty(g_bridge.dpy, g_bridge.root,
-                                   g_bridge.a_tag_update,
-                                   0L, 1L, False, AnyPropertyType,
-                                   &type, &fmt, &nitems, &after, &data) == Success
-                && data != NULL) {
-                val = *(unsigned long *)data;
-                oomaya_state_set_tag_mask(g_bridge.state, (uint32_t)val);
                 XFree(data);
                 data = NULL;
             }
@@ -372,8 +371,9 @@ oomaya_x11_kill_window(uint32_t xid)
 }
 
 /*
- * oomaya_x11_sync_state() — Mirror current state_cache values into X11 root atoms.
- * Called after every fast-path IPC mutation so legacy tools see fresh values.
+ * oomaya_x11_sync_state() — Mirror state_cache into private _OOMAYA_* root atoms.
+ * Runs only after fast-path IPC mutations, so it records the last IPC request,
+ * not dwm's live state. Read _NET_CURRENT_DESKTOP for the current tag.
  */
 void
 oomaya_x11_sync_state(void)
@@ -387,7 +387,7 @@ oomaya_x11_sync_state(void)
     tags   = (unsigned long)oomaya_state_get_tag_mask(g_bridge.state);
 
     XChangeProperty(g_bridge.dpy, g_bridge.root,
-                    g_bridge.a_tag_update, XA_CARDINAL, 32,
+                    g_bridge.a_oomaya_tag_mask, XA_CARDINAL, 32,
                     PropModeReplace, (unsigned char *)&tags, 1);
 
     /* Publish the numeric layout index for X11-native consumers.
