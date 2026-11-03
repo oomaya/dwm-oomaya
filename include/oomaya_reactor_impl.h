@@ -10,7 +10,6 @@
 #include "oomaya_rate.h"
 #include "oomaya_worker.h"
 #include "oomaya_state.h"
-#include "oomaya_audio_watch.h"
 
 typedef enum { CS_WANT_HDR = 0, CS_WANT_BODY, CS_READY } client_state_t;
 
@@ -41,17 +40,6 @@ struct oomaya_reactor {
     uint32_t              last_tag_mask;
     uint32_t              last_layout;
     uint32_t              last_focused;
-
-    /* Audio source, alive only while someone is subscribed */
-    int                   audio_fd;
-    pid_t                 audio_pid;
-    int                   audio_timer_fd; /* one-shot restart timer */
-    char                  audio_carry[OOMAYA_AUDIO_WATCH_CARRY];
-    int                   audio_query_pending;
-    int                   audio_query_again;
-    int                   audio_known;
-    int32_t               audio_volume;
-    int32_t               audio_muted;
 };
 
 #endif /* OOMAYA_REACTOR_IMPL_H */

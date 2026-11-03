@@ -84,8 +84,7 @@ typedef enum {
      * msg_id 0 and body [opcode:2][value:4]. */
     IPC_SIG_WM_LAYOUT_CHANGED = 0x0301,
     IPC_SIG_WM_TAG_CHANGED    = 0x0302,
-    IPC_SIG_WM_FOCUS_CHANGED  = 0x0303,
-    IPC_SIG_SYS_AUDIO_CHANGED = 0x0304   /* body [opcode:2][volume:4][muted:4] */
+    IPC_SIG_WM_FOCUS_CHANGED  = 0x0303
 } oomaya_opcode_t;
 
 /* ── Error codes ─────────────────────────────────────────────────────────── */

@@ -21,9 +21,6 @@ udev_parser_pid=
 udev_parser_starttime=
 pactl_restart_count=0
 udev_restart_count=0
-audio_state=
-audio_from_daemon=0
-audio_watch_allowed=1
 provider_restart_limit=${DWM_STATUS_PROVIDER_RESTART_LIMIT:-3}
 publish_timeout=${DWM_STATUS_PUBLISH_TIMEOUT:-0.5}
 power_poll_interval=${DWM_STATUS_POWER_POLL_INTERVAL:-15}
@@ -287,24 +284,7 @@ publish() {
 }
 
 volume_text() {
-	local mute volume json
-
-	if [[ -n $audio_state ]]; then
-		printf '%s\n' "$audio_state"
-		return
-	fi
-
-	if command -v oomaya-ctl >/dev/null 2>&1; then
-		json=$(timeout --kill-after=0.2 "$publish_timeout" oomaya-ctl -j audio 2>/dev/null) || json=
-		if [[ $json =~ \"volume\":([0-9]+),\"muted\":(true|false) ]]; then
-			if [[ ${BASH_REMATCH[2]} == true ]]; then
-				printf 'VOL muted\n'
-			else
-				printf 'VOL %s%%\n' "${BASH_REMATCH[1]}"
-			fi
-			return
-		fi
-	fi
+	local mute volume
 
 	if command -v pactl >/dev/null 2>&1; then
 		mute=$(timeout --kill-after=0.2 "$publish_timeout" \
@@ -352,24 +332,11 @@ power_text() {
 watch_pactl_events() {
 	while IFS= read -r event; do
 		case $event in
-		*'"event":"audio"'*)
-			if [[ $event =~ \"volume\":([0-9]+),\"muted\":(true|false) ]]; then
-				printf 'audio-state %s %s\n' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" >"$fifo"
-			fi
-			;;
 		*" on sink"* | *" on server"* | *" on card"*)
 			printf 'audio\n' >"$fifo"
 			;;
 		esac
 	done
-}
-
-# Use the daemon's event stream only if it can read the sink. A watch that ends
-# before its first event means an older daemon, so stop asking for this session.
-daemon_can_watch() {
-	((audio_watch_allowed == 1)) || return 1
-	command -v oomaya-ctl >/dev/null 2>&1 || return 1
-	[[ $(timeout --kill-after=0.2 "$publish_timeout" oomaya-ctl -j audio 2>/dev/null) == *'"muted":'* ]]
 }
 
 watch_power_events() {
@@ -379,13 +346,7 @@ watch_power_events() {
 }
 
 start_pactl_source() {
-	if daemon_can_watch; then
-		audio_from_daemon=1
-		oomaya-ctl watch audio >"$pactl_fifo" 2>/dev/null &
-	else
-		audio_from_daemon=0
-		pactl subscribe >"$pactl_fifo" 2>/dev/null &
-	fi
+	pactl subscribe >"$pactl_fifo" 2>/dev/null &
 	pactl_provider_pid=$!
 	if ! pactl_provider_starttime=$(capture_child_starttime "$pactl_provider_pid"); then
 		kill -TERM "$pactl_provider_pid" 2>/dev/null || true
@@ -450,7 +411,7 @@ trap 'signal_exit=143' TERM
 register_identity
 publish || true
 ((signal_exit == 0)) || exit "$signal_exit"
-if command -v pactl >/dev/null 2>&1 || command -v oomaya-ctl >/dev/null 2>&1; then
+if command -v pactl >/dev/null 2>&1; then
 	pactl_fifo=$fifo_dir/pactl
 	mkfifo "$pactl_fifo"
 	start_pactl_source || true
@@ -473,24 +434,10 @@ while :; do
 	IFS= read -r -t "$current_interval" _event <&3 || true
 	((signal_exit == 0)) || break
 	case $_event in
-	refresh)
-		publish || true
-		;;
-	audio-state\ *)
-		_event=${_event#audio-state }
-		if [[ ${_event#* } == true ]]; then
-			audio_state='VOL muted'
-		else
-			audio_state="VOL ${_event% *}%"
-		fi
-		pactl_restart_count=0
+	refresh | audio)
 		publish || true
 		;;
 	restart-pactl)
-		if ((audio_from_daemon == 1)) && [[ -z $audio_state ]]; then
-			audio_watch_allowed=0
-		fi
-		audio_state=
 		stop_child "$pactl_provider_pid" "$pactl_provider_starttime"
 		stop_child "$pactl_parser_pid" "$pactl_parser_starttime"
 		pactl_provider_pid=

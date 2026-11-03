@@ -41,14 +41,7 @@ chmod 700 "$XDG_RUNTIME_DIR"
 
 # ── Daemon and client ────────────────────────────────────────────────────────
 
-cat >"$work/daemon-bin/wpctl" <<'SH'
-#!/bin/sh
-[ -f "$AUDIO_TEST_DIR/wpctl.output" ] || exit 1
-cat "$AUDIO_TEST_DIR/wpctl.output"
-SH
-chmod +x "$work/daemon-bin/wpctl"
-
-PATH="$work/daemon-bin:$PATH" "$repo/dwm-oomayad" >"$work/daemon.log" 2>&1 &
+"$repo/dwm-oomayad" >"$work/daemon.log" 2>&1 &
 daemon_pid=$!
 for _ in {1..200}; do
 	[[ -S $XDG_RUNTIME_DIR/dwm-oomaya/ipc.sock ]] && break
@@ -58,13 +51,13 @@ done
 
 ctl=$repo/tools/oomaya-ctl
 
-printf 'Volume: 0.42\n' >"$work/wpctl.output"
-expect 'unmuted json' "$("$ctl" -j audio)" '{"volume":42,"muted":false}'
-expect 'unmuted text' "$("$ctl" audio)" 'Volume: 42%'
-
-printf 'Volume: 0.42 [MUTED]\n' >"$work/wpctl.output"
-expect 'muted json' "$("$ctl" -j audio)" '{"volume":42,"muted":true}'
-expect 'muted text' "$("$ctl" audio)" 'Volume: 42% (muted)'
+# Audio commands are decoupled from oomaya-ctl and must be rejected.
+for command in 'audio' '-j audio' 'volume 50' 'watch audio'; do
+	# shellcheck disable=SC2086
+	if out=$("$ctl" $command 2>&1); then
+		fail "$command should be rejected by purified oomaya-ctl: $out"
+	fi
+done
 
 # The daemon cannot perform these, so it must refuse them, not report success.
 for command in 'toggleview 2' 'setlayout 1'; do
@@ -83,7 +76,7 @@ expect 'refused layout left state alone' "$("$ctl" -j state | grep -o '"layout_i
 
 # A stalled daemon must not hang the caller.
 kill -STOP "$daemon_pid"
-if timeout 5 "$ctl" -j audio >/dev/null 2>&1; then
+if timeout 5 "$ctl" -j state >/dev/null 2>&1; then
 	kill -CONT "$daemon_pid"
 	fail 'stalled daemon answered'
 else
@@ -92,44 +85,9 @@ fi
 kill -CONT "$daemon_pid"
 [[ $stalled_rc -ne 124 ]] || fail 'oomaya-ctl hung on a stalled daemon'
 
-# No audio server must read as a failure, never as volume 0.
-rm "$work/wpctl.output"
-if out=$("$ctl" -j audio 2>/dev/null); then
-	fail "audio without wpctl succeeded: $out"
-fi
-[[ $out != *'"volume"'* ]] || fail "failure reported a volume: $out"
-
 kill -TERM "$daemon_pid"
 wait "$daemon_pid" 2>/dev/null || true
 daemon_pid=
-
-# A response without a body must fail, so that scripts fall back.
-if command -v python3 >/dev/null 2>&1; then
-	mkdir -p "$work/fake"
-	python3 -I - "$work/fake/ipc.sock" >"$work/fake.ready" <<'PY' &
-import socket
-import sys
-
-server = socket.socket(socket.AF_UNIX)
-server.bind(sys.argv[1])
-server.listen(1)
-print("ready", flush=True)
-client, _ = server.accept()
-request = client.recv(64)
-client.sendall(request[:12] + bytes(4))
-client.close()
-PY
-	daemon_pid=$!
-	for _ in {1..200}; do
-		[[ -s $work/fake.ready ]] && break
-		sleep 0.01
-	done
-	if out=$("$ctl" --socket "$work/fake/ipc.sock" -j audio 2>/dev/null); then
-		fail "empty audio response succeeded: $out"
-	fi
-	wait "$daemon_pid" 2>/dev/null || true
-	daemon_pid=
-fi
 
 # ── Stubs for script consumers ───────────────────────────────────────────────
 
@@ -191,60 +149,33 @@ called() {
 	grep -Fxq -- "$2" "$work/$1.calls"
 }
 
-# ── dwm-volume ───────────────────────────────────────────────────────────────
+# ── dwm-volume (pure pactl direct, zero daemon calls) ────────────────────────
 
 reset_calls
-printf '{"volume":50,"muted":false}\n' >"$work/ctl.audio"
 run_volume up 5%
-called ctl 'volume 55' || fail 'volume up did not use the daemon'
-if grep -q set-sink-volume "$work/pactl.calls"; then
-	fail 'volume up changed the sink twice'
+called pactl 'set-sink-volume @DEFAULT_SINK@ +5%' || fail 'volume up did not call pactl'
+if grep -q . "$work/ctl.calls"; then
+	fail 'volume up should not call oomaya-ctl'
 fi
-if grep -q . "$work/pactl.calls"; then
-	fail 'daemon path should not call pactl'
-fi
-grep -q 'Volume: 50%' "$work/notify.calls" || fail 'notification missing'
 
 reset_calls
-printf '{"volume":50,"muted":true}\n' >"$work/ctl.audio"
 run_volume status >"$work/out"
-expect 'status volume' "$(cat "$work/out")" '50%'
+expect 'status volume' "$(cat "$work/out")" '30%'
 run_volume down 5%
-called ctl 'volume 45' || fail 'volume down did not use the daemon'
-grep -q 'Volume Muted' "$work/notify.calls" || fail 'mute did not come from the daemon'
-if grep -q . "$work/pactl.calls"; then
-	fail 'muted daemon path should not call pactl'
+called pactl 'set-sink-volume @DEFAULT_SINK@ -5%' || fail 'volume down did not call pactl'
+grep -q 'Volume Muted' "$work/notify.calls" || fail 'mute notification missing'
+if grep -q . "$work/ctl.calls"; then
+	fail 'volume down should not call oomaya-ctl'
 fi
 
-# Daemon stopped: oomaya-ctl exists but cannot answer.
 reset_calls
-run_volume up 5%
-called pactl 'set-sink-volume @DEFAULT_SINK@ +5%' || fail 'no fallback with daemon down'
-
-# The daemon answers but cannot set the sink.
-reset_calls
-printf '{"volume":50,"muted":false}\n' >"$work/ctl.audio"
-: >"$work/ctl.volume-fails"
-run_volume up 5%
-called pactl 'set-sink-volume @DEFAULT_SINK@ +5%' || fail 'no fallback when set fails'
-
-# A sink above 100% must not be pulled down by the daemon's 0-100 range.
-reset_calls
-printf '{"volume":120,"muted":false}\n' >"$work/ctl.audio"
-run_volume up 5%
-called pactl 'set-sink-volume @DEFAULT_SINK@ +5%' || fail 'over-100 sink was clamped'
-if grep -q '^volume ' "$work/ctl.calls"; then
-	fail 'over-100 sink used the daemon'
+run_volume mute
+called pactl 'set-sink-mute @DEFAULT_SINK@ toggle' || fail 'mute did not call pactl'
+if grep -q . "$work/ctl.calls"; then
+	fail 'mute should not call oomaya-ctl'
 fi
 
-# An older daemon reports no mute state.
-reset_calls
-printf '{"volume":50}\n' >"$work/ctl.audio"
-run_volume down 5%
-called ctl 'volume 45' || fail 'older daemon volume path broke'
-grep -q 'Volume Muted' "$work/notify.calls" || fail 'older daemon lost pactl mute state'
-
-# ── dwm-status ───────────────────────────────────────────────────────────────
+# ── dwm-status (pure pactl subscribe, zero daemon calls) ─────────────────────
 
 status_once() {
 	: >"$DWM_STATUS_TEST_LOG"
@@ -260,74 +191,13 @@ status_once() {
 }
 
 reset_calls
-printf '{"volume":64,"muted":false}\n' >"$work/ctl.audio"
 status_once
-grep -q 'VOL 64%' "$DWM_STATUS_TEST_LOG" || fail 'bar did not show daemon volume'
-if grep -q 'get-sink' "$work/pactl.calls"; then
-	fail 'bar called pactl with a working daemon'
+grep -q 'VOL muted' "$DWM_STATUS_TEST_LOG" || fail 'bar did not show pactl volume'
+called pactl 'get-sink-mute @DEFAULT_SINK@' || fail 'bar did not query pactl mute'
+called pactl 'get-sink-volume @DEFAULT_SINK@' || fail 'bar did not query pactl volume'
+if grep -q . "$work/ctl.calls"; then
+	fail 'bar should not call oomaya-ctl'
 fi
-
-reset_calls
-printf '{"volume":64,"muted":true}\n' >"$work/ctl.audio"
-status_once
-grep -q 'VOL muted' "$DWM_STATUS_TEST_LOG" || fail 'bar lost daemon mute state'
-if grep -q 'get-sink' "$work/pactl.calls"; then
-	fail 'bar called pactl for mute with a working daemon'
-fi
-
-# Older daemon: no mute field, so pactl decides. This stub reports muted.
-reset_calls
-printf '{"volume":64}\n' >"$work/ctl.audio"
-status_once
-grep -q 'VOL muted' "$DWM_STATUS_TEST_LOG" || fail 'bar lost mute with an older daemon'
-
-# Daemon stopped.
-reset_calls
-status_once
-grep -q 'VOL muted' "$DWM_STATUS_TEST_LOG" || fail 'bar did not fall back to pactl'
-
-# The daemon's event stream replaces pactl subscribe and per-event reads.
-reset_calls
-printf '{"volume":64,"muted":false}\n' >"$work/ctl.audio"
-printf '{"event":"audio","volume":33,"muted":false}\n' >"$work/ctl.watch"
-: >"$DWM_STATUS_TEST_LOG"
-DISPLAY=:199 PATH="$work/bin:/usr/bin:/bin" "$repo/scripts/dwm-status" &
-status_pid=$!
-wait_for_bar() {
-	for _ in {1..300}; do
-		grep -q "$1" "$DWM_STATUS_TEST_LOG" && return 0
-		sleep 0.01
-	done
-	fail "bar never showed $1"
-}
-wait_for_bar 'VOL 33%'
-audio_reads=$(grep -c -- '-j audio' "$work/ctl.calls")
-printf '{"event":"audio","volume":34,"muted":true}\n' >>"$work/ctl.watch"
-wait_for_bar 'VOL muted'
-printf '{"event":"audio","volume":35,"muted":false}\n' >>"$work/ctl.watch"
-wait_for_bar 'VOL 35%'
-[[ $(grep -c -- '-j audio' "$work/ctl.calls") -eq $audio_reads ]] ||
-	fail 'bar read audio again despite the event stream'
-if grep -q subscribe "$work/pactl.calls"; then
-	fail 'bar ran pactl subscribe beside the event stream'
-fi
-kill -TERM "$status_pid" 2>/dev/null || true
-wait "$status_pid" 2>/dev/null || true
-status_pid=
-
-# An older daemon answers audio but cannot watch: the bar must still get events.
-reset_calls
-printf '{"volume":64,"muted":false}\n' >"$work/ctl.audio"
-DISPLAY=:199 PATH="$work/bin:/usr/bin:/bin" "$repo/scripts/dwm-status" &
-status_pid=$!
-for _ in {1..300}; do
-	grep -q subscribe "$work/pactl.calls" && break
-	sleep 0.01
-done
-grep -q subscribe "$work/pactl.calls" || fail 'no pactl subscribe after watch failed'
-kill -TERM "$status_pid" 2>/dev/null || true
-wait "$status_pid" 2>/dev/null || true
-status_pid=
 
 # ── dwm-keybind-exec ─────────────────────────────────────────────────────────
 
