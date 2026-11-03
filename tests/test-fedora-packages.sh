@@ -38,9 +38,12 @@ if ((${#packages[@]} == 0)); then
 fi
 
 printf '%s\n' "${packages[@]}" >"$work/expected"
-dnf -q repoquery --available --latest-limit 1 \
-	--queryformat $'%{name}\n' "${packages[@]}" |
-	sort -u >"$work/available"
+if ! dnf -q repoquery --available --latest-limit 1 \
+	--queryformat $'%{name}\n' "${packages[@]}" >"$work/available" 2>/dev/null; then
+	dnf -C -q repoquery --available --latest-limit 1 \
+		--queryformat $'%{name}\n' "${packages[@]}" >"$work/available"
+fi
+sort -u -o "$work/available" "$work/available"
 comm -23 "$work/expected" "$work/available" >"$work/missing"
 if [[ -s $work/missing ]]; then
 	printf 'Unavailable Fedora package-map entries:\n' >&2
