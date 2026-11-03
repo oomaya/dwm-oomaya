@@ -197,13 +197,14 @@ install-system:
 		test -e "$$input" || { echo "dwm build input is missing: $$input. Run make before install-system." >&2; exit 1; }; \
 		test ! "$$input" -nt dwm || { echo "dwm is stale. Run make before install-system." >&2; exit 1; }; \
 	done
+	@test -x tools/oomaya-ctl || { echo "oomaya-ctl is not built. Run make before install-system." >&2; exit 1; }
 	$(MAKE) install-cursors
 	@echo ""
 	@echo "==> Installing system files..."
 	install -Dm755 dwm ${DESTDIR}${PREFIX}/bin/dwm
 	ln -sf dwm ${DESTDIR}${PREFIX}/bin/dwm-oomaya
 	@if [ -f dwm-oomayad ]; then install -Dm755 dwm-oomayad ${DESTDIR}${PREFIX}/bin/dwm-oomayad; fi
-	@if [ -f tools/oomaya-ctl ]; then install -Dm755 tools/oomaya-ctl ${DESTDIR}${PREFIX}/bin/oomaya-ctl; fi
+	install -Dm755 tools/oomaya-ctl ${DESTDIR}${PREFIX}/bin/oomaya-ctl
 	@if [ -f tools/dwm-msg-compat.sh ]; then \
 		install -Dm755 tools/dwm-msg-compat.sh ${DESTDIR}${PREFIX}/bin/dwm-msg-compat; \
 		ln -sf dwm-msg-compat ${DESTDIR}${PREFIX}/bin/dwm-msg; \
@@ -275,6 +276,10 @@ install-scripts:
 install-user:
 	@test -n "${USER_HOME}" || { echo "USER_HOME could not be determined." >&2; exit 1; }
 	@test "$$(id -u)" -ne 0 || { echo "Refusing to install user files as root. Run install-user as the target user." >&2; exit 1; }
+	@if [ -f dwm ] && [ ! -x tools/oomaya-ctl ]; then \
+		echo "oomaya-ctl is not built. Run make before install-user." >&2; \
+		exit 1; \
+	fi
 	@echo "==> Installing user files for ${OWNER}..."
 	@mkdir -p "${USER_HOME}/.local/bin"
 	@if [ -f dwm ]; then \
@@ -487,6 +492,12 @@ check-diagnostics:
 check-status:
 	tests/test-dwm-status.sh
 
+check-ipc-tools:
+	tests/test-ipc-tools-build.sh
+
+check-audio-consumers: ipc tools
+	tests/test-audio-consumers.sh
+
 check-monitor-tags:
 	tests/test-monitor-tag-switching.sh
 
@@ -556,7 +567,7 @@ check-install-manifest: all
 			usr/share/man/man1/dwm.1 \
 			usr/share/xsessions/dwm.desktop; \
 		if [ -f dwm-oomayad ]; then printf 'usr/bin/dwm-oomayad\n'; fi; \
-		if [ -f tools/oomaya-ctl ]; then printf 'usr/bin/oomaya-ctl\n'; fi; \
+		printf 'usr/bin/oomaya-ctl\n'; \
 		if [ -f tools/dwm-msg-compat.sh ]; then printf 'usr/bin/dwm-msg\nusr/bin/dwm-msg-compat\n'; fi; \
 		if [ -f systemd/dwm-oomayad.service ]; then printf 'usr/lib/systemd/user/dwm-oomayad.service\n'; fi; \
 		for name in ${INSTALL_COMMAND_NAMES}; do \
@@ -630,6 +641,8 @@ check-core: all
 	$(MAKE) check-xdg-autostart
 	$(MAKE) check-diagnostics
 	$(MAKE) check-status
+	$(MAKE) check-ipc-tools
+	$(MAKE) check-audio-consumers
 	$(MAKE) check-settings
 	$(MAKE) check-appearance
 	$(MAKE) check-display-profile
@@ -663,7 +676,7 @@ check:
 	$(MAKE) all
 	$(MAKE) check-core
 
-.PHONY: clean all check check-core check-ipc check-all check-appearance check-system check-accessibility check-build-config check-build-deps check-default-apps check-xdg-autostart check-dev-sync-install \
+.PHONY: clean all tools check check-core check-ipc check-ipc-tools check-audio-consumers check-all check-appearance check-system check-accessibility check-build-config check-build-deps check-default-apps check-xdg-autostart check-dev-sync-install \
 	check-test-runner \
 	check-display-profile check-display-setup check-fedora-packages check-packaging check-fedora-platform check-format check-install \
 	check-herdr-install check-install-manifest check-install-preservation check-lock \
