@@ -24,7 +24,6 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
-#include "../../include/oomaya_ipc.h"
 #include "../../include/oomaya_state.h"
 #include "../../include/oomaya_worker.h"
 #include "../../include/oomaya_reactor_impl.h"
@@ -139,7 +138,7 @@ create_listener(const char *path)
 }
 
 /* ── Worker dispatch ───────────────────────────────────────────────────────
- * Offload-path opcodes (power, audio volume, monitor cycling) are handled
+ * Offload-path opcodes (power, monitor cycling) are handled
  * by oomaya_default_dispatch() in worker_dispatch.c.
  */
 

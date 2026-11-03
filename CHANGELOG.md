@@ -8,6 +8,11 @@ versions from `config.mk`.
 
 ### Changed
 
+- `dwm-oomayad` refuses the retired audio opcodes `0x0203` and `0x0204` with
+  `ERR_OPCODE` before they reach a worker thread. A failing worker request now
+  returns its error code in `payload_len` with no body, where it used to send
+  `payload_len` 4 and a body, so clients read a wrong error code.
+
 - IPC v1 frames are limited to 512 payload bytes. A larger `payload_len` now
   gets `ERR_PAYLOAD` and a disconnect instead of truncation and a desynced
   stream. A bad magic (`ERR_MALFORMED`) or unknown version (`ERR_VERSION`)
@@ -17,15 +22,14 @@ versions from `config.mk`.
 - `make all` now builds `oomaya-ctl`, and `install-system` and `install-user`
   fail when it is missing. It was skipped silently before, so scripts never
   reached the daemon.
-- `oomaya-ctl -j audio` reports `{"volume":N,"muted":true|false}`. It exits
-  nonzero when the daemon cannot read the sink, where it used to report volume 0.
-  The `muted` field is absent with an older daemon. `IPC_CMD_SYS_GET_AUDIO` keeps
-  volume in its first four bytes.
-- `dwm-status` and `dwm-volume` read volume and mute from the daemon, and fall
-  back to `pactl` or `wpctl` when it is stopped or fails.
 - `dwm-oomayad` refuses `IPC_CMD_WM_TOGGLE_TAG` and `IPC_CMD_WM_SET_LAYOUT` with
   `ERR_OPCODE`. It used to report success without changing dwm, so `oomaya-ctl
   toggleview`, `oomaya-ctl setlayout`, and `dwm-msg` now fail for these.
+- `oomaya-ctl watch [tag|layout|focus]...` prints daemon WM events as JSON
+  lines. With no filter arguments, it defaults to watching all three domains.
+- `dwm-oomayad` drops a client that stops reading, keeps a reused fd from
+  receiving another client's reply, survives `EINTR` on client reads, and no
+  longer wakes every 200 ms when idle.
 - `dwm-status` no longer waits for `dwm-weather` to fetch. With a stale cache, every
   bar update waited for `curl`, about 300 ms here and up to 3 seconds offline.
 - `oomaya-ctl` gives up after 1 second on a stalled daemon.

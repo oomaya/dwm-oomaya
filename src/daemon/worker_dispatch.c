@@ -1,6 +1,6 @@
 /* worker_dispatch.c — Subsystem dispatch implementation for worker threads.
  *
- * Handles sysfs power queries, audio volume queries/mutations, and monitor cycling.
+ * Handles sysfs power queries and monitor cycling.
  * Executes on worker threads to protect reactor fast-path latency (<10µs).
  */
 #define _POSIX_C_SOURCE 200809L
@@ -62,34 +62,6 @@ static int32_t query_power(void) {
     return (ret >= 0) ? ret : 100;
 }
 
-/* Reads the default sink. Returns -1 when there is no answer, so that clients
- * can fall back instead of showing volume 0. */
-static int query_audio(int32_t *vol, int32_t *muted) {
-    FILE *p = popen("wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null", "r");
-    if (!p) return -1;
-    char buf[128];
-    int rc = -1;
-    if (fgets(buf, sizeof(buf), p)) {
-        float fval = 0.0f;
-        if (sscanf(buf, "Volume: %f", &fval) == 1) {
-            *vol = (int32_t)(fval * 100.0f + 0.5f);
-            *muted = (strstr(buf, "[MUTED]") != NULL) ? 1 : 0;
-            rc = 0;
-        }
-    }
-    pclose(p);
-    return rc;
-}
-
-static int32_t set_audio_volume(int32_t vol) {
-    if (vol < 0) vol = 0;
-    if (vol > 100) vol = 100;
-    char cmd[128];
-    snprintf(cmd, sizeof(cmd), "wpctl set-volume @DEFAULT_AUDIO_SINK@ %d%% >/dev/null 2>&1", (int)vol);
-    int rc = system(cmd);
-    return (rc == 0) ? 0 : -1;
-}
-
 void
 oomaya_default_dispatch(oomaya_task_t *task, oomaya_wm_state_t *state)
 {
@@ -105,37 +77,22 @@ oomaya_default_dispatch(oomaya_task_t *task, oomaya_wm_state_t *state)
         memcpy(task->resp_data, &pwr, sizeof(pwr));
         break;
     }
-    case IPC_CMD_SYS_GET_AUDIO: {
-        /* [volume:4][muted:4]. Volume stays first for older clients. */
-        int32_t aud[2] = { -1, 0 };
-        if (query_audio(&aud[0], &aud[1]) != 0) task->status = -1;
-        task->resp_len = sizeof(aud);
-        memcpy(task->resp_data, aud, sizeof(aud));
-        break;
-    }
-    case IPC_CMD_SYS_SET_VOLUME: {
-        int32_t vol = 0;
-        if (task->payload_len >= 6) {
-            memcpy(&vol, task->payload + 2, sizeof(vol));
-            task->status = set_audio_volume(vol);
-        } else {
-            task->status = -1;
+    case IPC_CMD_WM_CYCLE_MONITOR: {
+        int rc = system("xdotool key Super+period >/dev/null 2>&1");
+        if (rc != 0) {
+            task->status   = OOMAYA_IPC_ERR_INTERNAL;
+            task->resp_len = 0;
+            break;
         }
         task->resp_len = sizeof(int32_t);
         memcpy(task->resp_data, &task->status, sizeof(int32_t));
         break;
     }
-    case IPC_CMD_WM_CYCLE_MONITOR: {
-        int rc = system("xdotool key Super+period >/dev/null 2>&1");
-        task->status = (rc == 0) ? 0 : -1;
-        task->resp_len = sizeof(int32_t);
-        memcpy(task->resp_data, &task->status, sizeof(int32_t));
-        break;
-    }
+    /* A nonzero status is an oomaya_ipc_err_t; the reactor carries it in the
+     * error frame's payload_len with no body. */
     default: {
-        task->status   = 0;
-        task->resp_len = sizeof(int32_t);
-        memcpy(task->resp_data, &task->status, sizeof(int32_t));
+        task->status   = OOMAYA_IPC_ERR_OPCODE;
+        task->resp_len = 0;
         break;
     }
     }

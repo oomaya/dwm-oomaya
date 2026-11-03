@@ -72,14 +72,16 @@ typedef enum {
     IPC_CMD_WM_FOCUS_CLIENT   = 0x0105,
     IPC_CMD_WM_KILL_CLIENT    = 0x0106,
     IPC_CMD_WM_CYCLE_MONITOR  = 0x0107,  /* RandR enum — worker offload */
+    IPC_CMD_SUBSCRIBE         = 0x0108,  /* Keep this connection for signals */
 
     /* SYS namespace — worker-pool offload (1–15 ms) */
     IPC_CMD_SYS_GET_POWER     = 0x0201,
     IPC_CMD_SYS_SET_POWER     = 0x0202,
-    IPC_CMD_SYS_GET_AUDIO     = 0x0203,
-    IPC_CMD_SYS_SET_VOLUME    = 0x0204,
+    /* 0x0203, 0x0204: retired audio opcodes (GET_AUDIO, SET_VOLUME). Audio is
+     * not a WM concern; the daemon answers ERR_OPCODE. Do not reuse. */
 
-    /* Signals emitted by daemon to subscribers */
+    /* Signals emitted by daemon to subscribers. OOMAYA_MSG_SIGNAL frames with
+     * msg_id 0 and body [opcode:2][value:4]. */
     IPC_SIG_WM_LAYOUT_CHANGED = 0x0301,
     IPC_SIG_WM_TAG_CHANGED    = 0x0302,
     IPC_SIG_WM_FOCUS_CHANGED  = 0x0303

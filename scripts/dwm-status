@@ -284,19 +284,7 @@ publish() {
 }
 
 volume_text() {
-	local mute volume json
-
-	if command -v oomaya-ctl >/dev/null 2>&1; then
-		json=$(timeout --kill-after=0.2 "$publish_timeout" oomaya-ctl -j audio 2>/dev/null) || json=
-		if [[ $json =~ \"volume\":([0-9]+),\"muted\":(true|false) ]]; then
-			if [[ ${BASH_REMATCH[2]} == true ]]; then
-				printf 'VOL muted\n'
-			else
-				printf 'VOL %s%%\n' "${BASH_REMATCH[1]}"
-			fi
-			return
-		fi
-	fi
+	local mute volume
 
 	if command -v pactl >/dev/null 2>&1; then
 		mute=$(timeout --kill-after=0.2 "$publish_timeout" \
@@ -446,7 +434,7 @@ while :; do
 	IFS= read -r -t "$current_interval" _event <&3 || true
 	((signal_exit == 0)) || break
 	case $_event in
-	refresh)
+	refresh | audio)
 		publish || true
 		;;
 	restart-pactl)

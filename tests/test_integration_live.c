@@ -12,6 +12,8 @@
 #include <sys/uio.h>
 #include <sys/un.h>
 #include <errno.h>
+#include <poll.h>
+#include <time.h>
 
 #include "../include/oomaya_ipc.h"
 #include "../include/oomaya_state.h"
@@ -31,6 +33,17 @@ static void
 test_dispatch(oomaya_task_t *task, oomaya_wm_state_t *state)
 {
     (void)state;
+    /* A slow offload keeps a completion pending across a client's exit. */
+    if (task->opcode == IPC_CMD_SYS_SET_POWER) {
+        struct timespec ts = { .tv_sec = 0, .tv_nsec = 3000000 };
+        nanosleep(&ts, NULL);
+    }
+    /* A worker that fails reports an oomaya_ipc_err_t and no body. */
+    if (task->opcode == IPC_CMD_WM_CYCLE_MONITOR) {
+        task->status   = OOMAYA_IPC_ERR_INTERNAL;
+        task->resp_len = 0;
+        return;
+    }
     /* Simulate worker processing SYS_GET_POWER (battery % = 95) */
     int32_t val = 95;
     task->status = 0;
@@ -240,6 +253,65 @@ test_unknown_opcode_stays_connected(const struct sockaddr_un *addr)
     close(fd);
 }
 
+/* T13: retired audio opcodes are refused on the fast path. test_dispatch
+ * would answer them with success, so any reply but ERR_OPCODE means they
+ * reached a worker. */
+static void
+test_retired_audio_opcodes_refused(const struct sockaddr_un *addr)
+{
+    static const uint16_t ops[] = { 0x0203, 0x0204 };
+    oomaya_ipc_header_t req, err;
+    char lbl[64];
+    size_t i;
+    int fd = client_connect(addr);
+
+    ASSERT_EQ("T13 connect", fd >= 0, 1);
+    if (fd < 0) return;
+
+    for (i = 0; i < sizeof(ops) / sizeof(ops[0]); i++) {
+        uint16_t op = ops[i];
+        uint16_t id = (uint16_t)(0x3100u + i);
+
+        memset(&err, 0, sizeof(err));
+        oomaya_frame_init_request(&req, op, id, sizeof(op));
+        snprintf(lbl, sizeof(lbl), "T13 0x%04X send", op);
+        ASSERT_EQ(lbl, send_frame(fd, &req, &op, sizeof(op)), 0);
+        snprintf(lbl, sizeof(lbl), "T13 0x%04X error frame", op);
+        ASSERT_EQ(lbl, recv_exact(fd, &err, sizeof(err)), 0);
+        snprintf(lbl, sizeof(lbl), "T13 0x%04X msg_type", op);
+        ASSERT_EQ(lbl, err.msg_type, (uint16_t)OOMAYA_MSG_ERROR);
+        snprintf(lbl, sizeof(lbl), "T13 0x%04X msg_id echoed", op);
+        ASSERT_EQ(lbl, err.msg_id, id);
+        snprintf(lbl, sizeof(lbl), "T13 0x%04X ERR_OPCODE", op);
+        ASSERT_EQ(lbl, (int32_t)err.payload_len, OOMAYA_IPC_ERR_OPCODE);
+    }
+    ASSERT_EQ("T13 connection still usable", get_state_mask(fd, 0x3110), 0x1234);
+    close(fd);
+}
+
+/* T14: a worker failure becomes an error frame with the code in payload_len
+ * and no body, so the next reply on the connection stays in sync. */
+static void
+test_worker_error_frame(const struct sockaddr_un *addr)
+{
+    oomaya_ipc_header_t req, err;
+    uint16_t op = IPC_CMD_WM_CYCLE_MONITOR;
+    int fd = client_connect(addr);
+
+    ASSERT_EQ("T14 connect", fd >= 0, 1);
+    if (fd < 0) return;
+
+    memset(&err, 0, sizeof(err));
+    oomaya_frame_init_request(&req, op, 0x3200, sizeof(op));
+    ASSERT_EQ("T14 send", send_frame(fd, &req, &op, sizeof(op)), 0);
+    ASSERT_EQ("T14 error frame received", recv_exact(fd, &err, sizeof(err)), 0);
+    ASSERT_EQ("T14 msg_type", err.msg_type, (uint16_t)OOMAYA_MSG_ERROR);
+    ASSERT_EQ("T14 msg_id echoed", err.msg_id, 0x3200);
+    ASSERT_EQ("T14 ERR_INTERNAL", (int32_t)err.payload_len, OOMAYA_IPC_ERR_INTERNAL);
+    ASSERT_EQ("T14 no stray body", get_state_mask(fd, 0x3201), 0x1234);
+    close(fd);
+}
+
 /*
  * T08: good, oversize, and good frames queued in one write. The first is
  * answered, the second ends the connection, and the third is never parsed.
@@ -283,7 +355,180 @@ test_pipeline_oversize_never_desyncs(const struct sockaddr_un *addr)
     close(fd);
 }
 
-int main(void)
+/*
+ * C4: a client exits with an offload pending, and the next client reuses its
+ * fd number. The completion belongs to the first client and must not reach
+ * the second.
+ */
+static void
+test_completion_not_delivered_to_reused_fd(const struct sockaddr_un *addr)
+{
+    int misdelivered = 0, reused = 0, i;
+
+    for (i = 0; i < 300; ++i) {
+        uint16_t op = IPC_CMD_SYS_SET_POWER;
+        oomaya_ipc_header_t req;
+        struct pollfd pfd;
+        int first = client_connect(addr), second;
+
+        if (first < 0) break;
+        oomaya_frame_init_request(&req, op, 0x5000, sizeof(op));
+        if (send_frame(first, &req, &op, sizeof(op)) != 0) {
+            close(first);
+            break;
+        }
+        close(first);
+        second = client_connect(addr);
+        if (second < 0) break;
+        ++reused;
+
+        pfd.fd = second;
+        pfd.events = POLLIN;
+        pfd.revents = 0;
+        if (poll(&pfd, 1, 6) > 0 && (pfd.revents & POLLIN)) ++misdelivered;
+        close(second);
+    }
+    ASSERT_EQ("T09 ran every cycle", reused, 300);
+    ASSERT_EQ("T09 no frame reached an unrelated client", misdelivered, 0);
+}
+
+/* M11: a client that stops reading is dropped; the reactor never blocks on it
+ * and never leaves half a frame in its stream. */
+static void
+test_client_that_stops_reading_is_dropped(const struct sockaddr_un *addr)
+{
+    uint8_t buf[256];
+    uint16_t op = IPC_CMD_WM_GET_STATE;
+    oomaya_ipc_header_t req;
+    int fd = client_connect(addr), i, closed = 0;
+    long frames = 0;
+
+    if (fd < 0) { ASSERT_EQ("T10 connect", fd >= 0, 1); return; }
+    oomaya_frame_init_request(&req, op, 0x5100, sizeof(op));
+    memcpy(buf, &req, sizeof(req));
+    memcpy(buf + sizeof(req), &op, sizeof(op));
+    for (i = 0; i < 4000; ++i) {
+        if (send(fd, buf, sizeof(req) + sizeof(op), MSG_NOSIGNAL) < 0) break;
+    }
+    for (;;) {
+        ssize_t n = recv(fd, buf, sizeof(buf), 0);
+        if (n == 0 || (n < 0 && errno == ECONNRESET)) { closed = 1; break; }
+        if (n < 0) break;
+        frames += n;
+    }
+    ASSERT_EQ("T10 stalled client disconnected", closed, 1);
+    ASSERT_EQ("T10 stream ended on a frame boundary",
+              frames % 16 == 0 || frames % 36 == 0 || frames % 52 == 0, 1);
+    close(fd);
+
+    fd = client_connect(addr);
+    ASSERT_EQ("T10 reactor still accepts", fd >= 0, 1);
+    if (fd >= 0) {
+        oomaya_ipc_header_t resp;
+        oomaya_frame_init_request(&req, op, 0x5101, sizeof(op));
+        ASSERT_EQ("T10 send", send_frame(fd, &req, &op, sizeof(op)), 0);
+        ASSERT_EQ("T10 reply", recv_exact(fd, &resp, sizeof(resp)), 0);
+        close(fd);
+    }
+}
+
+/* Send one fast-path request and consume its reply. */
+static int
+request_view(int fd, uint32_t mask, uint16_t msg_id)
+{
+    uint8_t body[6], reply[4];
+    uint16_t op = IPC_CMD_WM_VIEW_TAG;
+    oomaya_ipc_header_t req, resp;
+
+    memcpy(body, &op, 2);
+    memcpy(body + 2, &mask, 4);
+    oomaya_frame_init_request(&req, op, msg_id, sizeof(body));
+    if (send_frame(fd, &req, body, sizeof(body)) != 0) return -1;
+    if (recv_exact(fd, &resp, sizeof(resp)) != 0) return -1;
+    return recv_exact(fd, reply, sizeof(reply));
+}
+
+static int
+subscribe(int fd)
+{
+    uint16_t op = IPC_CMD_SUBSCRIBE;
+    int32_t st = -1;
+    oomaya_ipc_header_t req, resp;
+
+    oomaya_frame_init_request(&req, op, 0x5200, sizeof(op));
+    if (send_frame(fd, &req, &op, sizeof(op)) != 0) return -1;
+    if (recv_exact(fd, &resp, sizeof(resp)) != 0) return -1;
+    if (resp.msg_type != OOMAYA_MSG_RESPONSE) return -1;
+    if (recv_exact(fd, &st, sizeof(st)) != 0) return -1;
+    return st;
+}
+
+static void
+test_subscribers_receive_tag_signal(const struct sockaddr_un *addr)
+{
+    int sub = client_connect(addr), other = client_connect(addr);
+    oomaya_ipc_header_t hdr;
+    uint8_t body[6];
+    uint16_t sig = 0;
+    uint32_t mask = 0;
+
+    ASSERT_EQ("T11 subscribe", subscribe(sub), 0);
+    ASSERT_EQ("T11 view", request_view(other, 1u << 4, 0x5201), 0);
+    ASSERT_EQ("T11 frame", recv_exact(sub, &hdr, sizeof(hdr)), 0);
+    ASSERT_EQ("T11 type", hdr.msg_type, OOMAYA_MSG_SIGNAL);
+    ASSERT_EQ("T11 length", hdr.payload_len, sizeof(body));
+    ASSERT_EQ("T11 body", recv_exact(sub, body, sizeof(body)), 0);
+    memcpy(&sig, body, 2);
+    memcpy(&mask, body + 2, 4);
+    ASSERT_EQ("T11 opcode", sig, IPC_SIG_WM_TAG_CHANGED);
+    ASSERT_EQ("T11 mask", mask, 1u << 4);
+
+    /* The requester did not subscribe, so its stream stays request/response. */
+    {
+        struct pollfd pfd = { .fd = other, .events = POLLIN, .revents = 0 };
+        ASSERT_EQ("T11 no signal to a non-subscriber", poll(&pfd, 1, 20), 0);
+    }
+    close(sub);
+    close(other);
+}
+
+/* M11: a stalled subscriber is dropped while a healthy one keeps receiving. */
+static void
+test_slow_subscriber_is_dropped(const struct sockaddr_un *addr)
+{
+    int stalled = client_connect(addr), healthy = client_connect(addr);
+    int i, j, received = 0, closed = 0;
+    uint32_t mask = 1u;
+    oomaya_ipc_header_t hdr;
+    uint8_t body[16];
+
+    ASSERT_EQ("T12 subscribe stalled", subscribe(stalled), 0);
+    ASSERT_EQ("T12 subscribe healthy", subscribe(healthy), 0);
+
+    /* One connection stays inside the rate limit, so spread the load. */
+    for (i = 0; i < 40 && !closed; ++i) {
+        int sender = client_connect(addr);
+        for (j = 0; j < 90; ++j) {
+            mask = (mask == 1u) ? 2u : 1u;
+            if (request_view(sender, mask, 0x5300) != 0) break;
+            if (recv_exact(healthy, &hdr, sizeof(hdr)) != 0 ||
+                recv_exact(healthy, body, hdr.payload_len) != 0) break;
+            ++received;
+        }
+        close(sender);
+        {
+            struct pollfd pfd = { .fd = stalled, .events = 0, .revents = 0 };
+            if (poll(&pfd, 1, 0) > 0 && (pfd.revents & POLLHUP)) closed = 1;
+        }
+    }
+    ASSERT_EQ("T12 stalled subscriber dropped", closed, 1);
+    ASSERT_EQ("T12 healthy subscriber kept up", received > 100, 1);
+    close(stalled);
+    close(healthy);
+}
+
+int
+main(void)
 {
     char sock_path[100];
     int listen_fd, client_fd;
@@ -302,11 +547,21 @@ int main(void)
     unlink(sock_path);
 
     listen_fd = socket(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
+    if (listen_fd < 0) {
+        perror("socket");
+        return 1;
+    }
     memset(&addr, 0, sizeof(addr));
     addr.sun_family = AF_UNIX;
     snprintf(addr.sun_path, sizeof(addr.sun_path), "%s", sock_path);
-    bind(listen_fd, (struct sockaddr *)&addr, sizeof(addr));
-    listen(listen_fd, 4);
+    /* Every later test talks to this socket; without it they only hang. */
+    if (bind(listen_fd, (struct sockaddr *)&addr, sizeof(addr)) != 0 ||
+        listen(listen_fd, 4) != 0) {
+        perror("bind/listen");
+        close(listen_fd);
+        unlink(sock_path);
+        return 1;
+    }
 
     oomaya_state_init(&state);
     oomaya_state_set_tag_mask(&state, 0x1234);
@@ -376,6 +631,8 @@ int main(void)
                     OOMAYA_IPC_ERR_PAYLOAD);
     test_reconnect_after_oversize_is_healthy(&addr);
     test_unknown_opcode_stays_connected(&addr);
+    test_retired_audio_opcodes_refused(&addr);
+    test_worker_error_frame(&addr);
     bad = violation_req(OOMAYA_MSG_ERROR, 600, 0x4003);
     check_violation("T05 oversize ERROR frame", &addr, &bad, bad.payload_len,
                     OOMAYA_IPC_ERR_PAYLOAD);
@@ -392,6 +649,10 @@ int main(void)
     check_violation("T07 unknown target_ver", &addr, &bad, bad.payload_len,
                     OOMAYA_IPC_ERR_VERSION);
     test_pipeline_oversize_never_desyncs(&addr);
+    test_completion_not_delivered_to_reused_fd(&addr);
+    test_client_that_stops_reading_is_dropped(&addr);
+    test_subscribers_receive_tag_signal(&addr);
+    test_slow_subscriber_is_dropped(&addr);
 
     /* Shutdown */
     oomaya_reactor_stop(&reactor);

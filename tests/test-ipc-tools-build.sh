@@ -31,7 +31,8 @@ make tools >"$work/tools.log" 2>&1 </dev/null || {
 	exit 1
 }
 tools/oomaya-ctl --help >"$work/help.log" 2>&1 </dev/null || :
-grep -Fq 'audio' "$work/help.log"
+grep -Fq 'watch' "$work/help.log"
+! grep -Fq 'audio' "$work/help.log"
 
 make clean >/dev/null 2>&1 </dev/null
 [ ! -e tools/oomaya-ctl ] || {

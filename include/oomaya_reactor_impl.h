@@ -5,6 +5,7 @@
 #define OOMAYA_REACTOR_IMPL_H
 
 #include <stdint.h>
+#include <sys/types.h>
 #include "oomaya_ipc.h"
 #include "oomaya_rate.h"
 #include "oomaya_worker.h"
@@ -19,6 +20,8 @@ typedef struct {
     oomaya_ipc_header_t hdr;
     uint8_t           body[OOMAYA_FRAME_BODY_MAX];
     uint32_t          body_read;
+    uint32_t          generation; /* bumped each time the slot is reused */
+    int               subscribed; /* receives OOMAYA_MSG_SIGNAL frames */
 } reactor_client_t;
 
 struct oomaya_reactor {
@@ -30,6 +33,13 @@ struct oomaya_reactor {
     oomaya_worker_pool_t *workers;
     oomaya_wm_state_t    *state;
     int                   running;
+    int                   stop_fd;       /* eventfd: wakes the idle reactor */
+
+    /* Signal delivery */
+    int                   subscribers;
+    uint32_t              last_tag_mask;
+    uint32_t              last_layout;
+    uint32_t              last_focused;
 };
 
 #endif /* OOMAYA_REACTOR_IMPL_H */
