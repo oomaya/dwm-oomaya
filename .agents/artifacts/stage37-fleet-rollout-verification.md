@@ -146,3 +146,47 @@ Built: tools/oomaya-ctl
      2
      ```
    - Exit Code: **0 (100% Success)**.
+
+---
+
+## 5. Live Multi-Node Verification on `cachyos-niri` (CachyOS Linux Rolling)
+
+Following `mint-vm`, we performed identical Stage 3.7 live verification on `cachyos-niri` (`100.115.225.96`):
+
+### 5.1 Pre-Sync Environment
+- OS: Linux cachyos-Niri 7.3.1-1-cachyos SMP PREEMPT_DYNAMIC x86_64
+- Active Session: `dwm` (PID 2309, started via startx on tty1)
+- Initial Shell Mode: `suckless`
+- Repository Setup: Cloned companion `quickshell-oomaya` (`~/.local/src/quickshell-oomaya`) and synchronized `dotfiles` to `1252842`.
+
+### 5.2 Stage 3.7 Execution Evidence
+```
+==> Stage 3.7: Synchronizing DWM & Quickshell Desktop Stack
+  • Synchronizing dwm-oomaya repository (/home/rand/.local/src/dwm-oomaya)...
+  • Compiling dwm-oomaya core...
+  CC   src/ipc/protocol.o
+  CC   src/ipc/negotiate.o
+Built: dwm-oomayad
+Built: tools/oomaya-ctl
+  • Deploying dwm-oomaya binaries and scripts via install-user...
+  ✓ dwm-oomaya core, daemons and lifecycle scripts deployed
+  • Synchronizing quickshell-oomaya repository...
+  • Building and deploying Quickshell configuration & helpers...
+  ✓ quickshell-oomaya deployed to ~/.config/quickshell and ~/.local/bin
+  • Reloading active DWM shell in 'suckless' mode...
+  ✓ DWM shell live-reloaded (suckless)
+```
+
+### 5.3 Post-Sync Stability & Dual-Shell Toggle Verification
+1. **Context-Aware Shell Mode Detection**:
+   - Accurately identified that `cachyos-niri` was running in `suckless` mode and reloaded `suckless` components without forcing Quickshell.
+2. **Zero Window Manager Downtime**:
+   - `dwm` (PID 2309) remained alive, unaffected by the compilation and binary replacement.
+3. **Bi-Directional Shell Switching & IPC Continuity**:
+   - `dwm-shell-mode quickshell`: Spawned Quickshell (PID 735899), D-Bus IPC query verified:
+     ```bash
+     $ quickshell ipc call tray count
+     1
+     ```
+   - `dwm-shell-mode suckless`: Gracefully unmapped and terminated Quickshell loop; restored suckless mode.
+   - Exit Code: **0 (100% Success)**.
