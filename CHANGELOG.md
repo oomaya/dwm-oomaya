@@ -26,6 +26,8 @@ versions from `config.mk`.
 - `dwm-oomayad` refuses `IPC_CMD_WM_TOGGLE_TAG` and `IPC_CMD_WM_SET_LAYOUT` with
   `ERR_OPCODE`. It used to report success without changing dwm, so `oomaya-ctl
   toggleview`, `oomaya-ctl setlayout`, and `dwm-msg` now fail for these.
+- `dwm-status` no longer waits for `dwm-weather` to fetch. With a stale cache, every
+  bar update waited for `curl`, about 300 ms here and up to 3 seconds offline.
 - `oomaya-ctl` gives up after 1 second on a stalled daemon.
 - The `dwm-keybind-exec` palette keeps `toggleview`, `setlayout`, and `focusmon`
   on their key bindings, because `dwm-oomayad` cannot perform them.

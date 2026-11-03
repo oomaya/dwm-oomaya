@@ -491,6 +491,7 @@ check-diagnostics:
 
 check-status:
 	tests/test-dwm-status.sh
+	tests/test-dwm-weather.sh
 
 check-ipc-tools:
 	tests/test-ipc-tools-build.sh
