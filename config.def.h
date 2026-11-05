@@ -147,7 +147,7 @@ static const Key keys[] = {
     { MODKEY,                           XK_d,       spawn,          SHCMD("dmenu-desktop") },
     { MODKEY|ShiftMask,                 XK_Return,  spawn,          SHCMD("ghostty || kitty") },
     { MODKEY,                           XK_a,       spawn,          SHCMD("antigravity-ide") },
-    { MODKEY|ShiftMask,                 XK_a,       spawn,          SHCMD("ghostty -e antigravity || kitty -e antigravity") },
+    { MODKEY|ShiftMask,                 XK_a,       spawn,          SHCMD("ghostty -e antigravity-cli || kitty -e antigravity-cli") },
     { MODKEY,                           XK_s,       spawn,          SHCMD("dwm-scratchpad") },
     { MODKEY,                           XK_slash,   spawn,          SHCMD("dwm-keybinds") },
     { MODKEY,                           XK_F1,      spawn,          SHCMD("dwm-controlcenter") },
